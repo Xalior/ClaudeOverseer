@@ -175,6 +175,7 @@ function renderMessage(msg: FormattedMessage) {
       return (
         <UserMessage
           text={msg.userText || ''}
+          images={msg.userImages}
           timestamp={msg.timestamp}
         />
       )

@@ -1,11 +1,17 @@
 import { Card } from 'react-bootstrap'
 
+interface UserImage {
+  mediaType: string
+  data: string
+}
+
 interface UserMessageProps {
   text: string
+  images?: UserImage[]
   timestamp: string
 }
 
-export function UserMessage({ text, timestamp }: UserMessageProps) {
+export function UserMessage({ text, images, timestamp }: UserMessageProps) {
   const relativeTime = getRelativeTime(timestamp)
 
   return (
@@ -17,7 +23,28 @@ export function UserMessage({ text, timestamp }: UserMessageProps) {
           </Card.Title>
           <small className="text-muted" data-testid="message-timestamp">{relativeTime}</small>
         </div>
-        <Card.Text className="mb-0" data-testid="user-message-text">{text}</Card.Text>
+        {text && (
+          <Card.Text className="mb-0" data-testid="user-message-text">{text}</Card.Text>
+        )}
+        {images && images.length > 0 && (
+          <div className="mt-2">
+            {images.map((img, i) => (
+              <img
+                key={i}
+                src={`data:${img.mediaType};base64,${img.data}`}
+                alt="User attachment"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '400px',
+                  borderRadius: '6px',
+                  border: '1px solid #30363d',
+                  marginBottom: i < images.length - 1 ? '8px' : 0
+                }}
+                data-testid="user-image"
+              />
+            ))}
+          </div>
+        )}
       </Card.Body>
     </Card>
   )

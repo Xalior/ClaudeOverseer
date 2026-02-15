@@ -12,12 +12,18 @@ export interface ToolPair {
   toolResult: ToolResultContent | null
 }
 
+export interface UserImage {
+  mediaType: string
+  data: string
+}
+
 export interface FormattedMessage {
   type: 'user' | 'assistant' | 'queue-operation'
   uuid: string
   timestamp: string
   // User message fields
   userText?: string
+  userImages?: UserImage[]
   // Assistant message fields
   model?: string
   textContent?: string
@@ -82,8 +88,35 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
           userText: userMsg.message.content,
           raw: msg
         })
-      } else {
-        // Tool result message — skip, handled via toolPairs on assistant messages
+      } else if (Array.isArray(userMsg.message.content)) {
+        // Extract text and images; skip pure tool_result messages
+        const textParts: string[] = []
+        const images: UserImage[] = []
+        let hasToolResults = false
+
+        for (const block of userMsg.message.content) {
+          if (block.type === 'text') {
+            textParts.push((block as { type: 'text'; text: string }).text)
+          } else if (block.type === 'image') {
+            const imgBlock = block as { type: 'image'; source: { type: string; media_type: string; data: string } }
+            images.push({ mediaType: imgBlock.source.media_type, data: imgBlock.source.data })
+          } else if (block.type === 'tool_result') {
+            hasToolResults = true
+          }
+        }
+
+        // Show the message if it has text or images (not just tool results)
+        if (textParts.length > 0 || images.length > 0) {
+          formatted.push({
+            type: 'user',
+            uuid: userMsg.uuid,
+            timestamp: userMsg.timestamp,
+            userText: textParts.length > 0 ? textParts.join('\n\n') : undefined,
+            userImages: images.length > 0 ? images : undefined,
+            raw: msg
+          })
+        }
+        // Pure tool_result messages are handled via toolPairs on assistant messages
       }
       continue
     }

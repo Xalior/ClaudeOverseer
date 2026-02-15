@@ -59,19 +59,28 @@ export interface QueueOperationMessage {
   sessionId: string
 }
 
+export interface ImageBlock {
+  type: 'image'
+  source: {
+    type: string
+    media_type: string
+    data: string
+  }
+}
+
 export interface UserMessage {
   type: 'user'
   uuid: string
   parentUuid: string | null
   timestamp: string
   sessionId: string
-  cwd: string
-  version: string
+  cwd?: string
+  version?: string
   gitBranch?: string
   isSidechain?: boolean
   message: {
     role: 'user'
-    content: string | ToolResultContent[]
+    content: string | (TextBlock | ToolResultContent | ImageBlock)[]
   }
 }
 
