@@ -11,17 +11,20 @@ interface Session {
 
 interface SessionListProps {
   projectEncodedName: string | null
+  onSessionSelect?: (filePath: string) => void
 }
 
-export function SessionList({ projectEncodedName }: SessionListProps) {
+export function SessionList({ projectEncodedName, onSessionSelect }: SessionListProps) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
     if (projectEncodedName) {
       loadSessions(projectEncodedName)
     } else {
       setSessions([])
+      setSelectedId(null)
     }
   }, [projectEncodedName])
 
@@ -36,6 +39,11 @@ export function SessionList({ projectEncodedName }: SessionListProps) {
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleSelect(session: Session) {
+    setSelectedId(session.id)
+    onSessionSelect?.(session.filePath)
   }
 
   function getSessionIcon(session: Session): string {
@@ -85,8 +93,12 @@ export function SessionList({ projectEncodedName }: SessionListProps) {
         {sessions.map(session => (
           <ListGroup.Item
             key={session.id}
+            action
+            active={session.id === selectedId}
             className="d-flex justify-content-between align-items-start"
             data-testid={`session-${session.type}-${session.id}`}
+            onClick={() => handleSelect(session)}
+            style={{ cursor: 'pointer' }}
           >
             <div className="ms-2 me-auto">
               <div className="fw-bold">

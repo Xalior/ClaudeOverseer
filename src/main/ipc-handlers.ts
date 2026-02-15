@@ -4,6 +4,8 @@ import { join } from 'path'
 import { readFile } from 'fs/promises'
 import { scanProjects } from './services/project-scanner'
 import { discoverSessions } from './services/session-discovery'
+import { parseJsonlFile } from './services/jsonl-parser'
+import { formatMessages } from './services/message-formatter'
 import { encodePath } from './utils/path-encoder'
 
 const DEFAULT_CLAUDE_DIR = join(homedir(), '.claude', 'projects')
@@ -40,5 +42,11 @@ export function registerIpcHandlers(): void {
     const dir = claudeDir || DEFAULT_CLAUDE_DIR
     const projectPath = join(dir, projectEncodedName)
     return await discoverSessions(projectPath)
+  })
+
+  // Get formatted messages for a session
+  ipcMain.handle('overseer:get-messages', async (_event, sessionFilePath: string) => {
+    const parsed = await parseJsonlFile(sessionFilePath)
+    return formatMessages(parsed)
   })
 }
