@@ -19,10 +19,11 @@
     "clean": "rm -rf release out",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "dist:mac": "electron-builder --mac",
+    "dist:mac": "electron-builder --mac --config.dmg.writeUpdateInfo=false",
     "dist:linux": "electron-builder --linux",
-    "dist:win": "electron-builder --win",
-    "postdist": "echo '\n✅ Build complete! Final artifacts are in release/ directory'"
+    "dist:win": "electron-builder --win --config.nsis.differentialPackage=false",
+    "postdist": "npm run clean:extra",
+    "clean:extra": "find release -name '*.blockmap' -delete && find release -name '*.yml' -delete && find release -name 'builder-*.y*ml' -delete && find release -type d -name '*-unpacked' -exec rm -rf {} + 2>/dev/null || true && find release -type d -name 'mac' -exec rm -rf {} + 2>/dev/null || true && find release -type d -name 'linux-*' -exec rm -rf {} + 2>/dev/null || true && find release -type d -name 'win-*' -exec rm -rf {} + 2>/dev/null || true && echo '🧹 Cleaned up intermediate build files'"
   },
   "build": {
     "appId": "com.claudeoverseer.app",
@@ -35,6 +36,9 @@
       "out/**/*"
     ],
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "removePackageScripts": true,
+    "removePackageKeywords": true,
+    "publish": null,
     "mac": {
       "target": [
         {
@@ -47,7 +51,8 @@
         }
       ],
       "category": "public.app-category.developer-tools",
-      "identity": null
+      "identity": null,
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     },
     "linux": {
       "target": [
@@ -60,7 +65,8 @@
           "arch": ["x64", "arm64"]
         }
       ],
-      "category": "Development"
+      "category": "Development",
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     },
     "win": {
       "target": [
@@ -74,7 +80,17 @@
         }
       ],
       "signingHashAlgorithms": ["sha256"],
-      "sign": null
+      "sign": null,
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+    },
+    "dmg": {
+      "writeUpdateInfo": false
+    },
+    "nsis": {
+      "differentialPackage": false
+    },
+    "appImage": {
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     }
   },
   "dependencies": {
