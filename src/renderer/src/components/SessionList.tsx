@@ -83,8 +83,8 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
 
   function getSessionTitle(session: Session): string {
     if (session.slug) return session.slug
-    if (session.type === 'subagent') return `${session.id.slice(0, 8)}... (subagent)`
-    return session.id.slice(0, 12) + '...'
+    if (session.summary) return session.summary
+    return formatDateTime(session.lastModified)
   }
 
   if (!projectEncodedName) {
