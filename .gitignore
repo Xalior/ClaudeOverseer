@@ -43,3 +43,4 @@ test-results/*
 
 # Electron Builder
 release/
+playwright-report/index.html
