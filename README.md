@@ -197,17 +197,25 @@ pnpm run test:coverage
 
 ### Build for Distribution
 
-```bash
-# Package without installer (for testing)
-pnpm run pack
+**Recommended: Docker Build (All Platforms)**
 
-# Build macOS .dmg + .zip
+```bash
+# Build for all platforms using Docker
+pnpm run docker:build
+```
+
+This creates all 12 artifacts (macOS, Linux, Windows - both x64 and ARM64).
+
+**Alternative: Platform-Specific Builds**
+
+```bash
+# Build macOS .dmg + .zip (requires macOS)
 pnpm run dist:mac
 
-# Build Linux AppImage + .deb
+# Build Linux AppImage + .deb (requires Linux)
 pnpm run dist:linux
 
-# Build Windows installer + .zip
+# Build Windows installer + .zip (requires Windows)
 pnpm run dist:win
 ```
 

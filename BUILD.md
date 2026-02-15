@@ -56,17 +56,40 @@ This removes both `release/` and `out/` directories.
 
 ## Build Commands
 
+### Docker Build (Recommended - All Platforms)
+
+Build for all platforms using Docker (no platform-specific requirements):
+
+```bash
+# Build for Linux, Windows, and macOS using Docker
+pnpm run docker:build
+
+# Or run the script directly
+./docker-build.sh
+```
+
+This will create all 12 artifacts (4 per platform) in the `release/` directory.
+
+**Requirements:**
+- Docker installed and running
+- ~2GB disk space for Docker image
+- ~10-15 minutes for first build (caching makes subsequent builds faster)
+
+### Native Platform Builds
+
+Build on your current platform (faster, but platform-specific):
+
 ```bash
 # Clean previous builds
 pnpm run clean
 
 # Build for specific platform (creates both x64 and arm64)
-pnpm run dist:mac     # macOS: 4 files
-pnpm run dist:linux   # Linux: 4 files
-pnpm run dist:win     # Windows: 4 files
+pnpm run dist:mac     # macOS: 4 files (requires macOS)
+pnpm run dist:linux   # Linux: 4 files (requires Linux)
+pnpm run dist:win     # Windows: 4 files (requires Windows)
 
-# Build for all platforms
-pnpm run dist         # All: 12 files
+# Build for all platforms (only works on current platform)
+pnpm run dist:all     # Attempts all platforms (may fail on cross-platform)
 ```
 
 ## Uploading to GitHub Releases
