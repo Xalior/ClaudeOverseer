@@ -22,19 +22,6 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-    mainWindow.webContents.openDevTools() // Open DevTools for debugging
-
-    // Auto-screenshot after 10 seconds for debugging
-    setTimeout(async () => {
-      try {
-        const image = await mainWindow.webContents.capturePage()
-        const screenshotPath = join(tmpdir(), `overseer-auto-${Date.now()}.png`)
-        await writeFile(screenshotPath, image.toPNG())
-        console.log('📸 AUTO-SCREENSHOT saved to:', screenshotPath)
-      } catch (err) {
-        console.error('Screenshot failed:', err)
-      }
-    }, 10000)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
