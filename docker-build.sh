@@ -1,33 +1,11 @@
 #!/bin/bash
-# Docker-based multi-platform build script for ClaudeOverseer
-# Idempotent - no side effects outside of release/ directory
-
 set -e
 
-echo "🐳 Building ClaudeOverseer using Docker..."
-echo ""
-
-# Colors for output
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Create temporary release directory
 RELEASE_DIR="$(pwd)/release"
 mkdir -p "$RELEASE_DIR"
 
-echo -e "${BLUE}Step 1/2: Building Docker image...${NC}"
-echo ""
-
-# Build the Docker image with visible output
 docker build -t claudeoverseer-builder:latest .
 
-echo ""
-echo -e "${BLUE}Step 2/2: Running build in isolated container...${NC}"
-echo ""
-
-# Run build in container - ONLY mount release/ for output
 docker run --rm \
   --platform linux/amd64 \
   -v "$RELEASE_DIR":/output \
@@ -36,24 +14,11 @@ docker run --rm \
   /bin/bash -c "
     set -e
     cd /project
-    echo '🔨 Building app source...'
     pnpm run build
-    echo ''
-    echo '📦 Packaging for all platforms (this takes a while)...'
     pnpm run dist:docker
-    echo ''
-    echo '🧹 Cleaning intermediate files...'
     pnpm run clean:extra
-    echo ''
-    echo '📤 Copying artifacts to output...'
-    cp -v release/* /output/ 2>/dev/null || echo 'No artifacts to copy'
+    cp release/* /output/ 2>/dev/null || true
   "
 
 echo ""
-echo -e "${GREEN}✅ Build complete!${NC}"
-echo ""
-echo "Artifacts in release/:"
-ls -lh "$RELEASE_DIR/" 2>/dev/null | grep -E '\.(dmg|zip|AppImage|deb|exe)$' || echo "  No final artifacts found"
-echo ""
-echo "Total artifacts:"
-find "$RELEASE_DIR" -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.exe" \) | wc -l | xargs echo "  "
+ls -lh "$RELEASE_DIR/" | grep -E '\.(dmg|zip|AppImage|deb|exe)$'
