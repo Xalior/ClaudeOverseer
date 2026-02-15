@@ -1,0 +1,7 @@
+{
+  "id": "3",
+  "subject": "Write integration tests",
+  "description": "Add tests for the auth middleware",
+  "status": "pending",
+  "blockedBy": ["2"]
+}
