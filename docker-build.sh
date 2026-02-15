@@ -14,16 +14,16 @@ docker run --rm \
   /bin/bash -c "
     set -e
     cd /project
-    echo 'Building app...'
+    echo '🔨 Building app...'
     pnpm run build
     echo ''
-    echo 'Packaging for all platforms...'
+    echo '📦 Packaging for all platforms...'
     pnpm run dist:docker
     echo ''
-    echo 'Cleaning intermediate files...'
+    echo '🧹 Cleaning intermediate files...'
     pnpm run clean:extra
     echo ''
-    echo 'Copying artifacts...'
+    echo '📤 Copying artifacts...'
     cp -v release/* /output/ 2>/dev/null || true
   "
 
