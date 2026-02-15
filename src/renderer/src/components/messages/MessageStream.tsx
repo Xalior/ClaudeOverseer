@@ -26,18 +26,8 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
 
       const unsubscribe = window.overseer.onNewMessages((data) => {
         if (data.filePath === sessionFilePath && data.messages.length > 0) {
-          setSession(prev => {
-            if (!prev) return prev
-            return {
-              messages: [...prev.messages, ...data.messages],
-              totalUsage: {
-                input_tokens: prev.totalUsage.input_tokens + data.usage.input_tokens,
-                output_tokens: prev.totalUsage.output_tokens + data.usage.output_tokens,
-                cache_creation_input_tokens: prev.totalUsage.cache_creation_input_tokens + data.usage.cache_creation_input_tokens,
-                cache_read_input_tokens: prev.totalUsage.cache_read_input_tokens + data.usage.cache_read_input_tokens
-              }
-            }
-          })
+          // Reload full session so tool_use/tool_result pairs match correctly
+          loadMessages(sessionFilePath)
         }
       })
 
