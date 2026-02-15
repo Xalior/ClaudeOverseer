@@ -28,7 +28,10 @@ const api = {
     const subscription = (_event: any, statuses: any[]) => callback(statuses)
     ipcRenderer.on('overseer:session-status-changed', subscription)
     return () => ipcRenderer.removeListener('overseer:session-status-changed', subscription)
-  }
+  },
+
+  // Screenshot for debugging
+  captureScreenshot: () => ipcRenderer.invoke('overseer:capture-screenshot')
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

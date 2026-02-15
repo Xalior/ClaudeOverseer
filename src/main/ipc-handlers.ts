@@ -1,7 +1,9 @@
-import { ipcMain } from 'electron'
+import { ipcMain, BrowserWindow } from 'electron'
 import { scanProjects, getClaudeProjectsDir } from './services/project-scanner'
 import { discoverSessions } from './services/session-discovery'
 import { join } from 'path'
+import { writeFile } from 'fs/promises'
+import { tmpdir } from 'os'
 
 /**
  * Register all IPC handlers for the main process
@@ -34,6 +36,19 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('overseer:get-team-tasks', async (_event, teamName: string) => {
     // TODO: Implement in Phase 5
     return []
+  })
+
+  // Screenshot capability for debugging
+  ipcMain.handle('overseer:capture-screenshot', async () => {
+    const window = BrowserWindow.getAllWindows()[0]
+    if (!window) return null
+
+    const image = await window.webContents.capturePage()
+    const screenshotPath = join(tmpdir(), `overseer-screenshot-${Date.now()}.png`)
+    await writeFile(screenshotPath, image.toPNG())
+
+    console.log('Screenshot saved to:', screenshotPath)
+    return screenshotPath
   })
 
   console.log('✓ IPC handlers registered')

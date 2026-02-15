@@ -1,7 +1,9 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, globalShortcut } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc-handlers'
+import { writeFile } from 'fs/promises'
+import { tmpdir } from 'os'
 // import icon from '../../resources/icon.png?asset' // TODO: Add app icon
 
 function createWindow(): void {
@@ -20,6 +22,19 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    mainWindow.webContents.openDevTools() // Open DevTools for debugging
+
+    // Auto-screenshot after 10 seconds for debugging
+    setTimeout(async () => {
+      try {
+        const image = await mainWindow.webContents.capturePage()
+        const screenshotPath = join(tmpdir(), `overseer-auto-${Date.now()}.png`)
+        await writeFile(screenshotPath, image.toPNG())
+        console.log('📸 AUTO-SCREENSHOT saved to:', screenshotPath)
+      } catch (err) {
+        console.error('Screenshot failed:', err)
+      }
+    }, 10000)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -52,6 +67,17 @@ app.whenReady().then(() => {
 
   // Register IPC handlers
   registerIpcHandlers()
+
+  // Register global shortcut for screenshots (Cmd+Shift+S)
+  globalShortcut.register('CommandOrControl+Shift+S', async () => {
+    const windows = BrowserWindow.getAllWindows()
+    if (windows.length === 0) return
+
+    const image = await windows[0].webContents.capturePage()
+    const screenshotPath = join(tmpdir(), `overseer-screenshot-${Date.now()}.png`)
+    await writeFile(screenshotPath, image.toPNG())
+    console.log('📸 Screenshot saved to:', screenshotPath)
+  })
 
   createWindow()
 

@@ -34,13 +34,13 @@ Building ClaudeOverseer - an Electron + React + TypeScript desktop app that moni
 - [x] Create three-panel AppShell layout
 - [x] Verify app launches with Bootstrap styling
 
-**Phase 2: Project Discovery**
-- [ ] Implement path encoder/decoder utilities
-- [ ] Implement project scanner service
-- [ ] Implement session discovery service
-- [ ] Wire up IPC handlers
-- [ ] Build ProjectList and SessionList components
-- [ ] Verify project/session discovery works
+**Phase 2: Project Discovery** ✅
+- [x] Implement path encoder/decoder utilities
+- [x] Implement project scanner service
+- [x] Implement session discovery service
+- [x] Wire up IPC handlers
+- [x] Build ProjectList and SessionList components
+- [x] Verify project/session discovery works
 
 **Phase 3: JSONL Parsing & Display**
 - [ ] Implement JSONL parser with TypeScript types

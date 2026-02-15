@@ -20,14 +20,17 @@ export function ProjectList() {
   }
 
   async function handleProjectClick(project: any) {
+    console.log('📁 Project clicked:', project.name, project.encodedDirName)
     selectProject(project)
 
     // Load sessions for this project
     try {
+      console.log('🔍 Loading sessions for:', project.encodedDirName)
       const sessions = await window.overseer.getSessions(project.encodedDirName)
+      console.log('✅ Loaded sessions:', sessions.length, sessions)
       setSessions(sessions)
     } catch (error) {
-      console.error('Failed to load sessions:', error)
+      console.error('❌ Failed to load sessions:', error)
     }
   }
 
