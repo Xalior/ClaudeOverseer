@@ -23,7 +23,7 @@
     "dist:linux": "electron-builder --linux",
     "dist:win": "electron-builder --win --config.nsis.differentialPackage=false",
     "postdist": "npm run clean:extra",
-    "clean:extra": "find release -name '*.blockmap' -delete && find release -name '*.yml' -delete && find release -name 'builder-*.y*ml' -delete && find release -type d -name '*-unpacked' -exec rm -rf {} + 2>/dev/null || true && find release -type d -name 'mac' -exec rm -rf {} + 2>/dev/null || true && find release -type d -name 'linux-*' -exec rm -rf {} + 2>/dev/null || true && find release -type d -name 'win-*' -exec rm -rf {} + 2>/dev/null || true && echo '🧹 Cleaned up intermediate build files'"
+    "clean:extra": "find release -name '*.blockmap' -delete && find release -name '*.yml' -delete && find release -name 'builder-*.y*ml' -delete && find release -type d \\( -name '*-unpacked' -o -name 'mac*' -o -name 'linux-*' -o -name 'win-*' -o -name '.icon-*' \\) -exec rm -rf {} + 2>/dev/null || true && echo '🧹 Cleaned up intermediate build files'"
   },
   "build": {
     "appId": "com.claudeoverseer.app",
