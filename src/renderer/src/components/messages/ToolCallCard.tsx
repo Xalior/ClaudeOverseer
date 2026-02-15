@@ -222,6 +222,112 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
   )
 }
 
+/** AskUserQuestion: render as a styled question with options and answer */
+function AskUserQuestionPrettyPrint({ input, result }: {
+  input: Record<string, unknown>
+  result: string
+}) {
+  const questions = (input.questions as Array<{
+    question: string
+    header?: string
+    options?: Array<{ label: string; description?: string }>
+    multiSelect?: boolean
+  }>) || []
+
+  // Parse the answer from result text like: "question"="answer"
+  const answerMatch = result.match(/="([^"]+)"/)
+  const answer = answerMatch ? answerMatch[1] : null
+
+  return (
+    <div style={{
+      backgroundColor: '#1c1f2b',
+      border: '1px solid #3d4663',
+      borderRadius: '6px',
+      padding: '12px',
+      margin: '8px 0 0 0',
+      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+      fontSize: '0.85rem'
+    }} data-testid="tool-input-content">
+      {questions.map((q, qi) => (
+        <div key={qi}>
+          {/* Header badge */}
+          {q.header && (
+            <span style={{
+              backgroundColor: '#30363d',
+              color: '#79c0ff',
+              padding: '2px 8px',
+              borderRadius: '10px',
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              marginBottom: '8px',
+              display: 'inline-block'
+            }}>
+              {q.header}
+            </span>
+          )}
+
+          {/* Question text */}
+          <div style={{ color: '#e6edf3', fontWeight: 500, margin: '8px 0' }}>
+            {q.question}
+          </div>
+
+          {/* Options */}
+          {q.options && (
+            <div style={{ margin: '8px 0' }}>
+              {q.options.map((opt, oi) => {
+                const isSelected = answer === opt.label
+                return (
+                  <div key={oi} style={{
+                    backgroundColor: isSelected ? '#1f3d1f' : '#161b22',
+                    border: isSelected ? '1px solid #3fb950' : '1px solid #30363d',
+                    borderRadius: '6px',
+                    padding: '8px 12px',
+                    marginBottom: '4px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px'
+                  }}>
+                    <span style={{
+                      color: isSelected ? '#3fb950' : '#484f58',
+                      fontSize: '0.9rem',
+                      marginTop: '1px'
+                    }}>
+                      {isSelected ? '●' : '○'}
+                    </span>
+                    <div>
+                      <span style={{ color: isSelected ? '#7ee787' : '#c9d1d9', fontWeight: 500 }}>
+                        {opt.label}
+                      </span>
+                      {opt.description && (
+                        <div style={{ color: '#8b949e', fontSize: '0.8rem', marginTop: '2px' }}>
+                          {opt.description}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Answer summary */}
+      {answer && (
+        <div style={{
+          borderTop: '1px solid #30363d',
+          paddingTop: '8px',
+          marginTop: '8px',
+          color: '#7ee787',
+          fontSize: '0.8rem'
+        }} data-testid="tool-output-content">
+          User selected: <strong>{answer}</strong>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /** Generic fallback for unknown tools */
 function GenericPrettyPrint({ toolName, input, result, isError }: {
   toolName: string
@@ -293,6 +399,8 @@ export function ToolCallCard({ toolName, toolInput, toolResult }: ToolCallCardPr
           <FilePrettyPrint toolName={toolName} input={toolInput} result={resultText} isError={isError} />
         ) : toolName === 'Grep' || toolName === 'Glob' ? (
           <SearchPrettyPrint toolName={toolName} input={toolInput} result={resultText} isError={isError} />
+        ) : toolName === 'AskUserQuestion' ? (
+          <AskUserQuestionPrettyPrint input={toolInput} result={resultText} />
         ) : (
           <GenericPrettyPrint toolName={toolName} input={toolInput} result={resultText} isError={isError} />
         )}
