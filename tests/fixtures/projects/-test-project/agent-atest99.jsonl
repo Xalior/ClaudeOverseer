@@ -1,0 +1,2 @@
+{"type":"queue-operation","operation":"dequeue","timestamp":"2026-02-15T19:05:00.000Z","sessionId":"agent-atest99"}
+{"type":"user","uuid":"msg-003","parentUuid":null,"timestamp":"2026-02-15T19:05:01.000Z","sessionId":"agent-atest99","cwd":"/test/project","version":"2.0.80","message":{"role":"user","content":"Background agent test"}}
