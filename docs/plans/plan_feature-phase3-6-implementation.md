@@ -93,6 +93,18 @@ Phases 1-2 were complete (33/33 tests passing). This branch implements Phases 3-
 - Also added `ThinkingBlock` type, made `usage`/`cwd`/`version` optional, added `ErrorBoundary` component.
 - **User tested and confirmed working** — message rendering and real-time updates both functioning correctly on live sessions.
 
+### 2026-02-15 — UX Polish & Testing
+- Fixed UX issues: overflow scrolling, tool card legibility, expanded-by-default tool cards
+- Pretty-printed tool call renderers (Bash terminal, File ops, Search, AskUserQuestion)
+- Fixed live update rendering (full session reload for correct toolResultMap, silent refresh)
+- Filtered empty streaming partials (whitespace-only, stop_reason: null)
+- Added image support in user messages (base64 inline rendering)
+- Session metadata: slug extraction, first-user-message summary, formatted date/time
+- Subagent grouping under parent sessions in session list
+- Added 16 new tests (8 unit formatter + 5 unit parser + 3 integration discovery)
+- Fixed E2E test for expanded-by-default tool cards
+- **All CI passing: 60 unit + 21 integration + 9 E2E = 90 tests**
+
 ## Blockers
 
 None.
@@ -107,3 +119,9 @@ None.
 - `5a48f63` feat: implement live file watching with chokidar (64/64 tests passing)
 - `1ca8610` feat: add live watching E2E test and team reader (47 unit + 18 integration + 9 E2E)
 - `325fe8c` feat: add session status badges, keyboard shortcuts (74/74 tests passing)
+- `7bab59e` feat: add packaging config and CI/CD workflows (Phase 6 complete)
+- `7b98f27` fix: use pnpm instead of npm in CI workflows
+- `5bb3b80` fix: E2E orphan test waits for panel instead of project-list
+- `84c307f` chore: add test-results dir to eliminate CI upload warning
+- `1655bc2` test: add 16 new tests for real-data edge cases (90 tests, CI green)
+- `c928b81` fix: E2E test expects tool cards expanded by default
