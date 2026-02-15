@@ -20,7 +20,7 @@ ClaudeOverseer is a desktop application that reads Claude Code's local JSONL tra
 - **Keyboard Shortcuts** — Navigate projects and sessions with `Cmd+1/2/3`, `Cmd+J`
 - **Raw JSON Toggle** — View the underlying JSONL structure when debugging
 - **Zero Cost** — Reads local files only, no API calls required
-- **Cross-Platform** — macOS, Linux, and Windows support
+- **Cross-Platform** — macOS, Linux, and Windows (both x64 and ARM64)
 
 ---
 
@@ -31,7 +31,7 @@ ClaudeOverseer is a desktop application that reads Claude Code's local JSONL tra
 #### macOS
 
 ```bash
-# Download the latest .dmg from releases
+# Download the latest .dmg from releases (available for Intel x64 and Apple Silicon ARM64)
 # Or install via source:
 git clone https://github.com/Xalior/ClaudeOverseer.git
 cd ClaudeOverseer
@@ -43,7 +43,7 @@ pnpm run dist:mac
 #### Linux
 
 ```bash
-# Download the AppImage or .deb from releases
+# Download the AppImage or .deb from releases (available for x64 and ARM64)
 # Or build from source:
 git clone https://github.com/Xalior/ClaudeOverseer.git
 cd ClaudeOverseer
@@ -55,7 +55,7 @@ pnpm run dist:linux
 #### Windows
 
 ```bash
-# Download the installer (.exe) or .zip from releases
+# Download the installer (.exe) or .zip from releases (available for x64 and ARM64)
 # Or build from source:
 git clone https://github.com/Xalior/ClaudeOverseer.git
 cd ClaudeOverseer
