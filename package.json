@@ -52,6 +52,7 @@
       ],
       "category": "public.app-category.developer-tools",
       "identity": null,
+      "icon": "docs/icon.png",
       "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     },
     "linux": {
@@ -66,6 +67,7 @@
         }
       ],
       "category": "Development",
+      "icon": "docs/icon.png",
       "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     },
     "win": {
@@ -81,6 +83,7 @@
       ],
       "signingHashAlgorithms": ["sha256"],
       "sign": null,
+      "icon": "docs/icon.png",
       "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     },
     "dmg": {
