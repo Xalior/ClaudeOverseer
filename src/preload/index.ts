@@ -1,7 +1,8 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 
-// Expose protected methods that allow the renderer process to use
-// ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('overseer', {
-  // IPC methods will be added here as we implement them
+  getProjectsDir: () => ipcRenderer.invoke('overseer:get-projects-dir'),
+  scanProjects: (claudeDir?: string) => ipcRenderer.invoke('overseer:scan-projects', claudeDir),
+  discoverSessions: (projectEncodedName: string, claudeDir?: string) =>
+    ipcRenderer.invoke('overseer:discover-sessions', projectEncodedName, claudeDir)
 })
