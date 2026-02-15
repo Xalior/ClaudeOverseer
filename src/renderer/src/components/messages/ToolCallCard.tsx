@@ -68,12 +68,9 @@ function BashPrettyPrint({ input, result, isError }: {
 
   return (
     <div style={{ ...terminalStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
-      {/* Terminal title bar */}
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', gap: '6px' }}>
-        <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ff5f57', display: 'inline-block' }} />
-        <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#febc2e', display: 'inline-block' }} />
-        <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28c840', display: 'inline-block' }} />
-        <span style={{ color: '#8b949e', fontSize: '0.75rem', marginLeft: '8px' }}>bash</span>
+      {/* Terminal header */}
+      <div style={{ marginBottom: '8px', borderBottom: '1px solid #30363d', paddingBottom: '6px' }}>
+        <span style={{ color: '#8b949e', fontSize: '0.75rem' }}>💻 bash</span>
       </div>
       {/* Command */}
       <div>
