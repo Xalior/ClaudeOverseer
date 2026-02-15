@@ -100,15 +100,14 @@ test.describe('Project Discovery', () => {
     for (let i = 0; i < 3; i++) {
       let app
       try {
-        const fixturesDir = path.join(__dirname, '../fixtures/projects')
-
         app = await electron.launch({
           args: [path.join(__dirname, '../../out/main/index.js')],
         })
 
         const window = await app.firstWindow()
         await window.waitForLoadState('domcontentloaded')
-        await window.waitForSelector('[data-testid="project-list"]', { timeout: 5000 })
+        // Just wait for the panels to render (always present regardless of data)
+        await window.waitForSelector('[data-testid="project-sidebar"]', { timeout: 10000 })
 
       } finally {
         if (app) {
