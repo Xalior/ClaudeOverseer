@@ -1,12 +1,18 @@
-import { ipcMain } from 'electron'
+import { ipcMain, BrowserWindow } from 'electron'
 import { homedir } from 'os'
 import { join } from 'path'
 import { readFile } from 'fs/promises'
 import { scanProjects } from './services/project-scanner'
 import { discoverSessions } from './services/session-discovery'
+import { parseJsonlFile } from './services/jsonl-parser'
+import { formatMessages } from './services/message-formatter'
+import { JsonlWatcher } from './services/jsonl-watcher'
 import { encodePath } from './utils/path-encoder'
 
 const DEFAULT_CLAUDE_DIR = join(homedir(), '.claude', 'projects')
+
+// Active watchers keyed by file path
+const activeWatchers = new Map<string, JsonlWatcher>()
 
 /**
  * Register all IPC handlers for the main process
@@ -40,5 +46,49 @@ export function registerIpcHandlers(): void {
     const dir = claudeDir || DEFAULT_CLAUDE_DIR
     const projectPath = join(dir, projectEncodedName)
     return await discoverSessions(projectPath)
+  })
+
+  // Get formatted messages for a session
+  ipcMain.handle('overseer:get-messages', async (_event, sessionFilePath: string) => {
+    const parsed = await parseJsonlFile(sessionFilePath)
+    return formatMessages(parsed)
+  })
+
+  // Watch a session file for new messages
+  ipcMain.handle('overseer:watch-session', async (_event, sessionFilePath: string) => {
+    // Stop any existing watcher for this file
+    const existing = activeWatchers.get(sessionFilePath)
+    if (existing) {
+      await existing.stop()
+    }
+
+    const watcher = new JsonlWatcher(sessionFilePath, {
+      onNewMessages: (messages) => {
+        const formatted = formatMessages(messages)
+        // Send to all renderer windows
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send('overseer:new-messages', {
+            filePath: sessionFilePath,
+            messages: formatted.messages,
+            usage: formatted.totalUsage
+          })
+        }
+      },
+      onError: (error) => {
+        console.error('Watcher error:', error.message)
+      }
+    })
+
+    activeWatchers.set(sessionFilePath, watcher)
+    await watcher.start()
+  })
+
+  // Stop watching a session file
+  ipcMain.handle('overseer:unwatch-session', async (_event, sessionFilePath: string) => {
+    const watcher = activeWatchers.get(sessionFilePath)
+    if (watcher) {
+      await watcher.stop()
+      activeWatchers.delete(sessionFilePath)
+    }
   })
 }

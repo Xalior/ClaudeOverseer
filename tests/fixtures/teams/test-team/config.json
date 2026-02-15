@@ -1,0 +1,20 @@
+{
+  "description": "Test team for unit testing",
+  "members": [
+    {
+      "name": "team-lead",
+      "agentId": "agent-lead-001",
+      "agentType": "general-purpose"
+    },
+    {
+      "name": "researcher",
+      "agentId": "agent-research-002",
+      "agentType": "Explore"
+    },
+    {
+      "name": "implementer",
+      "agentId": "agent-impl-003",
+      "agentType": "general-purpose"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "id": "2",
+  "subject": "Implement auth middleware",
+  "description": "Create JWT-based authentication middleware",
+  "status": "in_progress",
+  "owner": "implementer",
+  "blockedBy": []
+}

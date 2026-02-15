@@ -1,0 +1,7 @@
+{
+  "id": "1",
+  "subject": "Research API design patterns",
+  "description": "Look into best practices for REST API design",
+  "status": "completed",
+  "owner": "researcher"
+}

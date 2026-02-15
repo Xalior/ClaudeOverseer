@@ -7,21 +7,59 @@ interface Session {
   filePath: string
   lastModified: number
   parentSessionId?: string
+  slug?: string
+  summary?: string
 }
 
 interface SessionListProps {
   projectEncodedName: string | null
+  onSessionSelect?: (filePath: string) => void
 }
 
-export function SessionList({ projectEncodedName }: SessionListProps) {
+type SessionStatus = 'active' | 'recent' | 'stale'
+
+function getSessionStatus(lastModified: number): SessionStatus {
+  const now = Date.now()
+  const diff = now - lastModified
+  if (diff < 60 * 1000) return 'active'
+  if (diff < 5 * 60 * 1000) return 'recent'
+  return 'stale'
+}
+
+function getStatusBadge(status: SessionStatus): { icon: string; variant: string } {
+  switch (status) {
+    case 'active': return { icon: '🟢', variant: 'success' }
+    case 'recent': return { icon: '🔵', variant: 'primary' }
+    case 'stale': return { icon: '⚪', variant: 'secondary' }
+  }
+}
+
+function formatDateTime(timestamp: number): string {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const isYesterday = date.toDateString() === yesterday.toDateString()
+
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+  if (isToday) return `Today ${time}`
+  if (isYesterday) return `Yesterday ${time}`
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ` ${time}`
+}
+
+export function SessionList({ projectEncodedName, onSessionSelect }: SessionListProps) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
     if (projectEncodedName) {
       loadSessions(projectEncodedName)
     } else {
       setSessions([])
+      setSelectedId(null)
     }
   }, [projectEncodedName])
 
@@ -38,17 +76,15 @@ export function SessionList({ projectEncodedName }: SessionListProps) {
     }
   }
 
-  function getSessionIcon(session: Session): string {
-    if (session.type === 'subagent') return '👥'
-    if (session.type === 'background') return '🔵'
-    return '🟢'
+  function handleSelect(session: Session) {
+    setSelectedId(session.id)
+    onSessionSelect?.(session.filePath)
   }
 
-  function getSessionLabel(session: Session): string {
-    if (session.type === 'subagent') {
-      return `${session.id} (subagent)`
-    }
-    return session.id
+  function getSessionTitle(session: Session): string {
+    if (session.slug) return session.slug
+    if (session.summary) return session.summary
+    return `${session.type}-${session.id}`
   }
 
   if (!projectEncodedName) {
@@ -78,24 +114,63 @@ export function SessionList({ projectEncodedName }: SessionListProps) {
     )
   }
 
+  // Group subagents under their parent session
+  const topLevel = sessions.filter(s => s.type !== 'subagent')
+  const subagentsByParent = new Map<string, Session[]>()
+  for (const s of sessions) {
+    if (s.type === 'subagent' && s.parentSessionId) {
+      const list = subagentsByParent.get(s.parentSessionId) || []
+      list.push(s)
+      subagentsByParent.set(s.parentSessionId, list)
+    }
+  }
+
+  function renderSessionItem(session: Session, indent: boolean = false) {
+    const status = getSessionStatus(session.lastModified)
+    const badge = getStatusBadge(status)
+    return (
+      <ListGroup.Item
+        key={session.id}
+        action
+        active={session.id === selectedId}
+        className="d-flex justify-content-between align-items-start"
+        data-testid={`session-${session.type}-${session.id}`}
+        onClick={() => handleSelect(session)}
+        style={{ cursor: 'pointer', paddingLeft: indent ? '2rem' : undefined }}
+      >
+        <div className="ms-2 me-auto" style={{ minWidth: 0 }}>
+          <div className="fw-bold text-truncate">
+            {indent ? '↳ ' : badge.icon + ' '}{getSessionTitle(session)}
+          </div>
+          {session.summary && (
+            <div className="text-muted text-truncate" style={{ fontSize: '0.8rem' }}>
+              {session.summary}
+            </div>
+          )}
+          <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+            {formatDateTime(session.lastModified)} · {session.type}
+          </small>
+        </div>
+        <Badge bg={badge.variant} data-testid={`status-${session.id}`}>
+          {status}
+        </Badge>
+      </ListGroup.Item>
+    )
+  }
+
   return (
     <div className="p-3">
       <h5 className="text-white mb-3">📄 Sessions</h5>
       <ListGroup data-testid="session-list-items">
-        {sessions.map(session => (
-          <ListGroup.Item
-            key={session.id}
-            className="d-flex justify-content-between align-items-start"
-            data-testid={`session-${session.type}-${session.id}`}
-          >
-            <div className="ms-2 me-auto">
-              <div className="fw-bold">
-                {getSessionIcon(session)} {getSessionLabel(session)}
-              </div>
-              <small className="text-muted">{session.type}</small>
+        {topLevel.map(session => {
+          const children = subagentsByParent.get(session.id) || []
+          return (
+            <div key={session.id}>
+              {renderSessionItem(session)}
+              {children.map(child => renderSessionItem(child, true))}
             </div>
-          </ListGroup.Item>
-        ))}
+          )
+        })}
       </ListGroup>
     </div>
   )
