@@ -54,6 +54,18 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [session?.messages.length])
 
+  // Cmd+J keyboard shortcut to toggle raw mode
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
+        e.preventDefault()
+        setGlobalRaw(prev => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   async function loadMessages(filePath: string) {
     setLoading(true)
     try {

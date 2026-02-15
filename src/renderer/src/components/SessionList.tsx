@@ -14,6 +14,24 @@ interface SessionListProps {
   onSessionSelect?: (filePath: string) => void
 }
 
+type SessionStatus = 'active' | 'recent' | 'stale'
+
+function getSessionStatus(lastModified: number): SessionStatus {
+  const now = Date.now()
+  const diff = now - lastModified
+  if (diff < 60 * 1000) return 'active'
+  if (diff < 5 * 60 * 1000) return 'recent'
+  return 'stale'
+}
+
+function getStatusBadge(status: SessionStatus): { icon: string; variant: string } {
+  switch (status) {
+    case 'active': return { icon: '🟢', variant: 'success' }
+    case 'recent': return { icon: '🔵', variant: 'primary' }
+    case 'stale': return { icon: '⚪', variant: 'secondary' }
+  }
+}
+
 export function SessionList({ projectEncodedName, onSessionSelect }: SessionListProps) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(false)
@@ -44,12 +62,6 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
   function handleSelect(session: Session) {
     setSelectedId(session.id)
     onSessionSelect?.(session.filePath)
-  }
-
-  function getSessionIcon(session: Session): string {
-    if (session.type === 'subagent') return '👥'
-    if (session.type === 'background') return '🔵'
-    return '🟢'
   }
 
   function getSessionLabel(session: Session): string {
@@ -90,24 +102,31 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
     <div className="p-3">
       <h5 className="text-white mb-3">📄 Sessions</h5>
       <ListGroup data-testid="session-list-items">
-        {sessions.map(session => (
-          <ListGroup.Item
-            key={session.id}
-            action
-            active={session.id === selectedId}
-            className="d-flex justify-content-between align-items-start"
-            data-testid={`session-${session.type}-${session.id}`}
-            onClick={() => handleSelect(session)}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="ms-2 me-auto">
-              <div className="fw-bold">
-                {getSessionIcon(session)} {getSessionLabel(session)}
+        {sessions.map(session => {
+          const status = getSessionStatus(session.lastModified)
+          const badge = getStatusBadge(status)
+          return (
+            <ListGroup.Item
+              key={session.id}
+              action
+              active={session.id === selectedId}
+              className="d-flex justify-content-between align-items-start"
+              data-testid={`session-${session.type}-${session.id}`}
+              onClick={() => handleSelect(session)}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="ms-2 me-auto">
+                <div className="fw-bold">
+                  {badge.icon} {getSessionLabel(session)}
+                </div>
+                <small className="text-muted">{session.type}</small>
               </div>
-              <small className="text-muted">{session.type}</small>
-            </div>
-          </ListGroup.Item>
-        ))}
+              <Badge bg={badge.variant} data-testid={`status-${session.id}`}>
+                {status}
+              </Badge>
+            </ListGroup.Item>
+          )
+        })}
       </ListGroup>
     </div>
   )
