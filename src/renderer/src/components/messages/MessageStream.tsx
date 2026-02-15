@@ -26,8 +26,9 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
 
       const unsubscribe = window.overseer.onNewMessages((data) => {
         if (data.filePath === sessionFilePath && data.messages.length > 0) {
-          // Reload full session so tool_use/tool_result pairs match correctly
-          loadMessages(sessionFilePath)
+          // Silent reload — re-fetch full session so tool_use/tool_result
+          // pairs match correctly, but don't flash loading state
+          refreshMessages(sessionFilePath)
         }
       })
 
@@ -69,6 +70,15 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
     }
   }
 
+  async function refreshMessages(filePath: string) {
+    try {
+      const result = await window.overseer.getMessages(filePath)
+      setSession(result)
+    } catch (error) {
+      console.error('Failed to refresh messages:', error)
+    }
+  }
+
   function toggleRaw(uuid: string) {
     setRawToggles(prev => {
       const next = new Set(prev)
@@ -94,7 +104,7 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
     )
   }
 
-  if (loading) {
+  if (loading && !session) {
     return (
       <div className="p-3">
         <h5 className="text-white">💬 Message Stream</h5>
