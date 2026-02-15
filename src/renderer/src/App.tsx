@@ -1,23 +1,22 @@
+import { useState } from 'react'
 import { Container, Row, Col } from 'react-bootstrap'
+import { ProjectList } from './components/ProjectList'
+import { SessionList } from './components/SessionList'
 
 function App() {
+  const [selectedProject, setSelectedProject] = useState<string | null>(null)
+
   return (
     <Container fluid className="vh-100 p-0">
       <Row className="h-100 g-0">
         {/* Panel 1: Projects Sidebar */}
-        <Col xs={3} className="border-end bg-dark" data-testid="project-sidebar">
-          <div className="p-3">
-            <h5 className="text-white">🗂️ Projects</h5>
-            <p className="text-muted small">No projects loaded</p>
-          </div>
+        <Col xs={3} className="border-end bg-dark overflow-auto" data-testid="project-sidebar">
+          <ProjectList onProjectSelect={setSelectedProject} />
         </Col>
 
         {/* Panel 2: Sessions List */}
-        <Col xs={3} className="border-end bg-dark" data-testid="session-list">
-          <div className="p-3">
-            <h5 className="text-white">📄 Sessions</h5>
-            <p className="text-muted small">Select a project first</p>
-          </div>
+        <Col xs={3} className="border-end bg-dark overflow-auto" data-testid="session-list">
+          <SessionList projectEncodedName={selectedProject} />
         </Col>
 
         {/* Panel 3: Message Stream */}

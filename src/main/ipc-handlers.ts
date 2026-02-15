@@ -15,11 +15,13 @@ export function registerIpcHandlers(): void {
   // Get Claude projects directory from paths.txt or use default
   ipcMain.handle('overseer:get-projects-dir', async () => {
     try {
-      const pathsFile = join(process.cwd(), 'paths.txt')
+      // Check for test override first
+      const pathsFile = process.env.PATHS_FILE || join(process.cwd(), 'paths.txt')
       const content = await readFile(pathsFile, 'utf-8')
       const match = content.match(/Claude Project Dir = (.+)/)
       if (match) {
-        return match[1].replace('~', homedir())
+        const dir = match[1].replace('~', homedir())
+        return dir
       }
     } catch {
       // Fall through to default
