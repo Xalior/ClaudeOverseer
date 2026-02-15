@@ -25,7 +25,6 @@ docker build -t claudeoverseer-builder:latest .
 
 echo ""
 echo -e "${BLUE}Step 2/2: Running build in isolated container...${NC}"
-echo -e "${YELLOW}Note: All build happens inside container - no local files modified${NC}"
 echo ""
 
 # Run build in container - ONLY mount release/ for output
