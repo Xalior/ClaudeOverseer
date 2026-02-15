@@ -4,7 +4,15 @@ import { Card, Badge, Collapse, Button } from 'react-bootstrap'
 interface ToolCallCardProps {
   toolName: string
   toolInput: Record<string, unknown>
-  toolResult: { content: string; is_error?: boolean } | null
+  toolResult: { content: string | Array<{ type: string; text: string }>; is_error?: boolean } | null
+}
+
+function extractToolResultText(content: string | Array<{ type: string; text: string }>): string {
+  if (typeof content === 'string') return content
+  if (Array.isArray(content)) {
+    return content.map(block => block.text || '').join('\n')
+  }
+  return String(content)
 }
 
 const TOOL_ICONS: Record<string, string> = {
@@ -26,7 +34,8 @@ export function ToolCallCard({ toolName, toolInput, toolResult }: ToolCallCardPr
   const icon = TOOL_ICONS[toolName] || '🔧'
 
   const inputSummary = getInputSummary(toolName, toolInput)
-  const outputLines = toolResult ? toolResult.content.split('\n').length : 0
+  const resultText = toolResult ? extractToolResultText(toolResult.content) : ''
+  const outputLines = resultText ? resultText.split('\n').length : 0
 
   return (
     <Card className="mb-2 border-secondary" data-testid="tool-call-card">
@@ -79,7 +88,7 @@ export function ToolCallCard({ toolName, toolInput, toolResult }: ToolCallCardPr
                 className={`mt-2 mb-0 p-2 rounded small ${toolResult.is_error ? 'bg-danger bg-opacity-25' : 'bg-dark'}`}
                 data-testid="tool-output-content"
               >
-                <code>{toolResult.content}</code>
+                <code>{resultText}</code>
               </pre>
             </div>
           </Collapse>

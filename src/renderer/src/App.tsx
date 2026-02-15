@@ -3,6 +3,7 @@ import { Container, Row, Col } from 'react-bootstrap'
 import { ProjectList } from './components/ProjectList'
 import { SessionList } from './components/SessionList'
 import { MessageStream } from './components/messages/MessageStream'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 function App() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
@@ -76,7 +77,9 @@ function App() {
           ref={messageRef}
           tabIndex={-1}
         >
-          <MessageStream sessionFilePath={selectedSessionPath} />
+          <ErrorBoundary>
+            <MessageStream sessionFilePath={selectedSessionPath} />
+          </ErrorBoundary>
         </Col>
       </Row>
     </Container>

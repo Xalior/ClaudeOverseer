@@ -27,11 +27,22 @@ export interface ToolUseBlock {
   input: Record<string, unknown>
 }
 
+export interface ToolResultContentBlock {
+  type: 'text'
+  text: string
+}
+
 export interface ToolResultContent {
   type: 'tool_result'
   tool_use_id: string
-  content: string
+  content: string | ToolResultContentBlock[]
   is_error?: boolean
+}
+
+export interface ThinkingBlock {
+  type: 'thinking'
+  thinking: string
+  signature?: string
 }
 
 export interface TokenUsage {
@@ -70,14 +81,14 @@ export interface AssistantMessage {
   parentUuid: string
   timestamp: string
   sessionId: string
-  cwd: string
-  version: string
+  cwd?: string
+  version?: string
   message: {
     role: 'assistant'
     model: string
-    content: (TextBlock | ToolUseBlock)[]
-    usage: TokenUsage
-    stop_reason: string | null
+    content: (TextBlock | ToolUseBlock | ThinkingBlock)[]
+    usage?: TokenUsage
+    stop_reason?: string | null
   }
 }
 

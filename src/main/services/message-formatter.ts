@@ -106,10 +106,10 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
 
       // Accumulate token usage
       if (assistantMsg.message.usage) {
-        totalUsage.input_tokens += assistantMsg.message.usage.input_tokens
-        totalUsage.output_tokens += assistantMsg.message.usage.output_tokens
-        totalUsage.cache_creation_input_tokens += assistantMsg.message.usage.cache_creation_input_tokens
-        totalUsage.cache_read_input_tokens += assistantMsg.message.usage.cache_read_input_tokens
+        totalUsage.input_tokens += assistantMsg.message.usage.input_tokens || 0
+        totalUsage.output_tokens += assistantMsg.message.usage.output_tokens || 0
+        totalUsage.cache_creation_input_tokens += assistantMsg.message.usage.cache_creation_input_tokens || 0
+        totalUsage.cache_read_input_tokens += assistantMsg.message.usage.cache_read_input_tokens || 0
       }
 
       formatted.push({
