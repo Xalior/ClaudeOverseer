@@ -14,7 +14,36 @@
     "test:integration": "vitest run tests/integration",
     "test:e2e": "playwright test tests/e2e",
     "test:watch": "vitest watch tests/unit",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:all": "npm run test:unit && npm run test:integration && npm run build && npm run test:e2e",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.claudeoverseer.app",
+    "productName": "ClaudeOverseer",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Development"
+    }
   },
   "dependencies": {
     "react": "^19.0.0",

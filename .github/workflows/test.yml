@@ -1,0 +1,50 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Build app
+        run: npm run build
+
+      - name: Install Playwright
+        run: npx playwright install
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Verify no orphaned Electron processes
+        if: always()
+        run: |
+          ORPHANS=$(ps aux | grep -i electron | grep -v grep | wc -l | tr -d ' ')
+          if [ "$ORPHANS" -gt "0" ]; then
+            echo "WARNING: $ORPHANS orphaned Electron processes found"
+            ps aux | grep -i electron | grep -v grep
+            exit 1
+          fi
+          echo "No orphaned processes found"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
