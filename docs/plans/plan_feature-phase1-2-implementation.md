@@ -39,9 +39,9 @@ RE-implementing Phase 1 & 2 from scratch using CORRECT testing practices.
 
 ### Phase 2: 📂 Project Discovery
 
-- [ ] Create tests/fixtures/projects/-test-project/ structure
-- [ ] Implement src/main/utils/path-encoder.ts
-- [ ] **TEST:** Write tests/unit/main/path-encoder.test.ts
+- [x] Create tests/fixtures/projects/-test-project/ structure (real Claude JSONLs!)
+- [x] Implement src/main/utils/path-encoder.ts
+- [x] **TEST:** Write tests/unit/main/path-encoder.test.ts ✅ 14/14 passing
 - [ ] Implement src/main/services/project-scanner.ts
 - [ ] **TEST:** Write tests/integration/project-scanner.test.ts (uses fixtures!)
 - [ ] Implement src/main/services/session-discovery.ts
