@@ -29,8 +29,8 @@ const TOOL_ICONS: Record<string, string> = {
 }
 
 export function ToolCallCard({ toolName, toolInput, toolResult }: ToolCallCardProps) {
-  const [showInput, setShowInput] = useState(false)
-  const [showOutput, setShowOutput] = useState(false)
+  const [showInput, setShowInput] = useState(true)
+  const [showOutput, setShowOutput] = useState(true)
   const icon = TOOL_ICONS[toolName] || '🔧'
 
   const inputSummary = getInputSummary(toolName, toolInput)
@@ -75,7 +75,7 @@ export function ToolCallCard({ toolName, toolInput, toolResult }: ToolCallCardPr
 
         <Collapse in={showInput}>
           <div>
-            <pre className="mt-2 mb-0 p-2 bg-dark rounded small" data-testid="tool-input-content">
+            <pre className="mt-2 mb-0 p-2 bg-dark rounded" style={{ fontSize: '0.85rem' }} data-testid="tool-input-content">
               <code>{JSON.stringify(toolInput, null, 2)}</code>
             </pre>
           </div>
@@ -85,7 +85,8 @@ export function ToolCallCard({ toolName, toolInput, toolResult }: ToolCallCardPr
           <Collapse in={showOutput}>
             <div>
               <pre
-                className={`mt-2 mb-0 p-2 rounded small ${toolResult.is_error ? 'bg-danger bg-opacity-25' : 'bg-dark'}`}
+                className={`mt-2 mb-0 p-2 rounded ${toolResult.is_error ? 'bg-danger bg-opacity-25' : 'bg-dark'}`}
+                style={{ fontSize: '0.85rem' }}
                 data-testid="tool-output-content"
               >
                 <code>{resultText}</code>
