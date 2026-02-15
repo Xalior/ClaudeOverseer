@@ -1,26 +1,24 @@
 import { Container } from 'react-bootstrap'
+import { ProjectList } from './components/ProjectList'
+import { SessionList } from './components/SessionList'
 
 function App(): JSX.Element {
   return (
     <div className="app-shell">
       {/* Left Panel: Projects Sidebar */}
       <div className="sidebar-panel">
-        <Container className="p-3">
-          <h5 className="text-white-50 mb-3">🗂️ Projects</h5>
-          <div className="text-muted">
-            <small>Project list will appear here...</small>
-          </div>
-        </Container>
+        <div className="p-3 border-bottom">
+          <h5 className="text-white-50 mb-0">🗂️ Projects</h5>
+        </div>
+        <ProjectList />
       </div>
 
       {/* Middle Panel: Sessions List */}
       <div className="middle-panel">
-        <Container className="p-3">
-          <h5 className="text-white-50 mb-3">📄 Sessions</h5>
-          <div className="text-muted">
-            <small>Session list will appear here...</small>
-          </div>
-        </Container>
+        <div className="p-3 border-bottom">
+          <h5 className="text-white-50 mb-0">📄 Sessions</h5>
+        </div>
+        <SessionList />
       </div>
 
       {/* Right Panel: Message Stream */}
@@ -28,7 +26,7 @@ function App(): JSX.Element {
         <Container>
           <h5 className="text-white-50 mb-3">💬 Message Stream</h5>
           <div className="text-muted">
-            <small>Messages will stream here...</small>
+            <small>Messages will stream here (Phase 3)...</small>
           </div>
         </Container>
       </div>

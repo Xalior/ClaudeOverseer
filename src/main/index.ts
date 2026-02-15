@@ -1,6 +1,7 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { registerIpcHandlers } from './ipc-handlers'
 // import icon from '../../resources/icon.png?asset' // TODO: Add app icon
 
 function createWindow(): void {
@@ -49,8 +50,8 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC handlers will be registered here
-  // TODO: Register IPC handlers from services
+  // Register IPC handlers
+  registerIpcHandlers()
 
   createWindow()
 
