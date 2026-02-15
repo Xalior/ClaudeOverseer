@@ -5,7 +5,7 @@
 After running builds, the directory structure will be:
 
 ```
-dist/
+release/
 ├── mac/                          # Unpacked macOS app (intermediate)
 ├── mac-arm64/                    # Unpacked macOS ARM64 app (intermediate)
 ├── linux-unpacked/               # Unpacked Linux app (intermediate)
@@ -52,7 +52,7 @@ To clean all build artifacts:
 pnpm run clean
 ```
 
-This removes both `dist/` and `out/` directories.
+This removes both `release/` and `out/` directories.
 
 ## Build Commands
 
@@ -75,20 +75,20 @@ When creating a release, upload only the **final distributable** files (12 files
 
 ```bash
 # Example using gh CLI
-gh release upload v0.1.0 dist/*.dmg
-gh release upload v0.1.0 dist/*.zip
-gh release upload v0.1.0 dist/*.AppImage
-gh release upload v0.1.0 dist/*.deb
-gh release upload v0.1.0 dist/*.exe
+gh release upload v0.1.0 release/*.dmg
+gh release upload v0.1.0 release/*.zip
+gh release upload v0.1.0 release/*.AppImage
+gh release upload v0.1.0 release/*.deb
+gh release upload v0.1.0 release/*.exe
 ```
 
 Or use a glob pattern to upload all at once (excluding unpacked directories):
 
 ```bash
 gh release upload v0.1.0 \
-  dist/*.dmg \
-  dist/*.zip \
-  dist/*.AppImage \
-  dist/*.deb \
-  dist/*.exe
+  release/*.dmg \
+  release/*.zip \
+  release/*.AppImage \
+  release/*.deb \
+  release/*.exe
 ```
