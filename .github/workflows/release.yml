@@ -16,26 +16,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run tests
-        run: npm run test
+        run: pnpm run test
 
       - name: Build app
-        run: npm run build
+        run: pnpm run build
 
       - name: Package (macOS)
         if: matrix.os == 'macos-latest'
-        run: npm run dist:mac
+        run: pnpm run dist:mac
 
       - name: Package (Linux)
         if: matrix.os == 'ubuntu-latest'
-        run: npm run dist:linux
+        run: pnpm run dist:linux
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
