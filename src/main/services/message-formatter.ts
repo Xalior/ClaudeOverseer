@@ -145,12 +145,18 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
         totalUsage.cache_read_input_tokens += assistantMsg.message.usage.cache_read_input_tokens || 0
       }
 
+      // Skip empty streaming partials (no real content, stop_reason is null)
+      const combinedText = textParts.join('\n\n').trim()
+      if (!combinedText && toolPairs.length === 0) {
+        continue
+      }
+
       formatted.push({
         type: 'assistant',
         uuid: assistantMsg.uuid,
         timestamp: assistantMsg.timestamp,
         model: assistantMsg.message.model,
-        textContent: textParts.length > 0 ? textParts.join('\n\n') : undefined,
+        textContent: combinedText || undefined,
         toolPairs: toolPairs.length > 0 ? toolPairs : undefined,
         usage: assistantMsg.message.usage,
         stopReason: assistantMsg.message.stop_reason,
