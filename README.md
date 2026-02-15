@@ -211,7 +211,7 @@ pnpm run dist:linux
 pnpm run dist:win
 ```
 
-Artifacts will be in the `release/` directory.
+Artifacts will be in the `dist/` directory.
 
 ---
 

@@ -16,21 +16,25 @@
     "test:watch": "vitest watch tests/unit",
     "test:coverage": "vitest run --coverage",
     "test:all": "npm run test:unit && npm run test:integration && npm run build && npm run test:e2e",
+    "clean": "rm -rf dist out",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux",
-    "dist:win": "electron-builder --win"
+    "dist:win": "electron-builder --win",
+    "postdist": "echo '\n✅ Build complete! Artifacts are in dist/ directory'"
   },
   "build": {
     "appId": "com.claudeoverseer.app",
     "productName": "ClaudeOverseer",
     "directories": {
-      "output": "release"
+      "output": "dist",
+      "buildResources": "resources"
     },
     "files": [
       "out/**/*"
     ],
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "mac": {
       "target": [
         {
