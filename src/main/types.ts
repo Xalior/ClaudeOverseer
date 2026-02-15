@@ -11,6 +11,8 @@ export interface Session {
   filePath: string
   lastModified: number
   parentSessionId?: string
+  slug?: string
+  summary?: string
 }
 
 // --- JSONL Message Types ---

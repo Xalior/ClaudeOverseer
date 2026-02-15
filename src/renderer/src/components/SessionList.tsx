@@ -7,6 +7,8 @@ interface Session {
   filePath: string
   lastModified: number
   parentSessionId?: string
+  slug?: string
+  summary?: string
 }
 
 interface SessionListProps {
@@ -30,6 +32,21 @@ function getStatusBadge(status: SessionStatus): { icon: string; variant: string 
     case 'recent': return { icon: '🔵', variant: 'primary' }
     case 'stale': return { icon: '⚪', variant: 'secondary' }
   }
+}
+
+function formatDateTime(timestamp: number): string {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  const isYesterday = date.toDateString() === yesterday.toDateString()
+
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+  if (isToday) return `Today ${time}`
+  if (isYesterday) return `Yesterday ${time}`
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ` ${time}`
 }
 
 export function SessionList({ projectEncodedName, onSessionSelect }: SessionListProps) {
@@ -64,11 +81,10 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
     onSessionSelect?.(session.filePath)
   }
 
-  function getSessionLabel(session: Session): string {
-    if (session.type === 'subagent') {
-      return `${session.id} (subagent)`
-    }
-    return session.id
+  function getSessionTitle(session: Session): string {
+    if (session.slug) return session.slug
+    if (session.type === 'subagent') return `${session.id.slice(0, 8)}... (subagent)`
+    return session.id.slice(0, 12) + '...'
   }
 
   if (!projectEncodedName) {
@@ -115,11 +131,18 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
               onClick={() => handleSelect(session)}
               style={{ cursor: 'pointer' }}
             >
-              <div className="ms-2 me-auto">
-                <div className="fw-bold">
-                  {badge.icon} {getSessionLabel(session)}
+              <div className="ms-2 me-auto" style={{ minWidth: 0 }}>
+                <div className="fw-bold text-truncate">
+                  {badge.icon} {getSessionTitle(session)}
                 </div>
-                <small className="text-muted">{session.type}</small>
+                {session.summary && (
+                  <div className="text-muted text-truncate" style={{ fontSize: '0.8rem' }}>
+                    {session.summary}
+                  </div>
+                )}
+                <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                  {formatDateTime(session.lastModified)} · {session.type}
+                </small>
               </div>
               <Badge bg={badge.variant} data-testid={`status-${session.id}`}>
                 {status}
