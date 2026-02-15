@@ -91,6 +91,7 @@ Phases 1-2 were complete (33/33 tests passing). This branch implements Phases 3-
 ### 2026-02-15 — Bug Fix: Blank Screen Crash
 - Root cause: `tool_result.content` in real JSONL data can be an array of `{type, text}` objects, not just a string. `ToolCallCard` called `.split()` on the array, causing a TypeError that crashed the entire React render tree.
 - Also added `ThinkingBlock` type, made `usage`/`cwd`/`version` optional, added `ErrorBoundary` component.
+- **User tested and confirmed working** — message rendering and real-time updates both functioning correctly on live sessions.
 
 ## Blockers
 
