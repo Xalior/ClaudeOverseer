@@ -17,12 +17,14 @@ NC='\033[0m' # No Color
 RELEASE_DIR="$(pwd)/release"
 mkdir -p "$RELEASE_DIR"
 
-echo -e "${BLUE}Building Docker image...${NC}"
-# Build the Docker image (idempotent - uses cache)
-docker build -t claudeoverseer-builder:latest . 2>&1 | grep -v "^#" || true
+echo -e "${BLUE}Step 1/2: Building Docker image...${NC}"
+echo ""
+
+# Build the Docker image with visible output
+docker build -t claudeoverseer-builder:latest .
 
 echo ""
-echo -e "${BLUE}Running build in isolated container...${NC}"
+echo -e "${BLUE}Step 2/2: Running build in isolated container...${NC}"
 echo -e "${YELLOW}Note: All build happens inside container - no local files modified${NC}"
 echo ""
 
@@ -35,12 +37,15 @@ docker run --rm \
   /bin/bash -c "
     set -e
     cd /project
-    echo '🔨 Building app...'
+    echo '🔨 Building app source...'
     pnpm run build
-    echo '📦 Packaging for all platforms...'
+    echo ''
+    echo '📦 Packaging for all platforms (this takes a while)...'
     pnpm run dist:docker
+    echo ''
     echo '🧹 Cleaning intermediate files...'
     pnpm run clean:extra
+    echo ''
     echo '📤 Copying artifacts to output...'
     cp -v release/* /output/ 2>/dev/null || echo 'No artifacts to copy'
   "
