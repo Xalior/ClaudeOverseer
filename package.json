@@ -19,7 +19,8 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux"
+    "dist:linux": "electron-builder --linux",
+    "dist:win": "electron-builder --win"
   },
   "build": {
     "appId": "com.claudeoverseer.app",
@@ -44,6 +45,14 @@
         "deb"
       ],
       "category": "Development"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "signingHashAlgorithms": ["sha256"],
+      "sign": null
     }
   },
   "dependencies": {

@@ -20,7 +20,7 @@ ClaudeOverseer is a desktop application that reads Claude Code's local JSONL tra
 - **Keyboard Shortcuts** — Navigate projects and sessions with `Cmd+1/2/3`, `Cmd+J`
 - **Raw JSON Toggle** — View the underlying JSONL structure when debugging
 - **Zero Cost** — Reads local files only, no API calls required
-- **Cross-Platform** — macOS and Linux support
+- **Cross-Platform** — macOS, Linux, and Windows support
 
 ---
 
@@ -50,6 +50,18 @@ cd ClaudeOverseer
 pnpm install
 pnpm run build
 pnpm run dist:linux
+```
+
+#### Windows
+
+```bash
+# Download the installer (.exe) or .zip from releases
+# Or build from source:
+git clone https://github.com/Xalior/ClaudeOverseer.git
+cd ClaudeOverseer
+pnpm install
+pnpm run build
+pnpm run dist:win
 ```
 
 ### Prerequisites
@@ -194,6 +206,9 @@ pnpm run dist:mac
 
 # Build Linux AppImage + .deb
 pnpm run dist:linux
+
+# Build Windows installer + .zip
+pnpm run dist:win
 ```
 
 Artifacts will be in the `release/` directory.
@@ -264,7 +279,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - [x] Phase 4: Live file watching with incremental updates
 - [x] Phase 5: UX polish, teams support, keyboard shortcuts
 - [x] Phase 6: Packaging and CI/CD
-- [ ] Windows support
+- [x] Windows support
 - [ ] Message search and filtering
 - [ ] Export session transcripts
 - [ ] Dark/light theme toggle
