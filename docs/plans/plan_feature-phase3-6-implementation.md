@@ -88,12 +88,17 @@ Phases 1-2 were complete (33/33 tests passing). This branch implements Phases 3-
 - Keyboard shortcuts use Cmd (macOS) and Ctrl (Linux/Windows)
 - Session status is computed from file mtime, not from message content
 
+### 2026-02-15 — Bug Fix: Blank Screen Crash
+- Root cause: `tool_result.content` in real JSONL data can be an array of `{type, text}` objects, not just a string. `ToolCallCard` called `.split()` on the array, causing a TypeError that crashed the entire React render tree.
+- Also added `ThinkingBlock` type, made `usage`/`cwd`/`version` optional, added `ErrorBoundary` component.
+
 ## Blockers
 
 None.
 
 ## Commits
 
+- `9987066` fix: handle real JSONL data structures that caused blank screen crash
 - `42e2763` wip: start phase3-6-implementation — init progress tracker
 - `4588177` feat: implement JSONL parser and message formatter with unit tests (38/38 passing)
 - `19f0f6b` feat: implement message stream UI with IPC wiring (57/57 tests passing)
