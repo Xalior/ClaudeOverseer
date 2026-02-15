@@ -22,18 +22,20 @@ RE-implementing Phase 1 & 2 from scratch using CORRECT testing practices.
 
 ### Phase 1: 🏠 Scaffold & Skeleton
 
-- [ ] Run `npm create electron-vite@latest . -- --template react-ts`
-- [ ] Install runtime deps: react-bootstrap, bootstrap, zustand, react-markdown, remark-gfm, rehype-highlight, mermaid, chokidar
-- [ ] Install test deps: @playwright/test, vitest, @vitest/coverage-v8
-- [ ] Create vitest.config.ts with coverage thresholds
-- [ ] Create playwright.config.ts for Electron
-- [ ] Set up Bootstrap dark theme in custom.scss
-- [ ] Create AppShell.tsx with three panels (add `data-testid` attributes!)
-- [ ] Wire up Electron main process
-- [ ] **TEST:** Write tests/e2e/app-launch.spec.ts
-- [ ] **TEST:** Run test, verify passes
-- [ ] **TEST:** Run test again, verify `ps aux | grep electron` is EMPTY
-- [ ] Verify: app launches with three empty panels
+- [x] Create package.json with all deps (manual, since interactive tool failed)
+- [x] Install runtime deps: react-bootstrap, bootstrap, zustand, react-markdown, remark-gfm, rehype-highlight, mermaid, chokidar
+- [x] Install test deps: @playwright/test, vitest, @vitest/coverage-v8
+- [x] Create vitest.config.ts with coverage thresholds (80%)
+- [x] Create playwright.config.ts for Electron
+- [x] Set up Bootstrap dark theme in custom.scss
+- [x] Create App.tsx with three panels (WITH `data-testid` attributes: project-sidebar, session-list, message-stream!)
+- [x] Wire up Electron main process (src/main/index.ts)
+- [x] Create preload script with contextBridge stub
+- [x] Create test directory structure
+- [x] **TEST:** Write tests/e2e/app-launch.spec.ts (with try/finally cleanup!)
+- [x] **TEST:** Run test, verify passes ✅ 2/2 tests passed
+- [x] **TEST:** Verified `ps aux | grep electron` is EMPTY ✅ No orphaned processes
+- [x] Verify: app launches with three empty panels ✅ PHASE 1 COMPLETE
 
 ### Phase 2: 📂 Project Discovery
 
@@ -58,6 +60,17 @@ RE-implementing Phase 1 & 2 from scratch using CORRECT testing practices.
 - ✅ Deleted ALL code from failed implementation (src/, configs, package.json, everything)
 - ✅ Starting completely fresh with correct testing practices
 - 🚀 Ready to begin Phase 1 properly
+
+### 2026-02-15 19:15 UTC
+- ✅ Created complete Electron + React + TypeScript scaffold
+- ✅ Set up all configs (electron-vite, vitest, playwright, tsconfig)
+- ✅ Installed all dependencies (React 19, Bootstrap 5, testing tools)
+- ✅ Created three-panel layout with data-testid attributes
+- ✅ Wrote E2E test with proper cleanup (try/finally)
+- ✅ Tests passed: 2/2
+- ✅ Verified no orphaned processes: `ps aux | grep electron` = EMPTY
+- 🎉 **PHASE 1 COMPLETE**
+- 🚀 Starting Phase 2: Project Discovery
 
 ## Decisions & Notes
 
