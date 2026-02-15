@@ -116,7 +116,7 @@ test.describe('Message Stream', () => {
     }
   })
 
-  test('tool call cards are collapsible', async () => {
+  test('tool call cards render with content visible by default', async () => {
     let app
     try {
       const fixturesDir = path.join(__dirname, '../fixtures/projects')
@@ -142,20 +142,18 @@ test.describe('Message Stream', () => {
       await window.click('[data-testid="session-main-session-test-123"]')
       await window.waitForSelector('[data-testid="message-stream-content"]', { timeout: 5000 })
 
-      // Tool input should be collapsed initially
+      // Tool call cards should be present
+      const toolCards = window.locator('[data-testid="tool-call-card"]')
+      const count = await toolCards.count()
+      expect(count).toBeGreaterThan(0)
+
+      // Tool input content should be visible by default (expanded)
       const inputContent = window.locator('[data-testid="tool-input-content"]').first()
-      await expect(inputContent).not.toBeVisible()
-
-      // Click input toggle
-      const inputToggle = window.locator('[data-testid="tool-input-toggle"]').first()
-      await inputToggle.click()
-
-      // Input should now be visible
       await expect(inputContent).toBeVisible()
 
-      // Tool output toggle should exist
-      const outputToggle = window.locator('[data-testid="tool-output-toggle"]').first()
-      await expect(outputToggle).toBeVisible()
+      // Tool output content should also be visible by default
+      const outputContent = window.locator('[data-testid="tool-output-content"]').first()
+      await expect(outputContent).toBeVisible()
 
     } finally {
       if (app) {
