@@ -47,7 +47,7 @@ function App() {
         {/* Panel 1: Projects Sidebar */}
         <Col
           xs={3}
-          className="border-end bg-dark overflow-auto"
+          className="border-end bg-dark h-100 overflow-auto"
           data-testid="project-sidebar"
           ref={projectRef}
           tabIndex={-1}
@@ -58,7 +58,7 @@ function App() {
         {/* Panel 2: Sessions List */}
         <Col
           xs={3}
-          className="border-end bg-dark overflow-auto"
+          className="border-end bg-dark h-100 overflow-auto"
           data-testid="session-list"
           ref={sessionRef}
           tabIndex={-1}
@@ -72,7 +72,7 @@ function App() {
         {/* Panel 3: Message Stream */}
         <Col
           xs={6}
-          className="bg-dark"
+          className="bg-dark h-100 overflow-hidden"
           data-testid="message-stream"
           ref={messageRef}
           tabIndex={-1}
