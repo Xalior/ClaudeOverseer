@@ -36,3 +36,10 @@ Thumbs.db
 
 # Electron
 *.tsbuildinfo
+
+# Test results (Playwright artifacts)
+test-results/*
+!test-results/.gitkeep
+
+# Electron Builder
+release/
