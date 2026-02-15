@@ -84,7 +84,7 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
   function getSessionTitle(session: Session): string {
     if (session.slug) return session.slug
     if (session.summary) return session.summary
-    return `${session.type}-${session.id.slice(0, 8)}`
+    return `${session.type}-${session.id}`
   }
 
   if (!projectEncodedName) {
