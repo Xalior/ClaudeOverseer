@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Monitor Claude Code background agents in real-time",
   "main": "./out/main/index.js",
-  "author": "ClaudeOverseer Contributors",
+  "author": "Darran Kelinske <darran@xalior.com>",
   "license": "MIT",
   "scripts": {
     "dev": "electron-vite dev",
@@ -35,7 +35,8 @@
         "dmg",
         "zip"
       ],
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "identity": null
     },
     "linux": {
       "target": [
