@@ -4,20 +4,20 @@ FROM electronuserland/builder:wine
 # Set working directory
 WORKDIR /project
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm globally
+RUN npm install -g pnpm@9 --loglevel=error
 
-# Copy package files
+# Copy package files first (for better caching)
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies (will be cached if package.json unchanged)
+RUN pnpm install --frozen-lockfile --prefer-offline
 
-# Copy project files
+# Copy all project files
 COPY . .
 
-# Build the app
-RUN pnpm run build
+# Note: Build happens at runtime, not during image build
+# This keeps the image reusable and allows for clean builds
 
-# Default command builds for all platforms
-CMD ["pnpm", "run", "dist:all"]
+# Default command
+CMD ["pnpm", "run", "dist:docker"]

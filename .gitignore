@@ -41,6 +41,9 @@ Thumbs.db
 test-results/*
 !test-results/.gitkeep
 
-# Electron Builder
-release/
-playwright-report/index.html
+# Electron Builder - only ignore contents, not directory
+release/*
+!release/.gitkeep
+
+# Playwright reports
+playwright-report/

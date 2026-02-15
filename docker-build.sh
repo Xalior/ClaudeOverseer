@@ -1,5 +1,6 @@
 #!/bin/bash
 # Docker-based multi-platform build script for ClaudeOverseer
+# Idempotent - no side effects outside of release/ directory
 
 set -e
 
@@ -9,41 +10,46 @@ echo ""
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Clean previous builds
-echo -e "${BLUE}Cleaning previous builds...${NC}"
-rm -rf release out
+# Create temporary release directory
+RELEASE_DIR="$(pwd)/release"
+mkdir -p "$RELEASE_DIR"
 
-# Create release directory
-mkdir -p release
+echo -e "${BLUE}Building Docker image...${NC}"
+# Build the Docker image (idempotent - uses cache)
+docker build -t claudeoverseer-builder:latest . 2>&1 | grep -v "^#" || true
 
-# Run Docker build
-echo -e "${BLUE}Starting Docker container...${NC}"
-docker run --rm -ti \
+echo ""
+echo -e "${BLUE}Running build in isolated container...${NC}"
+echo -e "${YELLOW}Note: All build happens inside container - no local files modified${NC}"
+echo ""
+
+# Run build in container - ONLY mount release/ for output
+docker run --rm \
   --platform linux/amd64 \
-  -v "$(pwd)":/project \
-  -v "$(pwd)/release":/project/release \
-  -w /project \
-  electronuserland/builder:wine \
+  -v "$RELEASE_DIR":/output \
+  -e CI=true \
+  claudeoverseer-builder:latest \
   /bin/bash -c "
-    echo '📦 Installing pnpm...' && \
-    npm install -g pnpm@9 && \
-    echo '📥 Installing dependencies...' && \
-    pnpm install --frozen-lockfile && \
-    echo '🔨 Building app...' && \
-    pnpm run build && \
-    echo '📦 Building packages for all platforms...' && \
-    pnpm run dist:docker && \
-    echo '🧹 Cleaning up intermediate files...' && \
+    set -e
+    cd /project
+    echo '🔨 Building app...'
+    pnpm run build
+    echo '📦 Packaging for all platforms...'
+    pnpm run dist:docker
+    echo '🧹 Cleaning intermediate files...'
     pnpm run clean:extra
+    echo '📤 Copying artifacts to output...'
+    cp -v release/* /output/ 2>/dev/null || echo 'No artifacts to copy'
   "
 
 echo ""
 echo -e "${GREEN}✅ Build complete!${NC}"
 echo ""
 echo "Artifacts in release/:"
-ls -lh release/ | grep -E '\.(dmg|zip|AppImage|deb|exe)$' || echo "  No final artifacts found"
+ls -lh "$RELEASE_DIR/" 2>/dev/null | grep -E '\.(dmg|zip|AppImage|deb|exe)$' || echo "  No final artifacts found"
 echo ""
 echo "Total artifacts:"
-ls -1 release/*.{dmg,zip,AppImage,deb,exe} 2>/dev/null | wc -l | xargs echo "  "
+find "$RELEASE_DIR" -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.exe" \) | wc -l | xargs echo "  "

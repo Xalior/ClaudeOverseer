@@ -1,15 +1,36 @@
+# Exclude build outputs and local state
 node_modules
 dist
 out
 release
+
+# Exclude version control
 .git
+.gitignore
 .github
+
+# Exclude logs and temporary files
 *.log
+*.tsbuildinfo
 .DS_Store
+Thumbs.db
+
+# Exclude IDE and editor files
 .vscode
 .idea
+*.swp
+*.swo
+*~
+
+# Exclude test outputs
 test-results
 playwright-report
-*.tsbuildinfo
+
+# Exclude environment files
 .env
 .env.*
+
+# Exclude Docker files themselves (prevent recursion)
+Dockerfile
+.dockerignore
+docker-build.sh
