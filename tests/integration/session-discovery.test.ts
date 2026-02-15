@@ -63,4 +63,29 @@ describe('session-discovery integration', () => {
     const sessions = await discoverSessions('/nonexistent/path')
     expect(sessions).toEqual([])
   })
+
+  it('extracts slug from session metadata', async () => {
+    const sessions = await discoverSessions(fixtureProjectDir)
+    const sessionWithSlug = sessions.find(s => s.slug === 'happy-testing-penguin')
+
+    expect(sessionWithSlug).toBeDefined()
+    expect(sessionWithSlug!.slug).toBe('happy-testing-penguin')
+  })
+
+  it('extracts summary from first user message', async () => {
+    const sessions = await discoverSessions(fixtureProjectDir)
+    const sessionWithSummary = sessions.find(s => s.summary?.includes('login file'))
+
+    expect(sessionWithSummary).toBeDefined()
+    expect(sessionWithSummary!.summary).toContain('read the login file')
+  })
+
+  it('returns undefined slug and summary when not available', async () => {
+    const sessions = await discoverSessions(fixtureProjectDir)
+    // All sessions should have the fields (even if undefined)
+    sessions.forEach(session => {
+      expect('slug' in session).toBe(true)
+      expect('summary' in session).toBe(true)
+    })
+  })
 })

@@ -171,6 +171,66 @@ describe('JSONL Parser', () => {
     it('returns null for unknown type', () => {
       expect(parseJsonlLine('{"type":"unknown_type","data":"test"}')).toBeNull()
     })
+
+    it('returns null for system messages', () => {
+      expect(parseJsonlLine('{"type":"system","message":"notification"}')).toBeNull()
+    })
+
+    it('returns null for progress messages', () => {
+      expect(parseJsonlLine('{"type":"progress","data":"progress data"}')).toBeNull()
+    })
+
+    it('returns null for file-history-snapshot messages', () => {
+      expect(parseJsonlLine('{"type":"file-history-snapshot","snapshot":{}}')).toBeNull()
+    })
+
+    it('parses assistant message with thinking block', () => {
+      const line = JSON.stringify({
+        type: 'assistant',
+        uuid: 'msg-think',
+        parentUuid: 'parent',
+        timestamp: '2026-02-15T19:00:02.000Z',
+        sessionId: 'test-123',
+        message: {
+          role: 'assistant',
+          model: 'claude-opus-4-6',
+          content: [
+            { type: 'thinking', thinking: 'Let me consider...', signature: 'sig123' },
+            { type: 'text', text: 'My answer.' }
+          ],
+          usage: { input_tokens: 10, output_tokens: 5, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+          stop_reason: 'end_turn'
+        }
+      })
+      const parsed = parseJsonlLine(line)
+      expect(parsed).not.toBeNull()
+      expect(parsed!.type).toBe('assistant')
+      if (parsed!.type === 'assistant') {
+        expect(parsed!.message.content).toHaveLength(2)
+        expect(parsed!.message.content[0].type).toBe('thinking')
+      }
+    })
+
+    it('parses user message with image content', () => {
+      const line = JSON.stringify({
+        type: 'user',
+        uuid: 'msg-img',
+        parentUuid: null,
+        timestamp: '2026-02-15T19:00:01.000Z',
+        sessionId: 'test-123',
+        cwd: '/test',
+        version: '2.0.80',
+        message: {
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'abc123' } }
+          ]
+        }
+      })
+      const parsed = parseJsonlLine(line)
+      expect(parsed).not.toBeNull()
+      expect(parsed!.type).toBe('user')
+    })
   })
 
   describe('parseJsonlContent', () => {

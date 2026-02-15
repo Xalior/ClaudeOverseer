@@ -162,4 +162,147 @@ describe('Message Formatter', () => {
     const result = formatMessages([original])
     expect(result.messages[0].raw).toEqual(original)
   })
+
+  it('skips thinking blocks in assistant content', () => {
+    const messages: ParsedMessage[] = [
+      makeAssistantMsg('msg-002', [
+        { type: 'thinking', thinking: 'Let me think about this...' } as never,
+        { type: 'text', text: 'Here is my answer.' }
+      ])
+    ]
+    const result = formatMessages(messages)
+    expect(result.messages).toHaveLength(1)
+    expect(result.messages[0].textContent).toBe('Here is my answer.')
+  })
+
+  it('skips empty streaming partials', () => {
+    const messages: ParsedMessage[] = [
+      {
+        type: 'assistant',
+        uuid: 'msg-partial',
+        parentUuid: 'parent',
+        timestamp: '2026-02-15T19:00:02.000Z',
+        sessionId: 'test-123',
+        message: {
+          role: 'assistant',
+          model: 'claude-opus-4-6',
+          content: [{ type: 'text', text: '\n\n' }],
+          stop_reason: null
+        }
+      } as ParsedMessage
+    ]
+    const result = formatMessages(messages)
+    expect(result.messages).toHaveLength(0)
+  })
+
+  it('extracts images from user messages with array content', () => {
+    const messages: ParsedMessage[] = [
+      {
+        type: 'user',
+        uuid: 'msg-img',
+        parentUuid: null,
+        timestamp: '2026-02-15T19:00:01.000Z',
+        sessionId: 'test-123',
+        cwd: '/test',
+        version: '2.0.80',
+        message: {
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'abc123' } }
+          ] as never
+        }
+      }
+    ]
+    const result = formatMessages(messages)
+    expect(result.messages).toHaveLength(1)
+    expect(result.messages[0].type).toBe('user')
+    expect(result.messages[0].userImages).toHaveLength(1)
+    expect(result.messages[0].userImages![0].mediaType).toBe('image/png')
+    expect(result.messages[0].userImages![0].data).toBe('abc123')
+  })
+
+  it('extracts text and images from mixed user content', () => {
+    const messages: ParsedMessage[] = [
+      {
+        type: 'user',
+        uuid: 'msg-mixed',
+        parentUuid: null,
+        timestamp: '2026-02-15T19:00:01.000Z',
+        sessionId: 'test-123',
+        message: {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Check this screenshot' },
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'xyz789' } }
+          ] as never
+        }
+      } as ParsedMessage
+    ]
+    const result = formatMessages(messages)
+    expect(result.messages).toHaveLength(1)
+    expect(result.messages[0].userText).toBe('Check this screenshot')
+    expect(result.messages[0].userImages).toHaveLength(1)
+  })
+
+  it('handles tool_result with array content', () => {
+    const messages: ParsedMessage[] = [
+      makeAssistantMsg('msg-002', [
+        { type: 'tool_use', id: 'tool-arr', name: 'Read', input: { file_path: '/foo.ts' } }
+      ]),
+      makeUserMsg('msg-003', [
+        { type: 'tool_result', tool_use_id: 'tool-arr', content: [{ type: 'text', text: 'line 1' }, { type: 'text', text: 'line 2' }] as never }
+      ])
+    ]
+    const result = formatMessages(messages)
+    expect(result.messages).toHaveLength(1)
+    const toolResult = result.messages[0].toolPairs![0].toolResult!
+    expect(Array.isArray(toolResult.content)).toBe(true)
+  })
+
+  it('handles assistant messages without usage field', () => {
+    const messages: ParsedMessage[] = [
+      {
+        type: 'assistant',
+        uuid: 'msg-no-usage',
+        parentUuid: 'parent',
+        timestamp: '2026-02-15T19:00:02.000Z',
+        sessionId: 'test-123',
+        message: {
+          role: 'assistant',
+          model: 'claude-opus-4-6',
+          content: [{ type: 'text', text: 'No usage here' }],
+          stop_reason: 'end_turn'
+        }
+      } as ParsedMessage
+    ]
+    const result = formatMessages(messages)
+    expect(result.messages).toHaveLength(1)
+    expect(result.totalUsage.input_tokens).toBe(0)
+    expect(result.totalUsage.output_tokens).toBe(0)
+  })
+
+  it('handles usage with missing cache fields', () => {
+    const messages: ParsedMessage[] = [
+      makeAssistantMsg('msg-002', [{ type: 'text', text: 'Hello' }], {
+        input_tokens: 100,
+        output_tokens: 50
+      } as never)
+    ]
+    const result = formatMessages(messages)
+    expect(result.totalUsage.input_tokens).toBe(100)
+    expect(result.totalUsage.cache_creation_input_tokens).toBe(0)
+    expect(result.totalUsage.cache_read_input_tokens).toBe(0)
+  })
+
+  it('skips pure tool_result user messages but shows text+image ones', () => {
+    const messages: ParsedMessage[] = [
+      // Pure tool_result — should be skipped
+      makeUserMsg('msg-tr', [{ type: 'tool_result', tool_use_id: 'tool-x', content: 'result' }]),
+      // Text only — should show
+      makeUserMsg('msg-txt', 'Hello'),
+    ]
+    const result = formatMessages(messages)
+    expect(result.messages).toHaveLength(1)
+    expect(result.messages[0].userText).toBe('Hello')
+  })
 })
