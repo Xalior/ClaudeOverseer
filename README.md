@@ -28,39 +28,57 @@ ClaudeOverseer is a desktop application that reads Claude Code's local JSONL tra
 
 ### Installation
 
-#### macOS
+Download the appropriate package for your platform from the [latest release](https://github.com/Xalior/ClaudeOverseer/releases):
+
+#### macOS (Intel x64 & Apple Silicon ARM64)
+
+**Available formats:**
+- **`.dmg`** — Disk image installer (drag to Applications folder)
+- **`.zip`** — Portable app bundle (extract and run)
 
 ```bash
-# Download the latest .dmg from releases (available for Intel x64 and Apple Silicon ARM64)
-# Or install via source:
+# Or build from source (requires macOS):
 git clone https://github.com/Xalior/ClaudeOverseer.git
 cd ClaudeOverseer
 pnpm install
-pnpm run build
 pnpm run dist:mac
 ```
 
-#### Linux
+#### Linux (x64 & ARM64)
+
+**Available formats:**
+- **`.AppImage`** — Universal Linux package (no installation, just make executable and run)
+- **`.deb`** — Debian/Ubuntu package (for apt-based distros)
 
 ```bash
-# Download the AppImage or .deb from releases (available for x64 and ARM64)
+# Run AppImage:
+chmod +x ClaudeOverseer-*.AppImage
+./ClaudeOverseer-*.AppImage
+
+# Or install .deb:
+sudo dpkg -i ClaudeOverseer-*.deb
+
 # Or build from source:
 git clone https://github.com/Xalior/ClaudeOverseer.git
 cd ClaudeOverseer
 pnpm install
-pnpm run build
 pnpm run dist:linux
 ```
 
-#### Windows
+#### Windows (x64 & ARM64)
+
+**Available formats:**
+- **`-win-x64.exe`** — x64 NSIS installer (installs system-wide with Start Menu shortcuts)
+- **`-win-x64.zip`** — x64 portable version (extract and run, no installation)
+- **`-win-arm64.exe`** — ARM64 NSIS installer
+- **`-win-arm64.zip`** — ARM64 portable version
+- **`-win.exe`** — Universal installer (auto-detects architecture, includes both x64 and ARM64)
 
 ```bash
-# Download the installer (.exe) or .zip from releases (available for x64 and ARM64)
 # Or build from source:
 git clone https://github.com/Xalior/ClaudeOverseer.git
 cd ClaudeOverseer
 pnpm install
-pnpm run build
 pnpm run dist:win
 ```
 
@@ -176,11 +194,10 @@ pnpm run test:unit
 # Integration tests only (~1.7s)
 pnpm run test:integration
 
-# E2E tests (requires build first, ~15s)
-pnpm run build
+# E2E tests (~15s, includes build step)
 pnpm run test:e2e
 
-# All tests in sequence
+# All tests in sequence (includes build step)
 pnpm run test:all
 
 # Watch mode for development
@@ -197,29 +214,57 @@ pnpm run test:coverage
 
 ### Build for Distribution
 
-**Recommended: Docker Build (All Platforms)**
+**Recommended: Docker Build (Linux + Windows)**
 
 ```bash
-# Build for all platforms using Docker
+# Build for Linux and Windows using Docker (cross-platform)
 pnpm run docker:build
 ```
 
-This creates all 12 artifacts (macOS, Linux, Windows - both x64 and ARM64).
+This creates **9 artifacts** in `release/`:
 
-**Alternative: Platform-Specific Builds**
+**Linux (x64 & ARM64):**
+- `ClaudeOverseer-0.1.0-linux-x86_64.AppImage`
+- `ClaudeOverseer-0.1.0-linux-amd64.deb`
+- `ClaudeOverseer-0.1.0-linux-arm64.AppImage`
+- `ClaudeOverseer-0.1.0-linux-arm64.deb`
+
+**Windows (x64 & ARM64):**
+- `ClaudeOverseer-0.1.0-win-x64.exe` (installer)
+- `ClaudeOverseer-0.1.0-win-x64.zip` (portable)
+- `ClaudeOverseer-0.1.0-win-arm64.exe` (installer)
+- `ClaudeOverseer-0.1.0-win-arm64.zip` (portable)
+- `ClaudeOverseer-0.1.0-win.exe` (universal installer, auto-detects architecture)
+
+**macOS Build (requires macOS)**
 
 ```bash
-# Build macOS .dmg + .zip (requires macOS)
+# Build macOS packages natively (creates 4 additional artifacts)
+pnpm run dist:mac
+```
+
+This creates **4 artifacts**:
+- `ClaudeOverseer-0.1.0-mac-x64.dmg` (Intel installer)
+- `ClaudeOverseer-0.1.0-mac-x64.zip` (Intel portable)
+- `ClaudeOverseer-0.1.0-mac-arm64.dmg` (Apple Silicon installer)
+- `ClaudeOverseer-0.1.0-mac-arm64.zip` (Apple Silicon portable)
+
+**Total: 13 distribution packages** across all platforms and architectures.
+
+**Platform-Specific Builds**
+
+```bash
+# Build macOS .zip (requires macOS)
 pnpm run dist:mac
 
-# Build Linux AppImage + .deb (requires Linux)
+# Build Linux AppImage + .deb (works on Linux or in Docker)
 pnpm run dist:linux
 
-# Build Windows installer + .zip (requires Windows)
+# Build Windows installers + zips (works on Windows or in Docker via Wine)
 pnpm run dist:win
 ```
 
-Artifacts will be in the `release/` directory.
+All `dist:*` scripts automatically run `build` first.
 
 ---
 
@@ -298,6 +343,10 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
+
+## 📝 Changelog
+
+See [CHANGELOG.md](docs/CHANGELOG.md) for detailed release notes and version history.
 
 ---
 

@@ -47,3 +47,4 @@ release/*
 
 # Playwright reports
 playwright-report/
+.pnpm-store/

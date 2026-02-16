@@ -16,7 +16,6 @@ docker build -t claudeoverseer-builder:latest .
 
 echo ""
 docker run --rm \
-  --platform linux/amd64 \
   -v "$RELEASE_DIR":/output \
   -e CI=true \
   claudeoverseer-builder:latest \

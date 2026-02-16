@@ -1,5 +1,5 @@
 # Use electron-builder image with Wine for cross-platform builds
-FROM electronuserland/builder:wine
+FROM --platform=linux/amd64 electronuserland/builder:wine
 
 # Set working directory
 WORKDIR /project
