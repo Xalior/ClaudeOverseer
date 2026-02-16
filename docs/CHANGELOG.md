@@ -5,6 +5,23 @@ All notable changes to ClaudeOverseer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - Unreleased (partial)
+
+### Added
+- **Collapsible Session Groups** — Parent sessions with subagents now show a collapse/expand toggle (▶/▼) with child count; all groups collapsed by default except the active session
+
+### Changed
+- **TanStack Query Migration** — Replaced manual `useState`/`useEffect` data fetching with `@tanstack/react-query` across all three data-fetching components (ProjectList, SessionList, MessageStream)
+  - New shared query hooks: `useProjectsDir()`, `useProjects()`, `useSessions()`, `useSessionMessages()`
+  - `useProjectsDir()` cached and shared between Projects and Sessions (eliminates duplicate IPC calls)
+  - Filesystem watcher events now invalidate the query cache instead of manual `setState`
+  - ~50 lines of boilerplate removed
+
+### Technical Details
+- Added `@tanstack/react-query` dependency
+- `QueryClientProvider` wraps the app root with `retry: 1`, `refetchOnWindowFocus: false`
+- Stale times: projectsDir=Infinity, projects=30s, sessions=10s, messages=Infinity (watcher-driven)
+
 ## [0.1.0] - 2025-02-15
 
 ### Added
@@ -76,4 +93,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero API costs — reads local transcript files only
 - No internet connection required for core functionality
 
+[0.1.1]: https://github.com/Xalior/ClaudeOverseer/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Xalior/ClaudeOverseer/releases/tag/v0.1.0
