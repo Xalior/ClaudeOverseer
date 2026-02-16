@@ -17,7 +17,7 @@ Replace polling-based project/session discovery with **event-driven filesystem m
 - [x] Modify `src/preload/index.ts` — Expose `startDirectoryWatch`, `stopDirectoryWatch`, event listeners
 - [x] Modify `src/preload/index.d.ts` — Add type definitions for new API methods
 - [x] Modify `src/renderer/src/hooks/queries.ts` — Add `useDirectoryWatcher()` hook, change staleTime to Infinity
-- [ ] Modify `src/renderer/src/App.tsx` — Extract `AppContent` component, call `useDirectoryWatcher()`
+- [x] Modify `src/renderer/src/App.tsx` — Extract `AppContent` component, call `useDirectoryWatcher()`
 - [ ] Verify real-time behavior — Create test project/session, verify <200ms UI updates
 - [ ] Verify fallback polling — Disable watcher, confirm 120s/60s refetchInterval still works
 - [ ] Update CHANGELOG.md
@@ -31,6 +31,7 @@ Replace polling-based project/session discovery with **event-driven filesystem m
 - ✅ Wired directory watcher to IPC handlers (start/stop + event broadcasting)
 - ✅ Exposed directory watcher API via preload bridge + TypeScript types
 - ✅ Added useDirectoryWatcher() hook, converted to event-driven queries (staleTime: Infinity, refetchInterval as fallback)
+- ✅ Integrated directory watcher into App component lifecycle
 
 ## Decisions & Notes
 
@@ -57,3 +58,4 @@ a78cfeb - (base commit) chore: pipe dev server output to /tmp log and update age
 08828b4 - feat: add DirectoryWatcher service for filesystem events
 1f6a2a6 - feat: wire DirectoryWatcher to IPC handlers
 92ac0a4 - feat: expose directory watcher API via preload bridge
+a7167b1 - feat: add event-driven React Query hooks

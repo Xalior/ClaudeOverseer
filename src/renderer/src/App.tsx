@@ -5,6 +5,7 @@ import { ProjectList } from './components/ProjectList'
 import { SessionList } from './components/SessionList'
 import { MessageStream } from './components/messages/MessageStream'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { useDirectoryWatcher } from './hooks/queries'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,6 +17,17 @@ const queryClient = new QueryClient({
 })
 
 function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
+    </QueryClientProvider>
+  )
+}
+
+function AppContent() {
+  // Start directory watcher on mount
+  useDirectoryWatcher()
+
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [selectedSessionPath, setSelectedSessionPath] = useState<string | null>(null)
   const projectRef = useRef<HTMLDivElement>(null)
@@ -52,7 +64,6 @@ function App() {
   }, [])
 
   return (
-    <QueryClientProvider client={queryClient}>
     <Container fluid className="vh-100 p-0">
       <Row className="h-100 g-0">
         {/* Panel 1: Projects Sidebar */}
@@ -94,7 +105,6 @@ function App() {
         </Col>
       </Row>
     </Container>
-    </QueryClientProvider>
   )
 }
 
