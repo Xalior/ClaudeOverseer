@@ -17,6 +17,36 @@ function extractToolResultText(content: string | Array<{ type: string; text: str
   return String(content)
 }
 
+interface ParsedResult {
+  mainContent: string
+  systemReminders: string[]
+}
+
+/** Parse out <system-reminder> tags from result text */
+function parseSystemReminders(text: string): ParsedResult {
+  const systemReminders: string[] = []
+  const reminderRegex = /<system-reminder>([\s\S]*?)<\/system-reminder>/g
+
+  let match
+  let lastIndex = 0
+  const contentParts: string[] = []
+
+  while ((match = reminderRegex.exec(text)) !== null) {
+    // Add content before this reminder
+    contentParts.push(text.slice(lastIndex, match.index))
+    // Store the reminder content
+    systemReminders.push(match[1].trim())
+    lastIndex = match.index + match[0].length
+  }
+
+  // Add any remaining content after the last reminder
+  contentParts.push(text.slice(lastIndex))
+
+  const mainContent = contentParts.join('').trim()
+
+  return { mainContent, systemReminders }
+}
+
 const TOOL_ICONS: Record<string, string> = {
   Read: '📄',
   Write: '✏️',
@@ -96,6 +126,33 @@ const codeBlockStyle: React.CSSProperties = {
   lineHeight: 1.4
 }
 
+/** System reminder display component */
+function SystemReminder({ text }: { text: string }) {
+  return (
+    <div style={{
+      backgroundColor: '#1f2937',
+      border: '1px solid #4b5563',
+      borderLeft: '4px solid #60a5fa',
+      borderRadius: '6px',
+      padding: '10px 12px',
+      margin: '8px 0',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontSize: '0.8rem',
+      lineHeight: 1.5
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+        <span style={{ fontSize: '1rem', marginTop: '2px' }}>ℹ️</span>
+        <div style={{ color: '#d1d5db', flex: 1 }}>
+          <div style={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            System Reminder
+          </div>
+          {text}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** Bash: render like a terminal */
 function BashPrettyPrint({ input, result, isError }: {
   input: Record<string, unknown>
@@ -104,7 +161,10 @@ function BashPrettyPrint({ input, result, isError }: {
 }) {
   const [showOutput, setShowOutput] = useState(true)
   const command = (input.command as string) || ''
-  const outputLines = result ? result.split('\n').length : 0
+
+  // Parse out system reminders
+  const { mainContent, systemReminders } = parseSystemReminders(result)
+  const outputLines = mainContent ? mainContent.split('\n').length : 0
 
   return (
     <div style={{ ...terminalStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
@@ -118,7 +178,7 @@ function BashPrettyPrint({ input, result, isError }: {
         <span style={{ color: '#f0f6fc' }}>{command}</span>
       </div>
       {/* Output */}
-      {result && (
+      {mainContent && (
         <>
           <div style={{ marginTop: '4px' }}>
             <Button
@@ -138,11 +198,16 @@ function BashPrettyPrint({ input, result, isError }: {
               borderTop: '1px solid #30363d',
               paddingTop: '8px'
             }}>
-              {result}
+              {mainContent}
             </div>
           </Collapse>
         </>
       )}
+
+      {/* System reminders */}
+      {systemReminders.length > 0 && systemReminders.map((reminder, idx) => (
+        <SystemReminder key={idx} text={reminder} />
+      ))}
     </div>
   )
 }
@@ -161,7 +226,10 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
   // For Write, show the written file content from input; for Read, show result
   const isWrite = toolName === 'Write'
   const fileContent = isWrite ? (input.content as string) || '' : ''
-  const displayContent = isWrite ? fileContent : result
+  const rawDisplayContent = isWrite ? fileContent : result
+
+  // Parse out system reminders
+  const { mainContent: displayContent, systemReminders } = parseSystemReminders(rawDisplayContent)
   const contentLines = displayContent ? displayContent.split('\n').length : 0
 
   // For Edit, show old_string -> new_string
@@ -262,6 +330,11 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
           {isError ? '✗ ' : '✓ '}{result}
         </div>
       )}
+
+      {/* System reminders */}
+      {systemReminders.length > 0 && systemReminders.map((reminder, idx) => (
+        <SystemReminder key={idx} text={reminder} />
+      ))}
     </div>
   )
 }
@@ -276,7 +349,10 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
   const [showResults, setShowResults] = useState(true)
   const pattern = (input.pattern as string) || ''
   const path = (input.path as string) || (input.file_path as string) || ''
-  const resultLines = result ? result.split('\n').filter(l => l.trim()).length : 0
+
+  // Parse out system reminders
+  const { mainContent, systemReminders } = parseSystemReminders(result)
+  const resultLines = mainContent ? mainContent.split('\n').filter(l => l.trim()).length : 0
 
   return (
     <div style={{ ...codeBlockStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
@@ -289,7 +365,7 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
         )}
       </div>
 
-      {result && (
+      {mainContent && (
         <>
           <Button
             variant="link"
@@ -307,11 +383,16 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
               paddingTop: '8px',
               marginTop: '4px'
             }}>
-              {result}
+              {mainContent}
             </div>
           </Collapse>
         </>
       )}
+
+      {/* System reminders */}
+      {systemReminders.length > 0 && systemReminders.map((reminder, idx) => (
+        <SystemReminder key={idx} text={reminder} />
+      ))}
     </div>
   )
 }
@@ -432,6 +513,9 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
   const [showInput, setShowInput] = useState(false)
   const [showOutput, setShowOutput] = useState(true)
 
+  // Parse out system reminders
+  const { mainContent, systemReminders } = parseSystemReminders(result)
+
   return (
     <div style={{ ...codeBlockStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -446,7 +530,7 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
           >
             {showInput ? '▼' : '▶'} input
           </Button>
-          {result && (
+          {mainContent && (
             <Button
               variant="link"
               size="sm"
@@ -464,7 +548,7 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
           <code>{JSON.stringify(input, null, 2)}</code>
         </pre>
       </Collapse>
-      {result && (
+      {mainContent && (
         <Collapse in={showOutput}>
           <div data-testid="tool-output-content" style={{
             color: isError ? '#f85149' : '#c9d1d9',
@@ -472,10 +556,15 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
             paddingTop: '8px',
             marginTop: '8px'
           }}>
-            {result}
+            {mainContent}
           </div>
         </Collapse>
       )}
+
+      {/* System reminders */}
+      {systemReminders.length > 0 && systemReminders.map((reminder, idx) => (
+        <SystemReminder key={idx} text={reminder} />
+      ))}
     </div>
   )
 }
