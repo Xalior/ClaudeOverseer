@@ -152,18 +152,16 @@ export function ProjectList({ onProjectSelect }: ProjectListProps) {
               onClick={() => handleProjectClick(project.encodedName)}
               data-testid={`project-${project.encodedName}`}
             >
-              <div className="project-card__header">
-                <img
-                  className={`project-card__icon ${isActive ? 'project-card__icon--active' : ''}`}
-                  src={projectIcons[project.encodedName]}
-                  alt=""
-                  aria-hidden="true"
-                />
-                <div className="project-card__title">{project.name}</div>
-                <Badge bg="secondary" className="project-card__badge">
-                  {project.sessionCount}
-                </Badge>
-              </div>
+              <img
+                className="project-card__icon"
+                src={projectIcons[project.encodedName]}
+                alt=""
+                aria-hidden="true"
+              />
+              <div className="project-card__title">{project.name}</div>
+              <Badge bg="secondary" className="project-card__badge">
+                {project.sessionCount}
+              </Badge>
               {isActive ? (
                 <div className="project-card__details">
                   <div
