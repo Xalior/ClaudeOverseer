@@ -13,7 +13,7 @@ Replace polling-based project/session discovery with **event-driven filesystem m
 ### Tasks
 
 - [x] Create `src/main/services/directory-watcher.ts` — Chokidar-based directory firehose with per-project debouncing
-- [ ] Modify `src/main/ipc-handlers.ts` — Wire directory watcher to IPC events
+- [x] Modify `src/main/ipc-handlers.ts` — Wire directory watcher to IPC events
 - [ ] Modify `src/preload/index.ts` — Expose `startDirectoryWatch`, `stopDirectoryWatch`, event listeners
 - [ ] Modify `src/preload/index.d.ts` — Add type definitions for new API methods
 - [ ] Modify `src/renderer/src/hooks/queries.ts` — Add `useDirectoryWatcher()` hook, change staleTime to Infinity
@@ -28,6 +28,7 @@ Replace polling-based project/session discovery with **event-driven filesystem m
 - Created branch from `dev` at `a78cfeb`
 - Brought along uncommitted CHANGELOG.md updates (documented previous UI improvements)
 - ✅ Created DirectoryWatcher service with debounced event classification
+- ✅ Wired directory watcher to IPC handlers (start/stop + event broadcasting)
 
 ## Decisions & Notes
 
@@ -51,3 +52,4 @@ None currently.
 ## Commits
 a78cfeb - (base commit) chore: pipe dev server output to /tmp log and update agent rules
 60aa875 - wip: start responsive-filesystem — init progress tracker
+08828b4 - feat: add DirectoryWatcher service for filesystem events

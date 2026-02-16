@@ -7,12 +7,16 @@ import { discoverSessions } from './services/session-discovery'
 import { parseJsonlFile } from './services/jsonl-parser'
 import { formatMessages } from './services/message-formatter'
 import { JsonlWatcher } from './services/jsonl-watcher'
+import { DirectoryWatcher } from './services/directory-watcher'
 import { encodePath } from './utils/path-encoder'
 
 const DEFAULT_CLAUDE_DIR = join(homedir(), '.claude', 'projects')
 
 // Active watchers keyed by file path
 const activeWatchers = new Map<string, JsonlWatcher>()
+
+// Directory watcher for the entire projects tree
+let directoryWatcher: DirectoryWatcher | null = null
 
 /**
  * Register all IPC handlers for the main process
@@ -89,6 +93,57 @@ export function registerIpcHandlers(): void {
     if (watcher) {
       await watcher.stop()
       activeWatchers.delete(sessionFilePath)
+    }
+  })
+
+  // Start directory watcher for entire projects tree
+  ipcMain.handle('overseer:start-directory-watch', async () => {
+    // Stop existing watcher if running
+    if (directoryWatcher) {
+      await directoryWatcher.stop()
+      directoryWatcher = null
+    }
+
+    // Determine projects directory (same logic as get-projects-dir handler)
+    let projectsDir = DEFAULT_CLAUDE_DIR
+    try {
+      const pathsFile = process.env.PATHS_FILE || join(process.cwd(), 'paths.txt')
+      const content = await readFile(pathsFile, 'utf-8')
+      const match = content.match(/Claude Project Dir = (.+)/)
+      if (match) {
+        projectsDir = match[1].replace('~', homedir())
+      }
+    } catch {
+      // Use default
+    }
+
+    // Create and start directory watcher
+    directoryWatcher = new DirectoryWatcher(projectsDir, {
+      onProjectsChanged: () => {
+        // Broadcast to all windows
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send('overseer:projects-changed')
+        }
+      },
+      onSessionsChanged: (projectEncodedName) => {
+        // Broadcast to all windows
+        for (const win of BrowserWindow.getAllWindows()) {
+          win.webContents.send('overseer:sessions-changed', { projectEncodedName })
+        }
+      },
+      onError: (error) => {
+        console.error('Directory watcher error:', error.message)
+      }
+    })
+
+    await directoryWatcher.start()
+  })
+
+  // Stop directory watcher
+  ipcMain.handle('overseer:stop-directory-watch', async () => {
+    if (directoryWatcher) {
+      await directoryWatcher.stop()
+      directoryWatcher = null
     }
   })
 }
