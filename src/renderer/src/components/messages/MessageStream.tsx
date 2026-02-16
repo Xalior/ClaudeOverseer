@@ -4,15 +4,15 @@ import { UserMessage } from './UserMessage'
 import { AssistantMessage } from './AssistantMessage'
 import { RawJsonView } from './RawJsonView'
 import { TokenUsageBar } from './TokenUsageBar'
-import type { FormattedMessage, FormattedSession } from '../../../../../main/services/message-formatter'
+import { useSessionMessages } from '../../hooks/queries'
+import type { FormattedMessage } from '../../../../../main/services/message-formatter'
 
 interface MessageStreamProps {
   sessionFilePath: string | null
 }
 
 export function MessageStream({ sessionFilePath }: MessageStreamProps) {
-  const [session, setSession] = useState<FormattedSession | null>(null)
-  const [loading, setLoading] = useState(false)
+  const { data: session, isLoading: loading } = useSessionMessages(sessionFilePath)
   const [globalRaw, setGlobalRaw] = useState(false)
   const [rawToggles, setRawToggles] = useState<Set<string>>(new Set())
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -20,29 +20,11 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
   const shouldAutoScrollRef = useRef(true)
   const isProgrammaticScrollRef = useRef(false)
 
+  // Reset raw toggles and auto-scroll when session changes
   useEffect(() => {
     if (sessionFilePath) {
-      // Reset auto-scroll when loading a new session
       shouldAutoScrollRef.current = true
-      loadMessages(sessionFilePath)
-
-      // Start watching for new messages
-      window.overseer.watchSession(sessionFilePath)
-
-      const unsubscribe = window.overseer.onNewMessages((data) => {
-        if (data.filePath === sessionFilePath && data.messages.length > 0) {
-          // Silent reload — re-fetch full session so tool_use/tool_result
-          // pairs match correctly, but don't flash loading state
-          refreshMessages(sessionFilePath)
-        }
-      })
-
-      return () => {
-        unsubscribe()
-        window.overseer.unwatchSession(sessionFilePath)
-      }
-    } else {
-      setSession(null)
+      setRawToggles(new Set())
     }
   }, [sessionFilePath])
 
@@ -100,28 +82,6 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
-
-  async function loadMessages(filePath: string) {
-    setLoading(true)
-    try {
-      const result = await window.overseer.getMessages(filePath)
-      setSession(result)
-      setRawToggles(new Set())
-    } catch (error) {
-      console.error('Failed to load messages:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function refreshMessages(filePath: string) {
-    try {
-      const result = await window.overseer.getMessages(filePath)
-      setSession(result)
-    } catch (error) {
-      console.error('Failed to refresh messages:', error)
-    }
-  }
 
   function toggleRaw(uuid: string) {
     setRawToggles(prev => {
