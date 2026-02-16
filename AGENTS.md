@@ -1,6 +1,6 @@
-# Agent Debugging Guide: ClaudeOverseer
+# ClaudeOverseer
 
-## Architecture
+## Debugging Architecture
 
 ClaudeOverseer is an **electron-vite** app. In development:
 
@@ -113,6 +113,92 @@ Edit → Observe → Fix → Observe. No test harness. No timeouts. No hoping.
 | `src/renderer/src/main.tsx` | Renderer entry point |
 | `electron.vite.config.ts` | Vite config for main/preload/renderer |
 | `.mcp.json` | MCP server config — points chrome-devtools at port 19222 |
+
+## Frontend Architecture
+
+### Three-Panel Layout (`App.tsx`)
+
+| Panel | Component | Col Width | Purpose |
+|-------|-----------|-----------|---------|
+| 1 | `ProjectList` | xs=3 | Project sidebar — deterministic SVG icons, session count badges, modification times |
+| 2 | `SessionList` | xs=3 | Sessions for selected project — hierarchical with collapsible subagents |
+| 3 | `MessageStream` | xs=6 | Message display with auto-scroll, raw JSON toggle, markdown rendering |
+
+Selection flow: Project → Sessions → Messages (no URL routing, state in `App.tsx`).
+
+### State Management
+
+**TanStack React Query** — primary state for server-side data:
+- `useProjectsDir()` — projects directory path (staleTime: Infinity)
+- `useProjects()` — project list (staleTime: 30s polling)
+- `useSessions(projectEncodedName)` — sessions for selected project (staleTime: 10s)
+- `useSessionMessages(sessionFilePath)` — messages with live file watcher invalidation (staleTime: Infinity)
+
+All hooks in `src/renderer/src/hooks/queries.ts`.
+
+**React local state** — UI concerns (selected project/session, expanded parents, scroll position, raw mode toggles).
+
+**Zustand** — installed (v5) but currently unused.
+
+### Real-Time Updates
+
+Electron IPC + chokidar file watching (no WebSocket/SSE):
+1. `useSessionMessages()` calls `window.overseer.watchSession()` on mount
+2. Main process `JsonlWatcher` detects file changes via chokidar
+3. New messages sent via `ipcRenderer.send('overseer:new-messages', ...)`
+4. Hook receives event → `queryClient.invalidateQueries()` → re-fetch → re-render
+
+### IPC API (`window.overseer`)
+
+| Method | Direction | Purpose |
+|--------|-----------|---------|
+| `getProjectsDir()` | invoke | Get projects directory path |
+| `scanProjects(dir)` | invoke | List all projects |
+| `discoverSessions(name, dir)` | invoke | List sessions for a project |
+| `getMessages(path)` | invoke | Load formatted messages from JSONL |
+| `watchSession(path)` | invoke | Start file watcher for a session |
+| `unwatchSession(path)` | invoke | Stop file watcher |
+| `onNewMessages(cb)` | subscribe | Listen for new message events |
+
+Defined in `src/preload/index.ts` (bridge) and `src/preload/index.d.ts` (types).
+
+### Session Types & Status
+
+Types: `main` (primary sessions), `background` (prefixed `agent-`), `subagent` (in `subagents/` subdirectories).
+
+Status badges based on `lastModified`:
+- Active (green): < 1 minute old
+- Recent (blue): < 5 minutes old
+- Stale (gray): > 5 minutes old
+
+### Message Components
+
+| Component | Purpose |
+|-----------|---------|
+| `MessageStream.tsx` | Container with auto-scroll and global raw toggle |
+| `UserMessage.tsx` | User messages with text and base64 images |
+| `AssistantMessage.tsx` | Claude responses with markdown, token usage, model badge |
+| `ToolCallCard.tsx` | Expandable tool calls with syntax-highlighted I/O |
+| `TokenUsageBar.tsx` | Cumulative token usage display |
+| `RawJsonView.tsx` | Raw JSON fallback view |
+
+### Keyboard Shortcuts
+
+- `Cmd+1/2/3` — focus panels
+- `Cmd+R` — refresh
+- `Cmd+J` — toggle raw JSON mode
+
+### Main Process Services
+
+| Service | File | Purpose |
+|---------|------|---------|
+| `project-scanner.ts` | `src/main/services/` | Scans project directories, resolves encoded paths |
+| `session-discovery.ts` | `src/main/services/` | Enumerates JSONL files, extracts metadata (slug, summary) |
+| `jsonl-watcher.ts` | `src/main/services/` | Chokidar-based file tailing with offset tracking |
+| `jsonl-parser.ts` | `src/main/services/` | Line-by-line JSONL parsing |
+| `message-formatter.ts` | `src/main/services/` | Raw → formatted message transformation with tool pairing |
+| `team-reader.ts` | `src/main/services/` | Team configuration file parsing |
+| `path-encoder.ts` | `src/main/utils/` | Claude's dash-encoded path resolution |
 
 ## Rules
 
