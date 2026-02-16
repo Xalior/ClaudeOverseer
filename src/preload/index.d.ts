@@ -15,6 +15,10 @@ export interface OverseerAPI {
   watchSession: (sessionFilePath: string) => Promise<void>
   unwatchSession: (sessionFilePath: string) => Promise<void>
   onNewMessages: (callback: (data: NewMessagesData) => void) => () => void
+  startDirectoryWatch: () => Promise<void>
+  stopDirectoryWatch: () => Promise<void>
+  onProjectsChanged: (callback: () => void) => () => void
+  onSessionsChanged: (callback: (data: { projectEncodedName: string }) => void) => () => void
 }
 
 declare global {

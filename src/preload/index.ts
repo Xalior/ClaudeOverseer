@@ -17,5 +17,21 @@ contextBridge.exposeInMainWorld('overseer', {
     return () => {
       ipcRenderer.removeListener('overseer:new-messages', handler)
     }
+  },
+  startDirectoryWatch: () => ipcRenderer.invoke('overseer:start-directory-watch'),
+  stopDirectoryWatch: () => ipcRenderer.invoke('overseer:stop-directory-watch'),
+  onProjectsChanged: (callback: () => void) => {
+    const handler = () => callback()
+    ipcRenderer.on('overseer:projects-changed', handler)
+    return () => {
+      ipcRenderer.removeListener('overseer:projects-changed', handler)
+    }
+  },
+  onSessionsChanged: (callback: (data: { projectEncodedName: string }) => void) => {
+    const handler = (_event: unknown, data: { projectEncodedName: string }) => callback(data)
+    ipcRenderer.on('overseer:sessions-changed', handler)
+    return () => {
+      ipcRenderer.removeListener('overseer:sessions-changed', handler)
+    }
   }
 })
