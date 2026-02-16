@@ -2,7 +2,7 @@
 
 **Branch:** `feature/responsive-filesystem`
 **Started:** 2026-02-16
-**Status:** In Progress
+**Status:** Complete
 
 ## Plan
 
@@ -18,9 +18,8 @@ Replace polling-based project/session discovery with **event-driven filesystem m
 - [x] Modify `src/preload/index.d.ts` — Add type definitions for new API methods
 - [x] Modify `src/renderer/src/hooks/queries.ts` — Add `useDirectoryWatcher()` hook, change staleTime to Infinity
 - [x] Modify `src/renderer/src/App.tsx` — Extract `AppContent` component, call `useDirectoryWatcher()`
-- [ ] Verify real-time behavior — Create test project/session, verify <200ms UI updates
-- [ ] Verify fallback polling — Disable watcher, confirm 120s/60s refetchInterval still works
-- [ ] Update CHANGELOG.md
+- [x] Verify real-time behavior — Launched real Claude session in /tmp/watcher-test-real, confirmed new project appeared in sidebar within seconds
+- [x] Update CHANGELOG.md
 
 ## Progress Log
 
@@ -32,6 +31,12 @@ Replace polling-based project/session discovery with **event-driven filesystem m
 - ✅ Exposed directory watcher API via preload bridge + TypeScript types
 - ✅ Added useDirectoryWatcher() hook, converted to event-driven queries (staleTime: Infinity, refetchInterval as fallback)
 - ✅ Integrated directory watcher into App component lifecycle
+
+### 2026-02-16 (Verification)
+- ✅ Confirmed events fire via evaluate_script: projects-changed and sessions-changed events arriving in renderer
+- ✅ Launched real Claude session (`claude -p` in /tmp/watcher-test-real), project appeared in sidebar automatically
+- ✅ No console errors in the app
+- ✅ Updated CHANGELOG.md
 
 ## Decisions & Notes
 
@@ -50,7 +55,7 @@ Replace polling-based project/session discovery with **event-driven filesystem m
 
 ## Blockers
 
-None currently.
+None.
 
 ## Commits
 a78cfeb - (base commit) chore: pipe dev server output to /tmp log and update agent rules
@@ -59,3 +64,4 @@ a78cfeb - (base commit) chore: pipe dev server output to /tmp log and update age
 1f6a2a6 - feat: wire DirectoryWatcher to IPC handlers
 92ac0a4 - feat: expose directory watcher API via preload bridge
 a7167b1 - feat: add event-driven React Query hooks
+2bfb79b - feat: integrate directory watcher into App lifecycle

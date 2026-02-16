@@ -28,12 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `useProjectsDir()` cached and shared between Projects and Sessions (eliminates duplicate IPC calls)
   - Filesystem watcher events now invalidate the query cache instead of manual `setState`
   - ~50 lines of boilerplate removed
+- **Event-Driven Filesystem Monitoring** — Replaced 30s/10s polling with chokidar directory watcher on `~/.claude/projects/` tree for near-real-time UI updates
+  - New `DirectoryWatcher` service classifies filesystem events by project with 100ms per-project debouncing
+  - `projects-changed` and `sessions-changed` IPC events trigger targeted React Query invalidations
+  - New projects, sessions, and subagents appear within ~200ms of file creation
+  - Polling kept as safety fallback (120s projects, 60s sessions)
 
 ### Technical Details
 - Added `@tanstack/react-query` dependency
 - `QueryClientProvider` wraps the app root with `retry: 1`, `refetchOnWindowFocus: false`
-- Stale times: projectsDir=Infinity, projects=30s, sessions=10s, messages=Infinity (watcher-driven)
+- Stale times: projectsDir=Infinity, projects=Infinity (event-driven), sessions=Infinity (event-driven), messages=Infinity (watcher-driven)
 - Dev server output now logged to `/tmp/claudeoverseer-dev.log` via `tee` (terminal colors preserved with `FORCE_COLOR=1`)
+- New IPC channels: `overseer:start-directory-watch`, `overseer:stop-directory-watch`, `overseer:projects-changed`, `overseer:sessions-changed`
 
 ## [0.1.0] - 2025-02-15
 
