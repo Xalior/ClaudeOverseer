@@ -1,9 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Container, Row, Col } from 'react-bootstrap'
 import { ProjectList } from './components/ProjectList'
 import { SessionList } from './components/SessionList'
 import { MessageStream } from './components/messages/MessageStream'
 import { ErrorBoundary } from './components/ErrorBoundary'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false
+    }
+  }
+})
 
 function App() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
@@ -42,6 +52,7 @@ function App() {
   }, [])
 
   return (
+    <QueryClientProvider client={queryClient}>
     <Container fluid className="vh-100 p-0">
       <Row className="h-100 g-0">
         {/* Panel 1: Projects Sidebar */}
@@ -83,6 +94,7 @@ function App() {
         </Col>
       </Row>
     </Container>
+    </QueryClientProvider>
   )
 }
 
