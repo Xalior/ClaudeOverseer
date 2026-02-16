@@ -2,7 +2,9 @@ export interface Project {
   name: string
   encodedName: string
   path: string
+  pathVerified: boolean
   sessionCount: number
+  lastModified: number
 }
 
 export interface Session {

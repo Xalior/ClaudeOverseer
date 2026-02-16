@@ -1,6 +1,6 @@
 import { readdir, stat } from 'fs/promises'
 import { join } from 'path'
-import { decodePath } from '../utils/path-encoder'
+import { resolveEncodedPath } from '../utils/path-encoder'
 import type { Project } from '../types'
 
 /**
@@ -19,18 +19,30 @@ export async function scanProjects(claudeProjectsDir: string): Promise<Project[]
       }
 
       const encodedName = entry.name
-      const projectPath = decodePath(encodedName)
       const fullPath = join(claudeProjectsDir, encodedName)
 
-      // Count sessions in this project directory
+      // Resolve the encoded path against the filesystem
+      const { path: projectPath, verified } = await resolveEncodedPath(encodedName)
+
+      // Count sessions and find most recent modification time
       const sessionFiles = await readdir(fullPath)
       const jsonlFiles = sessionFiles.filter(f => f.endsWith('.jsonl'))
+
+      let lastModified = 0
+      for (const f of jsonlFiles) {
+        try {
+          const s = await stat(join(fullPath, f))
+          if (s.mtimeMs > lastModified) lastModified = s.mtimeMs
+        } catch { /* skip */ }
+      }
 
       projects.push({
         name: extractProjectName(projectPath),
         encodedName,
         path: projectPath,
-        sessionCount: jsonlFiles.length
+        pathVerified: verified,
+        sessionCount: jsonlFiles.length,
+        lastModified
       })
     }
 

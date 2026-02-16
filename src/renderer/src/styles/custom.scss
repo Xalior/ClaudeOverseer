@@ -27,3 +27,134 @@ html, body, #root {
   margin: 0;
   padding: 0;
 }
+
+// Project cards
+.project-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-card {
+  background: #1c2128;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 3px solid var(--project-accent, #30363d);
+
+  &:hover {
+    background: #22272e;
+    border-color: #444c56;
+  }
+
+  &--active {
+    background: #1f2a37;
+    border-color: var(--project-accent, #58a6ff);
+    border-left-width: 4px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--project-accent, #58a6ff) inset;
+    padding: 14px 14px;
+
+    &:hover {
+      background: #1f2a37;
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  &__icon {
+    width: 24px;
+    height: 21px;
+    flex-shrink: 0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &--active {
+      width: 32px;
+      height: 28px;
+    }
+  }
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e6edf3;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: font-size 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    .project-card--active & {
+      font-size: 1rem;
+    }
+  }
+
+  &__badge {
+    flex-shrink: 0;
+    font-size: 0.7rem !important;
+  }
+
+  &__path {
+    font-size: 0.7rem;
+    color: #8b949e;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 32px; // align with title (icon width + gap)
+
+    &--unverified {
+      font-style: italic;
+      opacity: 0.6;
+    }
+  }
+
+  &__details {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #30363d;
+    animation: cardDetailsIn 0.2s ease-out;
+  }
+
+  &__full-path {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+    font-size: 0.7rem;
+    color: #8b949e;
+    word-break: break-all;
+    line-height: 1.4;
+
+    &--unverified {
+      opacity: 0.6;
+    }
+  }
+
+  &__meta {
+    margin-top: 4px;
+    font-size: 0.7rem;
+    color: #8b949e;
+  }
+
+  &__unverified-tag {
+    display: inline-block;
+    margin-left: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.6rem;
+    color: #d29922;
+    font-style: italic;
+  }
+}
+
+@keyframes cardDetailsIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
