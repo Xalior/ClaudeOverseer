@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Badge } from 'react-bootstrap'
+import { useProjects } from '../hooks/queries'
 
 interface Project {
   name: string
@@ -101,25 +102,8 @@ function generateProjectIcon(name: string): string {
 }
 
 export function ProjectList({ onProjectSelect }: ProjectListProps) {
-  const [projects, setProjects] = useState<Project[]>([])
+  const { data: projects = [], isLoading: loading } = useProjects()
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    loadProjects()
-  }, [])
-
-  async function loadProjects() {
-    try {
-      const projectsDir = await window.overseer.getProjectsDir()
-      const discovered = await window.overseer.scanProjects(projectsDir)
-      setProjects(discovered)
-    } catch (error) {
-      console.error('Failed to load projects:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   function handleProjectClick(encodedName: string) {
     setSelectedProject(encodedName)
