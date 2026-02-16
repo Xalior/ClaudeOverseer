@@ -14,6 +14,9 @@ importers:
       chokidar:
         specifier: ^4.0.0
         version: 4.0.3
+      highlight.js:
+        specifier: ^11.0.0
+        version: 11.11.1
       mermaid:
         specifier: ^11.0.0
         version: 11.12.2

@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, Badge, Collapse, Button } from 'react-bootstrap'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github-dark.css'
 
 interface ToolCallCardProps {
   toolName: string
@@ -28,6 +30,44 @@ const TOOL_ICONS: Record<string, string> = {
   AskUserQuestion: '❓',
   NotebookEdit: '📓',
   TodoWrite: '✅'
+}
+
+/** Map file extensions to highlight.js language names */
+const EXT_TO_LANG: Record<string, string> = {
+  js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
+  ts: 'typescript', tsx: 'typescript', mts: 'typescript',
+  py: 'python', rb: 'ruby', rs: 'rust', go: 'go',
+  java: 'java', kt: 'kotlin', scala: 'scala',
+  c: 'c', h: 'c', cpp: 'cpp', cc: 'cpp', cxx: 'cpp', hpp: 'cpp',
+  cs: 'csharp', swift: 'swift', m: 'objectivec',
+  sh: 'bash', bash: 'bash', zsh: 'bash', fish: 'shell',
+  html: 'xml', htm: 'xml', xml: 'xml', svg: 'xml', xsl: 'xml',
+  css: 'css', scss: 'scss', sass: 'scss', less: 'less',
+  json: 'json', yaml: 'yaml', yml: 'yaml', toml: 'ini',
+  md: 'markdown', markdown: 'markdown',
+  sql: 'sql', graphql: 'graphql', gql: 'graphql',
+  dockerfile: 'dockerfile', docker: 'dockerfile',
+  makefile: 'makefile', cmake: 'cmake',
+  lua: 'lua', perl: 'perl', pl: 'perl', php: 'php',
+  r: 'r', R: 'r', jl: 'julia',
+  hs: 'haskell', erl: 'erlang', ex: 'elixir', exs: 'elixir',
+  clj: 'clojure', lisp: 'lisp', el: 'lisp',
+  vim: 'vim', ini: 'ini', conf: 'ini', cfg: 'ini',
+  tf: 'hcl', hcl: 'hcl',
+  proto: 'protobuf', ps1: 'powershell',
+  diff: 'diff', patch: 'diff'
+}
+
+function getLangFromPath(filePath: string): string | null {
+  const fileName = filePath.split('/').pop() || ''
+  // Handle extensionless names like Dockerfile, Makefile
+  const lowerName = fileName.toLowerCase()
+  if (lowerName === 'dockerfile') return 'dockerfile'
+  if (lowerName === 'makefile' || lowerName === 'gnumakefile') return 'makefile'
+  if (lowerName === '.bashrc' || lowerName === '.zshrc' || lowerName === '.profile') return 'bash'
+
+  const ext = fileName.includes('.') ? fileName.split('.').pop()! : ''
+  return EXT_TO_LANG[ext] || null
 }
 
 const terminalStyle: React.CSSProperties = {
@@ -117,12 +157,31 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
   const [showContent, setShowContent] = useState(true)
   const filePath = (input.file_path as string) || ''
   const fileName = filePath.split('/').pop() || filePath
-  const outputLines = result ? result.split('\n').length : 0
+
+  // For Write, show the written file content from input; for Read, show result
+  const isWrite = toolName === 'Write'
+  const fileContent = isWrite ? (input.content as string) || '' : ''
+  const displayContent = isWrite ? fileContent : result
+  const contentLines = displayContent ? displayContent.split('\n').length : 0
 
   // For Edit, show old_string -> new_string
   const isEdit = toolName === 'Edit'
   const oldStr = isEdit ? (input.old_string as string) : null
   const newStr = isEdit ? (input.new_string as string) : null
+
+  // Syntax highlighting for file content
+  const lang = getLangFromPath(filePath)
+  const highlightedHtml = useMemo(() => {
+    if (!displayContent || isEdit) return null
+    try {
+      if (lang) {
+        return hljs.highlight(displayContent, { language: lang }).value
+      }
+      return hljs.highlightAuto(displayContent).value
+    } catch {
+      return null
+    }
+  }, [displayContent, lang, isEdit])
 
   return (
     <div style={{ ...codeBlockStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
@@ -132,8 +191,18 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
           <span style={{ color: '#8b949e', marginRight: '6px' }}>{TOOL_ICONS[toolName]}</span>
           <span style={{ color: '#79c0ff', fontWeight: 500 }}>{fileName}</span>
           <span style={{ color: '#484f58', fontSize: '0.75rem', marginLeft: '8px' }}>{filePath}</span>
+          {lang && (
+            <span style={{
+              color: '#8b949e',
+              fontSize: '0.7rem',
+              marginLeft: '8px',
+              backgroundColor: '#21262d',
+              padding: '1px 6px',
+              borderRadius: '8px'
+            }}>{lang}</span>
+          )}
         </div>
-        {result && (
+        {displayContent && (
           <Button
             variant="link"
             size="sm"
@@ -141,7 +210,7 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
             style={{ color: '#8b949e', fontSize: '0.75rem', textDecoration: 'none' }}
             onClick={() => setShowContent(!showContent)}
           >
-            {showContent ? '▼' : '▶'} {outputLines} lines
+            {showContent ? '▼' : '▶'} {contentLines} lines
           </Button>
         )}
       </div>
@@ -160,13 +229,38 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
         </div>
       )}
 
-      {/* File content / result */}
-      {result && (
+      {/* File content with syntax highlighting */}
+      {displayContent && (
         <Collapse in={showContent}>
-          <div data-testid="tool-output-content" style={{ color: isError ? '#f85149' : '#c9d1d9' }}>
-            {result}
+          <div data-testid="tool-output-content">
+            {highlightedHtml ? (
+              <pre style={{ margin: 0, backgroundColor: 'transparent', padding: 0, overflow: 'auto' }}>
+                <code
+                  className={lang ? `hljs language-${lang}` : 'hljs'}
+                  style={{ backgroundColor: 'transparent', padding: 0, fontSize: '0.85rem', lineHeight: 1.4 }}
+                  dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+                />
+              </pre>
+            ) : (
+              <div style={{ color: isError ? '#f85149' : '#c9d1d9' }}>
+                {displayContent}
+              </div>
+            )}
           </div>
         </Collapse>
+      )}
+
+      {/* Show write result status if there's also a result message */}
+      {isWrite && result && (
+        <div style={{
+          color: isError ? '#f85149' : '#3fb950',
+          fontSize: '0.75rem',
+          borderTop: '1px solid #30363d',
+          paddingTop: '6px',
+          marginTop: '6px'
+        }}>
+          {isError ? '✗ ' : '✓ '}{result}
+        </div>
       )}
     </div>
   )
