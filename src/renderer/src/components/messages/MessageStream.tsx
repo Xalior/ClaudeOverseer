@@ -16,6 +16,8 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
   const [globalRaw, setGlobalRaw] = useState(false)
   const [rawToggles, setRawToggles] = useState<Set<string>>(new Set())
   const bottomRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const shouldAutoScrollRef = useRef(true)
 
   useEffect(() => {
     if (sessionFilePath) {
@@ -41,9 +43,28 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
     }
   }, [sessionFilePath])
 
+  // Auto-scroll to bottom only if user is already at the bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (shouldAutoScrollRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [session?.messages.length])
+
+  // Track scroll position to determine if we should auto-scroll
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current
+    if (!scrollContainer) return
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainer
+      // Consider "at bottom" if within 50px of the bottom (accounts for smooth scrolling)
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50
+      shouldAutoScrollRef.current = isAtBottom
+    }
+
+    scrollContainer.addEventListener('scroll', handleScroll)
+    return () => scrollContainer.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Cmd+J keyboard shortcut to toggle raw mode
   useEffect(() => {
@@ -139,7 +160,7 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
       </div>
 
       {/* Messages */}
-      <div className="flex-grow-1 overflow-auto p-3" data-testid="message-list">
+      <div ref={scrollContainerRef} className="flex-grow-1 overflow-auto p-3" data-testid="message-list">
         {session.messages.map((msg) => (
           <div key={msg.uuid} data-testid={`message-${msg.uuid}`}>
             {isRaw(msg.uuid) ? (
