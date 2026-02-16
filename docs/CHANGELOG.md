@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Project Card Layout** — Compact cards now show relative time; full path only shown when expanded
 
+### Improved
+- **Larger Project Icons** — Project icons doubled in size using CSS grid layout; collapsed icons span both text lines, expanded cards give the full path full card width below the icon
+- **Slim Scrollbars** — Thin dark-themed scrollbars app-wide for a cleaner look
+
 ### Changed
 - **TanStack Query Migration** — Replaced manual `useState`/`useEffect` data fetching with `@tanstack/react-query` across all three data-fetching components (ProjectList, SessionList, MessageStream)
   - New shared query hooks: `useProjectsDir()`, `useProjects()`, `useSessions()`, `useSessionMessages()`
@@ -29,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `@tanstack/react-query` dependency
 - `QueryClientProvider` wraps the app root with `retry: 1`, `refetchOnWindowFocus: false`
 - Stale times: projectsDir=Infinity, projects=30s, sessions=10s, messages=Infinity (watcher-driven)
+- Dev server output now logged to `/tmp/claudeoverseer-dev.log` via `tee` (terminal colors preserved with `FORCE_COLOR=1`)
 
 ## [0.1.0] - 2025-02-15
 
