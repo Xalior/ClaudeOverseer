@@ -102,6 +102,21 @@ list_network_requests                          → check failed requests
 
 Edit → Observe → Fix → Observe. No test harness. No timeouts. No hoping.
 
+## Dev Server Log
+
+`pnpm run dev` pipes all output (stdout + stderr) to `/tmp/claudeoverseer-dev.log` via `tee`. The terminal still shows output as normal, but the log file persists for inspection.
+
+The log file contains ANSI color codes (terminal colors are preserved via `FORCE_COLOR=1`). When searching the log, be aware that color escape sequences may appear within keywords.
+
+**Use cases for agents:**
+- Check if the dev server started successfully: `Read /tmp/claudeoverseer-dev.log`
+- Search for errors without MCP: `Grep pattern="error|ERR" path="/tmp/claudeoverseer-dev.log"`
+- Tail recent output: `Bash: tail -20 /tmp/claudeoverseer-dev.log`
+- Verify HMR reloads after edits: `Grep pattern="hmr|reload" path="/tmp/claudeoverseer-dev.log"`
+- Strip colors for clean reading: `Bash: sed 's/\x1b\[[0-9;]*m//g' /tmp/claudeoverseer-dev.log`
+
+The log resets each time `pnpm run dev` is started (tee overwrites the file).
+
 ## Key Files
 
 | File | Purpose |
@@ -207,3 +222,16 @@ Status badges based on `lastModified`:
 3. **Never add UI debug indicators.** Use `take_snapshot`, `evaluate_script`, `take_screenshot` to observe.
 4. **Never commit** unless explicitly told to.
 5. **Edit → Observe → Fix → Observe.** That's the loop.
+6. **Don't changelog agent metafiles.** Changes to `AGENTS.md`, `CLAUDE.md`, `docs/plans/`, and other agent-facing documentation are not user-facing and should not be recorded in `docs/CHANGELOG.md`.
+
+## Plan Management Workflow
+
+When beginning work on a new feature or refactor:
+
+1. **Create plan** in `docs/plans/` - architectural design and approach (e.g., `feature-name.md`)
+2. **Create implementation tracking file** in `docs/plans/` - track progress with git commits, WIP status, task lists (e.g., `plan_feature-name-implementation.md`)
+3. **Move both to done** when complete - `mv docs/plans/plan-name* docs/plans/done/`
+
+The implementation file goes into git and serves as the single source of truth for progress monitoring.
+
+**Note:** `~/.claude/plans/` is Claude's temporary workspace for plan mode - leave those files alone.
