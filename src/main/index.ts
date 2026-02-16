@@ -2,6 +2,11 @@ import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { registerIpcHandlers } from './ipc-handlers'
 
+// Enable remote debugging on port 9222 for agent debugging (dev only)
+if (process.env.NODE_ENV === 'development') {
+  app.commandLine.appendSwitch('remote-debugging-port', '19222')
+}
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1200,

@@ -18,9 +18,12 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const shouldAutoScrollRef = useRef(true)
+  const isProgrammaticScrollRef = useRef(false)
 
   useEffect(() => {
     if (sessionFilePath) {
+      // Reset auto-scroll when loading a new session
+      shouldAutoScrollRef.current = true
       loadMessages(sessionFilePath)
 
       // Start watching for new messages
@@ -46,7 +49,19 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
   // Auto-scroll to bottom only if user is already at the bottom
   useEffect(() => {
     if (shouldAutoScrollRef.current) {
+      isProgrammaticScrollRef.current = true
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false
+        const container = scrollContainerRef.current
+        if (container) {
+          const { scrollTop, scrollHeight, clientHeight } = container
+          const distanceFromBottom = scrollHeight - scrollTop - clientHeight
+          const isAtBottom = distanceFromBottom < 50
+          shouldAutoScrollRef.current = isAtBottom
+        }
+      }, 300)
     }
   }, [session?.messages.length])
 
@@ -55,16 +70,24 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
     const scrollContainer = scrollContainerRef.current
     if (!scrollContainer) return
 
-    const handleScroll = () => {
+    const checkScrollPosition = () => {
       const { scrollTop, scrollHeight, clientHeight } = scrollContainer
-      // Consider "at bottom" if within 50px of the bottom (accounts for smooth scrolling)
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight
+      const isAtBottom = distanceFromBottom < 50
       shouldAutoScrollRef.current = isAtBottom
     }
 
+    const handleScroll = () => {
+      if (isProgrammaticScrollRef.current) return
+      checkScrollPosition()
+    }
+
+    // Initial check without checking isProgrammaticScrollRef flag
+    checkScrollPosition()
+
     scrollContainer.addEventListener('scroll', handleScroll)
     return () => scrollContainer.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [session])
 
   // Cmd+J keyboard shortcut to toggle raw mode
   useEffect(() => {
