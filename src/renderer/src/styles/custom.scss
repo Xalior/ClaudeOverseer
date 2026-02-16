@@ -135,9 +135,9 @@ html, body, #root {
   }
 
   &__meta {
-    margin-top: 4px;
     font-size: 0.7rem;
     color: #8b949e;
+    padding-left: 32px; // align with title (icon width + gap)
   }
 
   &__unverified-tag {

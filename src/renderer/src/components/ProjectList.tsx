@@ -194,11 +194,8 @@ export function ProjectList({ onProjectSelect }: ProjectListProps) {
                   </div>
                 </div>
               ) : (
-                <div
-                  className={`project-card__path ${!project.pathVerified ? 'project-card__path--unverified' : ''}`}
-                  title={project.pathVerified ? project.path : `${project.path} (unverified)`}
-                >
-                  {project.path}
+                <div className="project-card__meta">
+                  {formatRelativeTime(project.lastModified)}
                 </div>
               )}
             </div>
