@@ -8,7 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - Unreleased (partial)
 
 ### Added
-- **Collapsible Session Groups** — Parent sessions with subagents now show a collapse/expand toggle (▶/▼) with child count; all groups collapsed by default except the active session
+- **Write Tool Syntax Highlighting** — Write tool calls now display file contents with highlight.js syntax highlighting instead of just a success message
+- **System Reminder Detection** — `<system-reminder>` tags in tool results are parsed and displayed in a styled info box instead of raw XML
+- **Smart Auto-Scroll** — Message stream only auto-scrolls when user is at the bottom; pauses when scrolled up to read older messages
+- **MCP-Based CDP Debugging** — Replaced custom CDP scripts with chrome-devtools-mcp server for agent workflows; agents use native MCP tools (take_snapshot, evaluate_script, take_screenshot) for autonomous observe-edit loops
+- **Redesigned Project Cards** — Styled cards with deterministic geometric SVG icons, colored accent borders, and filesystem-verified paths; click to expand shows full monospace path, verification status, and last modified time
+- **Collapsible Session Groups** — Parent sessions with subagents show a collapse/expand toggle (▶/▼) with child count; all groups collapsed by default except the active session
+
+### Fixed
+- **Project Card Layout** — Compact cards now show relative time; full path only shown when expanded
 
 ### Changed
 - **TanStack Query Migration** — Replaced manual `useState`/`useEffect` data fetching with `@tanstack/react-query` across all three data-fetching components (ProjectList, SessionList, MessageStream)
