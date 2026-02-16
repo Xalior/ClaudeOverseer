@@ -48,11 +48,17 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "category": "public.app-category.developer-tools",
@@ -64,11 +70,17 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "deb",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "category": "Development",
@@ -79,14 +91,22 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
-      "signingHashAlgorithms": ["sha256"],
+      "signingHashAlgorithms": [
+        "sha256"
+      ],
       "sign": null,
       "icon": "docs/icon.png",
       "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
@@ -102,31 +122,32 @@
     }
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-bootstrap": "^2.10.0",
+    "@tanstack/react-query": "^5.90.21",
     "bootstrap": "^5.3.3",
-    "zustand": "^5.0.0",
-    "react-markdown": "^9.0.0",
-    "remark-gfm": "^4.0.0",
-    "rehype-highlight": "^7.0.0",
+    "chokidar": "^4.0.0",
     "highlight.js": "^11.0.0",
     "mermaid": "^11.0.0",
-    "chokidar": "^4.0.0"
+    "react": "^19.0.0",
+    "react-bootstrap": "^2.10.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^9.0.0",
+    "rehype-highlight": "^7.0.0",
+    "remark-gfm": "^4.0.0",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
-    "electron": "^33.0.0",
-    "electron-vite": "^3.0.0",
-    "electron-builder": "^25.0.0",
-    "vite": "^6.0.0",
-    "@vitejs/plugin-react": "^4.3.0",
-    "typescript": "^5.7.0",
-    "sass": "^1.80.0",
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@types/node": "^22.0.0",
-    "@playwright/test": "^1.48.0",
-    "vitest": "^2.1.0",
-    "@vitest/coverage-v8": "^2.1.0"
+    "@vitejs/plugin-react": "^4.3.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "electron-vite": "^3.0.0",
+    "sass": "^1.80.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vitest": "^2.1.0"
   }
 }
