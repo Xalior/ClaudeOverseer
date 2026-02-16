@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { ListGroup, Badge } from 'react-bootstrap'
+import { useState, useEffect, useMemo } from 'react'
+import { ListGroup, Badge, Collapse } from 'react-bootstrap'
 
 interface Session {
   id: string
@@ -53,6 +53,7 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (projectEncodedName) {
@@ -62,6 +63,52 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
       setSelectedId(null)
     }
   }, [projectEncodedName])
+
+  const topLevel = useMemo(
+    () => sessions.filter(s => s.type !== 'subagent'),
+    [sessions]
+  )
+
+  const subagentsByParent = useMemo(() => {
+    const map = new Map<string, Session[]>()
+    for (const s of sessions) {
+      if (s.type === 'subagent' && s.parentSessionId) {
+        const list = map.get(s.parentSessionId) || []
+        list.push(s)
+        map.set(s.parentSessionId, list)
+      }
+    }
+    return map
+  }, [sessions])
+
+  // Auto-expand parent of the selected session, or the active (most recent) parent
+  useEffect(() => {
+    if (selectedId) {
+      const selectedSession = sessions.find(s => s.id === selectedId)
+      if (selectedSession?.type === 'subagent' && selectedSession.parentSessionId) {
+        setExpandedParents(prev => {
+          const next = new Set(prev)
+          next.add(selectedSession.parentSessionId!)
+          return next
+        })
+      }
+      if (selectedSession && subagentsByParent.has(selectedSession.id)) {
+        setExpandedParents(prev => {
+          const next = new Set(prev)
+          next.add(selectedSession.id)
+          return next
+        })
+      }
+    } else {
+      // No selection: auto-expand the most recently active parent that has children
+      const activeParent = topLevel.find(s =>
+        getSessionStatus(s.lastModified) === 'active' && subagentsByParent.has(s.id)
+      )
+      if (activeParent) {
+        setExpandedParents(new Set([activeParent.id]))
+      }
+    }
+  }, [selectedId, sessions])
 
   async function loadSessions(encodedName: string) {
     setLoading(true)
@@ -85,6 +132,19 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
     if (session.slug) return session.slug
     if (session.summary) return session.summary
     return `${session.type}-${session.id}`
+  }
+
+  function toggleExpand(parentId: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    setExpandedParents(prev => {
+      const next = new Set(prev)
+      if (next.has(parentId)) {
+        next.delete(parentId)
+      } else {
+        next.add(parentId)
+      }
+      return next
+    })
   }
 
   if (!projectEncodedName) {
@@ -114,20 +174,13 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
     )
   }
 
-  // Group subagents under their parent session
-  const topLevel = sessions.filter(s => s.type !== 'subagent')
-  const subagentsByParent = new Map<string, Session[]>()
-  for (const s of sessions) {
-    if (s.type === 'subagent' && s.parentSessionId) {
-      const list = subagentsByParent.get(s.parentSessionId) || []
-      list.push(s)
-      subagentsByParent.set(s.parentSessionId, list)
-    }
-  }
-
   function renderSessionItem(session: Session, indent: boolean = false) {
     const status = getSessionStatus(session.lastModified)
     const badge = getStatusBadge(status)
+    const children = subagentsByParent.get(session.id) || []
+    const hasChildren = children.length > 0
+    const isExpanded = expandedParents.has(session.id)
+
     return (
       <ListGroup.Item
         key={session.id}
@@ -149,6 +202,15 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
           )}
           <small className="text-muted" style={{ fontSize: '0.75rem' }}>
             {formatDateTime(session.lastModified)} · {session.type}
+            {hasChildren && (
+              <span
+                role="button"
+                onClick={(e) => toggleExpand(session.id, e)}
+                style={{ marginLeft: '0.5rem', userSelect: 'none' }}
+              >
+                {isExpanded ? '▼' : '▶'} {children.length} sub
+              </span>
+            )}
           </small>
         </div>
         <Badge bg={badge.variant} data-testid={`status-${session.id}`}>
@@ -164,10 +226,17 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
       <ListGroup data-testid="session-list-items">
         {topLevel.map(session => {
           const children = subagentsByParent.get(session.id) || []
+          const isExpanded = expandedParents.has(session.id)
           return (
             <div key={session.id}>
               {renderSessionItem(session)}
-              {children.map(child => renderSessionItem(child, true))}
+              {children.length > 0 && (
+                <Collapse in={isExpanded}>
+                  <div>
+                    {children.map(child => renderSessionItem(child, true))}
+                  </div>
+                </Collapse>
+              )}
             </div>
           )
         })}
