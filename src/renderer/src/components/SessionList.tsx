@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ListGroup, Badge, Collapse } from 'react-bootstrap'
+import { useSessions } from '../hooks/queries'
 
 interface Session {
   id: string
@@ -50,22 +51,12 @@ function formatDateTime(timestamp: number): string {
 }
 
 export function SessionList({ projectEncodedName, onSessionSelect }: SessionListProps) {
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [loading, setLoading] = useState(false)
+  const { data: sessions = [], isLoading: loading } = useSessions(projectEncodedName)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
-    if (projectEncodedName) {
-      loadSessions(projectEncodedName)
-    } else {
-      setSessions([])
-      setSelectedId(null)
-    }
-  }, [projectEncodedName])
-
   const topLevel = useMemo(
-    () => sessions.filter(s => s.type !== 'subagent'),
+    () => sessions.filter((s: Session) => s.type !== 'subagent'),
     [sessions]
   )
 
@@ -84,7 +75,7 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
   // Auto-expand parent of the selected session, or the active (most recent) parent
   useEffect(() => {
     if (selectedId) {
-      const selectedSession = sessions.find(s => s.id === selectedId)
+      const selectedSession = sessions.find((s: Session) => s.id === selectedId)
       if (selectedSession?.type === 'subagent' && selectedSession.parentSessionId) {
         setExpandedParents(prev => {
           const next = new Set(prev)
@@ -100,8 +91,7 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
         })
       }
     } else {
-      // No selection: auto-expand the most recently active parent that has children
-      const activeParent = topLevel.find(s =>
+      const activeParent = topLevel.find((s: Session) =>
         getSessionStatus(s.lastModified) === 'active' && subagentsByParent.has(s.id)
       )
       if (activeParent) {
@@ -109,19 +99,6 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
       }
     }
   }, [selectedId, sessions])
-
-  async function loadSessions(encodedName: string) {
-    setLoading(true)
-    try {
-      const projectsDir = await window.overseer.getProjectsDir()
-      const discovered = await window.overseer.discoverSessions(encodedName, projectsDir)
-      setSessions(discovered)
-    } catch (error) {
-      console.error('Failed to load sessions:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   function handleSelect(session: Session) {
     setSelectedId(session.id)
@@ -224,7 +201,7 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
     <div className="p-3">
       <h5 className="text-white mb-3">📄 Sessions</h5>
       <ListGroup data-testid="session-list-items">
-        {topLevel.map(session => {
+        {topLevel.map((session: Session) => {
           const children = subagentsByParent.get(session.id) || []
           const isExpanded = expandedParents.has(session.id)
           return (
