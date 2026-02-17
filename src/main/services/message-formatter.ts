@@ -92,7 +92,6 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
         // Extract text and images; skip pure tool_result messages
         const textParts: string[] = []
         const images: UserImage[] = []
-        let hasToolResults = false
 
         for (const block of userMsg.message.content) {
           if (block.type === 'text') {
@@ -100,8 +99,6 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
           } else if (block.type === 'image') {
             const imgBlock = block as { type: 'image'; source: { type: string; media_type: string; data: string } }
             images.push({ mediaType: imgBlock.source.media_type, data: imgBlock.source.data })
-          } else if (block.type === 'tool_result') {
-            hasToolResults = true
           }
         }
 

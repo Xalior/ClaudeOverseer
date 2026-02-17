@@ -1,5 +1,5 @@
 import { watch, type FSWatcher } from 'chokidar'
-import { basename, relative } from 'path'
+import { relative } from 'path'
 
 export interface DirectoryWatcherEvents {
   onProjectsChanged: () => void
@@ -43,7 +43,7 @@ export class DirectoryWatcher {
     this.watcher.on('change', (path) => this.handleEvent(path, 'change'))
 
     this.watcher.on('error', (error) => {
-      this.events.onError(error)
+      this.events.onError(error instanceof Error ? error : new Error(String(error)))
     })
   }
 

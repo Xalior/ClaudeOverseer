@@ -1,9 +1,10 @@
-import { Card, Badge } from 'react-bootstrap'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { ToolCallCard } from './ToolCallCard'
 import type { ToolUseBlock, ToolResultContent, TokenUsage } from '../../../../main/types'
+import { Card, CardContent, CardTitle } from '../ui/card'
+import { Badge } from '../ui/badge'
 
 interface ToolPair {
   toolUse: ToolUseBlock
@@ -23,27 +24,27 @@ export function AssistantMessage({ model, textContent, toolPairs, usage, timesta
   const relativeTime = getRelativeTime(timestamp)
 
   return (
-    <Card className="mb-3 border-success" data-testid="assistant-message">
-      <Card.Body>
-        <div className="d-flex justify-content-between align-items-center mb-2">
+    <Card className="message-card message-card--assistant" data-testid="assistant-message">
+      <CardContent>
+        <div className="message-card__header">
           <div>
-            <Card.Title className="mb-0 fs-6 d-inline">
-              <span className="me-2">🤖</span>Claude
-            </Card.Title>
-            <Badge bg="success" className="ms-2" data-testid="model-badge">{modelShort}</Badge>
+            <CardTitle className="message-card__title message-card__title--inline">
+              <span className="message-card__title-icon">🤖</span>Claude
+            </CardTitle>
+            <Badge variant="success" className="message-card__model" data-testid="model-badge">{modelShort}</Badge>
           </div>
-          <div className="d-flex align-items-center gap-2">
+          <div className="message-card__meta">
             {usage && (
-              <small className="text-muted" data-testid="token-usage">
+              <small className="panel-muted" data-testid="token-usage">
                 {usage.input_tokens}↓ {usage.output_tokens}↑
               </small>
             )}
-            <small className="text-muted">{relativeTime}</small>
+            <small className="panel-muted">{relativeTime}</small>
           </div>
         </div>
 
         {textContent && (
-          <div className="mb-2" data-testid="assistant-text-content">
+          <div className="message-card__body" data-testid="assistant-text-content">
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
               {textContent}
             </ReactMarkdown>
@@ -58,7 +59,7 @@ export function AssistantMessage({ model, textContent, toolPairs, usage, timesta
             toolResult={pair.toolResult}
           />
         ))}
-      </Card.Body>
+      </CardContent>
     </Card>
   )
 }

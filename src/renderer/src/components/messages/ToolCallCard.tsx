@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react'
-import { Card, Badge, Collapse, Button } from 'react-bootstrap'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
+import { Card, CardContent } from '../ui/card'
+import { Button } from '../ui/button'
+import { Collapsible, CollapsibleContent } from '../ui/collapsible'
 
 interface ToolCallCardProps {
   toolName: string
@@ -184,23 +186,23 @@ function BashPrettyPrint({ input, result, isError }: {
             <Button
               variant="link"
               size="sm"
-              className="p-0"
-              style={{ color: '#8b949e', fontSize: '0.75rem', textDecoration: 'none' }}
+              className="tool-toggle"
+              style={{ color: '#8b949e', fontSize: '0.75rem' }}
               onClick={() => setShowOutput(!showOutput)}
             >
               {showOutput ? '▼' : '▶'} output ({outputLines} lines)
             </Button>
           </div>
-          <Collapse in={showOutput}>
-            <div data-testid="tool-output-content" style={{
+          <Collapsible open={showOutput}>
+            <CollapsibleContent className="ui-collapsible-content" data-testid="tool-output-content" style={{
               color: isError ? '#f85149' : '#e0e0e0',
               marginTop: '4px',
               borderTop: '1px solid #30363d',
               paddingTop: '8px'
             }}>
               {mainContent}
-            </div>
-          </Collapse>
+            </CollapsibleContent>
+          </Collapsible>
         </>
       )}
 
@@ -274,8 +276,8 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
           <Button
             variant="link"
             size="sm"
-            className="p-0"
-            style={{ color: '#8b949e', fontSize: '0.75rem', textDecoration: 'none' }}
+            className="tool-toggle"
+            style={{ color: '#8b949e', fontSize: '0.75rem' }}
             onClick={() => setShowContent(!showContent)}
           >
             {showContent ? '▼' : '▶'} {contentLines} lines
@@ -299,8 +301,8 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
 
       {/* File content with syntax highlighting */}
       {displayContent && (
-        <Collapse in={showContent}>
-          <div data-testid="tool-output-content">
+        <Collapsible open={showContent}>
+          <CollapsibleContent className="ui-collapsible-content" data-testid="tool-output-content">
             {highlightedHtml ? (
               <pre style={{ margin: 0, backgroundColor: 'transparent', padding: 0, overflow: 'auto' }}>
                 <code
@@ -314,8 +316,8 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
                 {displayContent}
               </div>
             )}
-          </div>
-        </Collapse>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {/* Show write result status if there's also a result message */}
@@ -370,22 +372,22 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
           <Button
             variant="link"
             size="sm"
-            className="p-0"
-            style={{ color: '#8b949e', fontSize: '0.75rem', textDecoration: 'none', marginBottom: '4px' }}
+            className="tool-toggle"
+            style={{ color: '#8b949e', fontSize: '0.75rem', marginBottom: '4px' }}
             onClick={() => setShowResults(!showResults)}
           >
             {showResults ? '▼' : '▶'} results
           </Button>
-          <Collapse in={showResults}>
-            <div data-testid="tool-output-content" style={{
+          <Collapsible open={showResults}>
+            <CollapsibleContent className="ui-collapsible-content" data-testid="tool-output-content" style={{
               color: isError ? '#f85149' : '#c9d1d9',
               borderTop: '1px solid #30363d',
               paddingTop: '8px',
               marginTop: '4px'
             }}>
               {mainContent}
-            </div>
-          </Collapse>
+            </CollapsibleContent>
+          </Collapsible>
         </>
       )}
 
@@ -524,8 +526,8 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
           <Button
             variant="link"
             size="sm"
-            className="p-0 me-2"
-            style={{ color: '#8b949e', fontSize: '0.75rem', textDecoration: 'none' }}
+            className="tool-toggle tool-toggle--spaced"
+            style={{ color: '#8b949e', fontSize: '0.75rem' }}
             onClick={() => setShowInput(!showInput)}
           >
             {showInput ? '▼' : '▶'} input
@@ -534,8 +536,8 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
             <Button
               variant="link"
               size="sm"
-              className="p-0"
-              style={{ color: '#8b949e', fontSize: '0.75rem', textDecoration: 'none' }}
+              className="tool-toggle"
+              style={{ color: '#8b949e', fontSize: '0.75rem' }}
               onClick={() => setShowOutput(!showOutput)}
             >
               {showOutput ? '▼' : '▶'} output
@@ -543,22 +545,24 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
           )}
         </div>
       </div>
-      <Collapse in={showInput}>
-        <pre style={{ color: '#c9d1d9', margin: '8px 0 0 0', fontSize: '0.8rem' }}>
-          <code>{JSON.stringify(input, null, 2)}</code>
-        </pre>
-      </Collapse>
+      <Collapsible open={showInput}>
+        <CollapsibleContent className="ui-collapsible-content">
+          <pre style={{ color: '#c9d1d9', margin: '8px 0 0 0', fontSize: '0.8rem' }}>
+            <code>{JSON.stringify(input, null, 2)}</code>
+          </pre>
+        </CollapsibleContent>
+      </Collapsible>
       {mainContent && (
-        <Collapse in={showOutput}>
-          <div data-testid="tool-output-content" style={{
+        <Collapsible open={showOutput}>
+          <CollapsibleContent className="ui-collapsible-content" data-testid="tool-output-content" style={{
             color: isError ? '#f85149' : '#c9d1d9',
             borderTop: '1px solid #30363d',
             paddingTop: '8px',
             marginTop: '8px'
           }}>
             {mainContent}
-          </div>
-        </Collapse>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {/* System reminders */}
@@ -574,8 +578,8 @@ export function ToolCallCard({ toolName, toolInput, toolResult }: ToolCallCardPr
   const isError = toolResult?.is_error || false
 
   return (
-    <Card className="mb-2" style={{ backgroundColor: 'transparent', border: 'none' }} data-testid="tool-call-card">
-      <Card.Body className="p-0">
+    <Card className="tool-card-wrap" data-testid="tool-call-card">
+      <CardContent className="tool-card-wrap__content">
         {toolName === 'Bash' ? (
           <BashPrettyPrint input={toolInput} result={resultText} isError={isError} />
         ) : toolName === 'Read' || toolName === 'Write' || toolName === 'Edit' ? (
@@ -587,7 +591,7 @@ export function ToolCallCard({ toolName, toolInput, toolResult }: ToolCallCardPr
         ) : (
           <GenericPrettyPrint toolName={toolName} input={toolInput} result={resultText} isError={isError} />
         )}
-      </Card.Body>
+      </CardContent>
     </Card>
   )
 }

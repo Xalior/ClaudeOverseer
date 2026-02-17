@@ -8,8 +8,7 @@ import { parseJsonlFile } from './services/jsonl-parser'
 import { formatMessages } from './services/message-formatter'
 import { JsonlWatcher } from './services/jsonl-watcher'
 import { DirectoryWatcher } from './services/directory-watcher'
-import { encodePath } from './utils/path-encoder'
-import { loadPreferences, savePreferences, savePreferencesSync } from './services/preferences'
+import { loadPreferences, savePreferencesSync } from './services/preferences'
 import type { AppPreferences } from './services/preferences'
 
 const DEFAULT_CLAUDE_DIR = join(homedir(), '.claude', 'projects')

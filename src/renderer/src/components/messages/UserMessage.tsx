@@ -1,4 +1,4 @@
-import { Card } from 'react-bootstrap'
+import { Card, CardContent, CardTitle } from '../ui/card'
 
 interface UserImage {
   mediaType: string
@@ -15,19 +15,19 @@ export function UserMessage({ text, images, timestamp }: UserMessageProps) {
   const relativeTime = getRelativeTime(timestamp)
 
   return (
-    <Card className="mb-3 border-info" data-testid="user-message">
-      <Card.Body>
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <Card.Title className="mb-0 fs-6">
-            <span className="me-2">👤</span>User
-          </Card.Title>
-          <small className="text-muted" data-testid="message-timestamp">{relativeTime}</small>
+    <Card className="message-card message-card--user" data-testid="user-message">
+      <CardContent>
+        <div className="message-card__header">
+          <CardTitle className="message-card__title">
+            <span className="message-card__title-icon">👤</span>User
+          </CardTitle>
+          <small className="panel-muted" data-testid="message-timestamp">{relativeTime}</small>
         </div>
         {text && (
-          <Card.Text className="mb-0" data-testid="user-message-text">{text}</Card.Text>
+          <p className="message-card__text" data-testid="user-message-text">{text}</p>
         )}
         {images && images.length > 0 && (
-          <div className="mt-2">
+          <div className="message-card__images">
             {images.map((img, i) => (
               <img
                 key={i}
@@ -45,7 +45,7 @@ export function UserMessage({ text, images, timestamp }: UserMessageProps) {
             ))}
           </div>
         )}
-      </Card.Body>
+      </CardContent>
     </Card>
   )
 }

@@ -48,7 +48,7 @@ export class JsonlWatcher {
     })
 
     this.watcher.on('error', (error) => {
-      this.events.onError(error)
+      this.events.onError(error instanceof Error ? error : new Error(String(error)))
     })
   }
 

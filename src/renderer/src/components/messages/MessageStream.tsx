@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { Form } from 'react-bootstrap'
 import { UserMessage } from './UserMessage'
 import { AssistantMessage } from './AssistantMessage'
 import { RawJsonView } from './RawJsonView'
 import { TokenUsageBar } from './TokenUsageBar'
 import { useSessionMessages } from '../../hooks/queries'
-import type { FormattedMessage } from '../../../../../main/services/message-formatter'
+import type { FormattedMessage } from '../../../../main/services/message-formatter'
+import { Switch } from '../ui/switch'
 
 interface MessageStreamProps {
   sessionFilePath: string | null
@@ -101,49 +101,49 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
 
   if (!sessionFilePath) {
     return (
-      <div className="p-3">
-        <h5 className="text-white">💬 Message Stream</h5>
-        <p className="text-muted small">Select a session to view messages</p>
+      <div className="panel-content">
+        <h5 className="panel-title">💬 Message Stream</h5>
+        <p className="panel-muted">Select a session to view messages</p>
       </div>
     )
   }
 
   if (loading && !session) {
     return (
-      <div className="p-3">
-        <h5 className="text-white">💬 Message Stream</h5>
-        <p className="text-muted small">Loading messages...</p>
+      <div className="panel-content">
+        <h5 className="panel-title">💬 Message Stream</h5>
+        <p className="panel-muted">Loading messages...</p>
       </div>
     )
   }
 
   if (!session || session.messages.length === 0) {
     return (
-      <div className="p-3">
-        <h5 className="text-white">💬 Message Stream</h5>
-        <p className="text-muted small">No messages in this session</p>
+      <div className="panel-content">
+        <h5 className="panel-title">💬 Message Stream</h5>
+        <p className="panel-muted">No messages in this session</p>
       </div>
     )
   }
 
   return (
-    <div className="d-flex flex-column h-100" data-testid="message-stream-content">
+    <div className="message-stream" data-testid="message-stream-content">
       {/* Toolbar */}
-      <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-secondary">
-        <h6 className="text-white mb-0">💬 Message Stream</h6>
-        <Form.Check
-          type="switch"
-          id="raw-toggle"
-          label="Raw JSON"
-          className="text-muted"
-          checked={globalRaw}
-          onChange={() => setGlobalRaw(!globalRaw)}
-          data-testid="global-raw-toggle"
-        />
+      <div className="message-stream__toolbar">
+        <h6 className="message-stream__title">💬 Message Stream</h6>
+        <label className="switch-field" htmlFor="raw-toggle">
+          <span className="switch-field__label">Raw JSON</span>
+          <Switch
+            id="raw-toggle"
+            checked={globalRaw}
+            onCheckedChange={setGlobalRaw}
+            data-testid="global-raw-toggle"
+          />
+        </label>
       </div>
 
       {/* Messages */}
-      <div ref={scrollContainerRef} className="flex-grow-1 overflow-auto p-3" data-testid="message-list">
+      <div ref={scrollContainerRef} className="message-stream__list" data-testid="message-list">
         {session.messages.map((msg) => (
           <div key={msg.uuid} data-testid={`message-${msg.uuid}`}>
             {isRaw(msg.uuid) ? (
@@ -152,9 +152,9 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
               renderMessage(msg)
             )}
             {!globalRaw && msg.type !== 'queue-operation' && (
-              <div className="text-end mb-2">
+              <div className="message-stream__raw-toggle-wrap">
                 <button
-                  className="btn btn-link btn-sm text-muted p-0"
+                  className="message-stream__raw-toggle"
                   onClick={() => toggleRaw(msg.uuid)}
                   data-testid={`raw-toggle-${msg.uuid}`}
                 >
@@ -195,7 +195,7 @@ function renderMessage(msg: FormattedMessage) {
       )
     case 'queue-operation':
       return (
-        <div className="text-center text-muted small my-2" data-testid="queue-operation">
+        <div className="queue-op" data-testid="queue-operation">
           ⏳ Session started
         </div>
       )

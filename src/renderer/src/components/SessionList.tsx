@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
-import { ListGroup, Badge, Collapse } from 'react-bootstrap'
 import { useSessions } from '../hooks/queries'
+import { Badge } from './ui/badge'
+import { Collapsible, CollapsibleContent } from './ui/collapsible'
 
 interface Session {
   id: string
@@ -27,10 +28,10 @@ function getSessionStatus(lastModified: number): SessionStatus {
   return 'stale'
 }
 
-function getStatusBadge(status: SessionStatus): { icon: string; variant: string } {
+function getStatusBadge(status: SessionStatus): { icon: string; variant: 'success' | 'info' | 'secondary' } {
   switch (status) {
     case 'active': return { icon: '🟢', variant: 'success' }
-    case 'recent': return { icon: '🔵', variant: 'primary' }
+    case 'recent': return { icon: '🔵', variant: 'info' }
     case 'stale': return { icon: '⚪', variant: 'secondary' }
   }
 }
@@ -126,27 +127,27 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
 
   if (!projectEncodedName) {
     return (
-      <div className="p-3">
-        <h5 className="text-white">📄 Sessions</h5>
-        <p className="text-muted small">Select a project first</p>
+      <div className="panel-content">
+        <h5 className="panel-title">📄 Sessions</h5>
+        <p className="panel-muted">Select a project first</p>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="p-3">
-        <h5 className="text-white">📄 Sessions</h5>
-        <p className="text-muted small">Loading...</p>
+      <div className="panel-content">
+        <h5 className="panel-title">📄 Sessions</h5>
+        <p className="panel-muted">Loading...</p>
       </div>
     )
   }
 
   if (sessions.length === 0) {
     return (
-      <div className="p-3">
-        <h5 className="text-white">📄 Sessions</h5>
-        <p className="text-muted small">No sessions found</p>
+      <div className="panel-content">
+        <h5 className="panel-title">📄 Sessions</h5>
+        <p className="panel-muted">No sessions found</p>
       </div>
     )
   }
@@ -159,48 +160,54 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
     const isExpanded = expandedParents.has(session.id)
 
     return (
-      <ListGroup.Item
+      <div
         key={session.id}
-        action
-        active={session.id === selectedId}
-        className="d-flex justify-content-between align-items-start"
+        className={`session-item ${session.id === selectedId ? 'session-item--active' : ''}`}
         data-testid={`session-${session.type}-${session.id}`}
         onClick={() => handleSelect(session)}
-        style={{ cursor: 'pointer', paddingLeft: indent ? '2rem' : undefined }}
+        style={{ paddingLeft: indent ? '2rem' : undefined }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleSelect(session)
+          }
+        }}
       >
-        <div className="ms-2 me-auto" style={{ minWidth: 0 }}>
-          <div className="fw-bold text-truncate">
+        <div className="session-item__main">
+          <div className="session-item__title">
             {indent ? '↳ ' : badge.icon + ' '}{getSessionTitle(session)}
           </div>
           {session.summary && (
-            <div className="text-muted text-truncate" style={{ fontSize: '0.8rem' }}>
+            <div className="session-item__summary">
               {session.summary}
             </div>
           )}
-          <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+          <small className="session-item__meta">
             {formatDateTime(session.lastModified)} · {session.type}
             {hasChildren && (
               <span
                 role="button"
                 onClick={(e) => toggleExpand(session.id, e)}
-                style={{ marginLeft: '0.5rem', userSelect: 'none' }}
+                className="session-item__sub-toggle"
               >
                 {isExpanded ? '▼' : '▶'} {children.length} sub
               </span>
             )}
           </small>
         </div>
-        <Badge bg={badge.variant} data-testid={`status-${session.id}`}>
+        <Badge variant={badge.variant} data-testid={`status-${session.id}`}>
           {status}
         </Badge>
-      </ListGroup.Item>
+      </div>
     )
   }
 
   return (
-    <div className="p-3">
-      <h5 className="text-white mb-3">📄 Sessions</h5>
-      <ListGroup data-testid="session-list-items">
+    <div className="panel-content">
+      <h5 className="panel-title panel-title--spaced">📄 Sessions</h5>
+      <div className="session-list" data-testid="session-list-items">
         {topLevel.map((session: Session) => {
           const children = subagentsByParent.get(session.id) || []
           const isExpanded = expandedParents.has(session.id)
@@ -208,16 +215,16 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
             <div key={session.id}>
               {renderSessionItem(session)}
               {children.length > 0 && (
-                <Collapse in={isExpanded}>
-                  <div>
+                <Collapsible open={isExpanded}>
+                  <CollapsibleContent className="ui-collapsible-content">
                     {children.map(child => renderSessionItem(child, true))}
-                  </div>
-                </Collapse>
+                  </CollapsibleContent>
+                </Collapsible>
               )}
             </div>
           )
         })}
-      </ListGroup>
+      </div>
     </div>
   )
 }

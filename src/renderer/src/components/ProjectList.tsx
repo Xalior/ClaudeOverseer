@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
-import { Badge } from 'react-bootstrap'
 import { useProjects } from '../hooks/queries'
+import { Badge } from './ui/badge'
 
 interface Project {
   name: string
@@ -113,7 +113,7 @@ export function ProjectList({ onProjectSelect }: ProjectListProps) {
   // Pre-compute icons so they're stable across renders
   const projectIcons = useMemo(() => {
     const map: Record<string, string> = {}
-    for (const p of projects) {
+    for (const p of projects as Project[]) {
       map[p.encodedName] = generateProjectIcon(p.name)
     }
     return map
@@ -121,27 +121,27 @@ export function ProjectList({ onProjectSelect }: ProjectListProps) {
 
   if (loading) {
     return (
-      <div className="p-3">
-        <h5 className="text-white">Projects</h5>
-        <p className="text-muted small">Loading...</p>
+      <div className="panel-content">
+        <h5 className="panel-title">Projects</h5>
+        <p className="panel-muted">Loading...</p>
       </div>
     )
   }
 
   if (projects.length === 0) {
     return (
-      <div className="p-3">
-        <h5 className="text-white">Projects</h5>
-        <p className="text-muted small">No projects found</p>
+      <div className="panel-content">
+        <h5 className="panel-title">Projects</h5>
+        <p className="panel-muted">No projects found</p>
       </div>
     )
   }
 
   return (
-    <div className="p-3">
-      <h5 className="text-white mb-3">Projects</h5>
+    <div className="panel-content">
+      <h5 className="panel-title panel-title--spaced">Projects</h5>
       <div className="project-card-list" data-testid="project-list">
-        {projects.map(project => {
+        {(projects as Project[]).map(project => {
           const isActive = selectedProject === project.encodedName
           const accentColor = hashColor(project.name)
           return (
@@ -159,7 +159,7 @@ export function ProjectList({ onProjectSelect }: ProjectListProps) {
                 aria-hidden="true"
               />
               <div className="project-card__title">{project.name}</div>
-              <Badge bg="secondary" className="project-card__badge">
+              <Badge variant="secondary" className="project-card__badge">
                 {project.sessionCount}
               </Badge>
               {isActive ? (

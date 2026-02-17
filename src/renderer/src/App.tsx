@@ -141,7 +141,7 @@ function AppContent() {
     <div className="app-layout">
       {/* Panel 1: Projects Sidebar */}
       <div
-        className="app-panel bg-dark"
+        className="app-panel app-panel--surface"
         style={{ width: panelWidths[0] }}
         data-testid="project-sidebar"
         ref={projectRef}
@@ -154,7 +154,7 @@ function AppContent() {
 
       {/* Panel 2: Sessions List */}
       <div
-        className="app-panel bg-dark"
+        className="app-panel app-panel--surface"
         style={{ width: panelWidths[1] }}
         data-testid="session-list"
         ref={sessionRef}
@@ -170,7 +170,7 @@ function AppContent() {
 
       {/* Panel 3: Message Stream */}
       <div
-        className="app-panel app-panel--fill bg-dark"
+        className="app-panel app-panel--fill app-panel--surface"
         data-testid="message-stream"
         ref={messageRef}
         tabIndex={-1}
