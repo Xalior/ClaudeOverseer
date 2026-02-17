@@ -13,9 +13,15 @@ ClaudeOverseer is a desktop application that reads Claude Code's local JSONL tra
 
 - **Live Session Monitoring** — Watch Claude Code sessions update in real-time as agents work
 - **Chat-Style Interface** — Familiar message stream with user messages, assistant responses, and tool calls
+- **Dark / Light / System Theme** — Three-mode theme switcher; System mode auto-follows OS appearance
+- **Pinned Projects** — Pin favourite projects to the top of the sidebar for quick access
+- **Project Sort Controls** — Cycle through sort modes (Recent / A-Z / Sessions)
+- **Resizable Panels** — Draggable panel dividers with persistent widths
+- **Preferences Persistence** — Selected project/session, window size/position, and panel widths survive restarts
 - **Team Support** — Discover and display team configurations with member details
+- **Activity Indicators** — Live status dots on project icons (green/blue/gray)
 - **Session Status** — Visual indicators for active (🟢), recent (🔵), and stale (⚪) sessions
-- **Tool Call Visualization** — Expandable cards showing tool invocations and results
+- **Tool Call Visualization** — Expandable cards with syntax-highlighted tool I/O
 - **Token Usage Tracking** — Input/output token counts with visual bars
 - **Keyboard Shortcuts** — Navigate projects and sessions with `Cmd+1/2/3`, `Cmd+J`
 - **Raw JSON Toggle** — View the underlying JSONL structure when debugging
@@ -130,11 +136,12 @@ ClaudeOverseer is built with:
 
 - **Electron** — Desktop shell with filesystem access
 - **React 19 + TypeScript** — Component-based UI
-- **React-Bootstrap + Bootstrap 5** — Styling and widgets
+- **Radix UI** — Accessible, unstyled primitives with custom styling
+- **TanStack React Query** — Server-state management with event-driven invalidation
 - **Vite + electron-vite** — Fast bundling and hot-reload
-- **Zustand** — Lightweight state management
 - **Chokidar** — File watching for live updates
 - **react-markdown + remark-gfm + rehype-highlight** — Markdown rendering
+- **highlight.js** — Syntax highlighting for tool call content
 - **Mermaid** — Diagram support
 
 ### Process Architecture
@@ -224,17 +231,17 @@ pnpm run docker:build
 This creates **9 artifacts** in `release/`:
 
 **Linux (x64 & ARM64):**
-- `ClaudeOverseer-0.1.0-linux-x86_64.AppImage`
-- `ClaudeOverseer-0.1.0-linux-amd64.deb`
-- `ClaudeOverseer-0.1.0-linux-arm64.AppImage`
-- `ClaudeOverseer-0.1.0-linux-arm64.deb`
+- `ClaudeOverseer-0.2.0-linux-x86_64.AppImage`
+- `ClaudeOverseer-0.2.0-linux-amd64.deb`
+- `ClaudeOverseer-0.2.0-linux-arm64.AppImage`
+- `ClaudeOverseer-0.2.0-linux-arm64.deb`
 
 **Windows (x64 & ARM64):**
-- `ClaudeOverseer-0.1.0-win-x64.exe` (installer)
-- `ClaudeOverseer-0.1.0-win-x64.zip` (portable)
-- `ClaudeOverseer-0.1.0-win-arm64.exe` (installer)
-- `ClaudeOverseer-0.1.0-win-arm64.zip` (portable)
-- `ClaudeOverseer-0.1.0-win.exe` (universal installer, auto-detects architecture)
+- `ClaudeOverseer-0.2.0-win-x64.exe` (installer)
+- `ClaudeOverseer-0.2.0-win-x64.zip` (portable)
+- `ClaudeOverseer-0.2.0-win-arm64.exe` (installer)
+- `ClaudeOverseer-0.2.0-win-arm64.zip` (portable)
+- `ClaudeOverseer-0.2.0-win.exe` (universal installer, auto-detects architecture)
 
 **macOS Build (requires macOS)**
 
@@ -244,10 +251,10 @@ pnpm run dist:mac
 ```
 
 This creates **4 artifacts**:
-- `ClaudeOverseer-0.1.0-mac-x64.dmg` (Intel installer)
-- `ClaudeOverseer-0.1.0-mac-x64.zip` (Intel portable)
-- `ClaudeOverseer-0.1.0-mac-arm64.dmg` (Apple Silicon installer)
-- `ClaudeOverseer-0.1.0-mac-arm64.zip` (Apple Silicon portable)
+- `ClaudeOverseer-0.2.0-mac-x64.dmg` (Intel installer)
+- `ClaudeOverseer-0.2.0-mac-x64.zip` (Intel portable)
+- `ClaudeOverseer-0.2.0-mac-arm64.dmg` (Apple Silicon installer)
+- `ClaudeOverseer-0.2.0-mac-arm64.zip` (Apple Silicon portable)
 
 **Total: 13 distribution packages** across all platforms and architectures.
 
@@ -333,9 +340,13 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - [x] Phase 5: UX polish, teams support, keyboard shortcuts
 - [x] Phase 6: Packaging and CI/CD
 - [x] Windows support
+- [x] Dark/light/system theme toggle
+- [x] Pinned projects and sort controls
+- [x] Resizable panels with persistent preferences
+- [x] Radix UI migration (replaced React-Bootstrap)
+- [x] Event-driven filesystem monitoring (replaced polling)
 - [ ] Message search and filtering
 - [ ] Export session transcripts
-- [ ] Dark/light theme toggle
 - [ ] Session comparison view
 
 ---
