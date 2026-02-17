@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Container, Row, Col } from 'react-bootstrap'
 import { ProjectList } from './components/ProjectList'
 import { SessionList } from './components/SessionList'
 import { MessageStream } from './components/messages/MessageStream'
@@ -15,6 +14,22 @@ const queryClient = new QueryClient({
     }
   }
 })
+
+const STORAGE_KEY = 'overseer-panel-widths'
+const DEFAULT_WIDTHS = [220, 280] // px for panel 1 and 2; panel 3 gets the rest
+const MIN_WIDTH = 120
+const MAX_WIDTH_FRACTION = 0.45 // no single panel > 45% of window
+
+function loadWidths(): [number, number] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length === 2) return parsed as [number, number]
+    }
+  } catch { /* ignore */ }
+  return DEFAULT_WIDTHS as [number, number]
+}
 
 function App() {
   return (
@@ -33,6 +48,50 @@ function AppContent() {
   const projectRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<HTMLDivElement>(null)
   const messageRef = useRef<HTMLDivElement>(null)
+
+  // Resizable panel widths (px)
+  const [panelWidths, setPanelWidths] = useState<[number, number]>(loadWidths)
+  const dragging = useRef<{ index: 0 | 1; startX: number; startWidths: [number, number] } | null>(null)
+
+  // Persist widths
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(panelWidths))
+  }, [panelWidths])
+
+  const handleMouseDown = useCallback((index: 0 | 1) => (e: React.MouseEvent) => {
+    e.preventDefault()
+    dragging.current = { index, startX: e.clientX, startWidths: [...panelWidths] as [number, number] }
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }, [panelWidths])
+
+  useEffect(() => {
+    function onMouseMove(e: MouseEvent) {
+      const d = dragging.current
+      if (!d) return
+      const delta = e.clientX - d.startX
+      const maxPx = window.innerWidth * MAX_WIDTH_FRACTION
+      const newWidths: [number, number] = [...d.startWidths]
+      newWidths[d.index] = Math.max(MIN_WIDTH, Math.min(maxPx, d.startWidths[d.index] + delta))
+      // Ensure panel 3 keeps at least MIN_WIDTH
+      const remaining = window.innerWidth - newWidths[0] - newWidths[1] - 8 // 8px for two handles
+      if (remaining < MIN_WIDTH) return
+      setPanelWidths(newWidths)
+    }
+    function onMouseUp() {
+      if (dragging.current) {
+        dragging.current = null
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+      }
+    }
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [])
 
   function handleProjectSelect(encodedName: string) {
     setSelectedProject(encodedName)
@@ -64,47 +123,48 @@ function AppContent() {
   }, [])
 
   return (
-    <Container fluid className="vh-100 p-0">
-      <Row className="h-100 g-0">
-        {/* Panel 1: Projects Sidebar */}
-        <Col
-          xs={3}
-          className="border-end bg-dark h-100 overflow-auto"
-          data-testid="project-sidebar"
-          ref={projectRef}
-          tabIndex={-1}
-        >
-          <ProjectList onProjectSelect={handleProjectSelect} />
-        </Col>
+    <div className="app-layout">
+      {/* Panel 1: Projects Sidebar */}
+      <div
+        className="app-panel bg-dark"
+        style={{ width: panelWidths[0] }}
+        data-testid="project-sidebar"
+        ref={projectRef}
+        tabIndex={-1}
+      >
+        <ProjectList onProjectSelect={handleProjectSelect} />
+      </div>
 
-        {/* Panel 2: Sessions List */}
-        <Col
-          xs={3}
-          className="border-end bg-dark h-100 overflow-auto"
-          data-testid="session-list"
-          ref={sessionRef}
-          tabIndex={-1}
-        >
-          <SessionList
-            projectEncodedName={selectedProject}
-            onSessionSelect={setSelectedSessionPath}
-          />
-        </Col>
+      <div className="resize-handle" onMouseDown={handleMouseDown(0)} />
 
-        {/* Panel 3: Message Stream */}
-        <Col
-          xs={6}
-          className="bg-dark h-100 overflow-hidden"
-          data-testid="message-stream"
-          ref={messageRef}
-          tabIndex={-1}
-        >
-          <ErrorBoundary>
-            <MessageStream sessionFilePath={selectedSessionPath} />
-          </ErrorBoundary>
-        </Col>
-      </Row>
-    </Container>
+      {/* Panel 2: Sessions List */}
+      <div
+        className="app-panel bg-dark"
+        style={{ width: panelWidths[1] }}
+        data-testid="session-list"
+        ref={sessionRef}
+        tabIndex={-1}
+      >
+        <SessionList
+          projectEncodedName={selectedProject}
+          onSessionSelect={setSelectedSessionPath}
+        />
+      </div>
+
+      <div className="resize-handle" onMouseDown={handleMouseDown(1)} />
+
+      {/* Panel 3: Message Stream */}
+      <div
+        className="app-panel app-panel--fill bg-dark"
+        data-testid="message-stream"
+        ref={messageRef}
+        tabIndex={-1}
+      >
+        <ErrorBoundary>
+          <MessageStream sessionFilePath={selectedSessionPath} />
+        </ErrorBoundary>
+      </div>
+    </div>
   )
 }
 

@@ -52,6 +52,49 @@ html, body, #root {
   padding: 0;
 }
 
+// Resizable three-panel layout
+.app-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-panel {
+  height: 100%;
+  overflow: auto;
+  flex-shrink: 0;
+
+  &--fill {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+}
+
+.resize-handle {
+  width: 4px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: #30363d;
+  transition: background 0.15s;
+  position: relative;
+
+  // Wider invisible hit area
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -3px;
+    right: -3px;
+  }
+
+  &:hover,
+  &:active {
+    background: #58a6ff;
+  }
+}
+
 // Project cards
 .project-card-list {
   display: flex;
