@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - Unreleased (partial)
 
 ### Added
+- **Preferences Persistence** — App state now survives restarts via `~/.ClaudeOverseer/prefs.json`; remembers selected project/session, window size/position, and panel widths
+- **Resizable Panels** — Three-panel layout with draggable dividers; widths persist across sessions
 - **Write Tool Syntax Highlighting** — Write tool calls now display file contents with highlight.js syntax highlighting instead of just a success message
 - **System Reminder Detection** — `<system-reminder>` tags in tool results are parsed and displayed in a styled info box instead of raw XML
 - **Smart Auto-Scroll** — Message stream only auto-scrolls when user is at the bottom; pauses when scrolled up to read older messages
@@ -23,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Slim Scrollbars** — Thin dark-themed scrollbars app-wide for a cleaner look
 
 ### Changed
+- **Radix UI Migration** — Replaced React-Bootstrap with Radix UI primitives and custom styled components for a lighter, more flexible UI toolkit
 - **TanStack Query Migration** — Replaced manual `useState`/`useEffect` data fetching with `@tanstack/react-query` across all three data-fetching components (ProjectList, SessionList, MessageStream)
   - New shared query hooks: `useProjectsDir()`, `useProjects()`, `useSessions()`, `useSessionMessages()`
   - `useProjectsDir()` cached and shared between Projects and Sessions (eliminates duplicate IPC calls)
@@ -39,7 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `QueryClientProvider` wraps the app root with `retry: 1`, `refetchOnWindowFocus: false`
 - Stale times: projectsDir=Infinity, projects=Infinity (event-driven), sessions=Infinity (event-driven), messages=Infinity (watcher-driven)
 - Dev server output now logged to `/tmp/claudeoverseer-dev.log` via `tee` (terminal colors preserved with `FORCE_COLOR=1`)
-- New IPC channels: `overseer:start-directory-watch`, `overseer:stop-directory-watch`, `overseer:projects-changed`, `overseer:sessions-changed`
+- New IPC channels: `overseer:start-directory-watch`, `overseer:stop-directory-watch`, `overseer:projects-changed`, `overseer:sessions-changed`, `overseer:load-preferences`, `overseer:save-preferences`
+- Preferences service: debounced writes (300ms), atomic file operations (write-to-temp + rename), merge semantics for partial updates
 
 ## [0.1.0] - 2025-02-15
 
