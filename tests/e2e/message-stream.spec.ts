@@ -56,9 +56,9 @@ test.describe('Message Stream', () => {
       const toolCount = await toolCards.count()
       expect(toolCount).toBeGreaterThan(0)
 
-      // Should show token usage bar
-      const tokenBar = window.locator('[data-testid="token-usage-bar"]')
-      await expect(tokenBar).toBeVisible()
+      // Should show status bar (replaced TokenUsageBar)
+      const statusBar = window.locator('[data-testid="status-bar"]')
+      await expect(statusBar).toBeVisible()
 
     } finally {
       if (app) {

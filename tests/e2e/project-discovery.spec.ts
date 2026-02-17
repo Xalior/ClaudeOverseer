@@ -34,7 +34,7 @@ test.describe('Project Discovery', () => {
       await expect(projectItem).toBeVisible()
 
       // Project should show session count badge
-      const badge = projectItem.locator('.badge')
+      const badge = projectItem.locator('.ui-badge')
       await expect(badge).toBeVisible()
       const count = await badge.textContent()
       expect(parseInt(count || '0')).toBeGreaterThan(0)
@@ -77,15 +77,19 @@ test.describe('Project Discovery', () => {
       const count = await sessionItems.count()
       expect(count).toBeGreaterThan(0)
 
-      // Should have different session types
+      // Should have main sessions visible at top level
       const mainSessions = window.locator('[data-testid^="session-main-"]')
-      const subagentSessions = window.locator('[data-testid^="session-subagent-"]')
-
       const mainCount = await mainSessions.count()
-      const subagentCount = await subagentSessions.count()
-
-      // We know our fixture has both main sessions and subagents
       expect(mainCount).toBeGreaterThan(0)
+
+      // Expand the parent session that has subagents (session-ac1708b5)
+      const subToggle = window.locator('.session-item__sub-toggle').first()
+      await subToggle.click()
+
+      // After expanding, subagent sessions should be visible
+      const subagentSessions = window.locator('[data-testid^="session-subagent-"]')
+      await expect(subagentSessions.first()).toBeVisible({ timeout: 3000 })
+      const subagentCount = await subagentSessions.count()
       expect(subagentCount).toBeGreaterThan(0)
 
     } finally {
