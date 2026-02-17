@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useProjects } from '../hooks/queries'
 import { Badge } from './ui/badge'
+import { sortProjects, getActivityLevel, formatRelativeTime } from '../utils/project-utils'
 import type { ProjectSortOrder } from '../../../preload/index.d'
 
 interface Project {
@@ -10,21 +11,6 @@ interface Project {
   pathVerified: boolean
   sessionCount: number
   lastModified: number
-}
-
-function formatRelativeTime(timestamp: number): string {
-  if (!timestamp) return 'Never'
-  const now = Date.now()
-  const diff = now - timestamp
-  const minutes = Math.floor(diff / 60000)
-  if (minutes < 1) return 'Just now'
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
-  const date = new Date(timestamp)
-  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })
 }
 
 interface ProjectListProps {
@@ -111,26 +97,6 @@ const SORT_LABELS: Record<ProjectSortOrder, string> = {
 
 const SORT_OPTIONS: ProjectSortOrder[] = ['recent', 'alpha', 'sessions']
 
-function sortProjects(projects: Project[], order: ProjectSortOrder): Project[] {
-  const sorted = [...projects]
-  switch (order) {
-    case 'alpha':
-      return sorted.sort((a, b) => a.name.localeCompare(b.name))
-    case 'recent':
-      return sorted.sort((a, b) => b.lastModified - a.lastModified)
-    case 'sessions':
-      return sorted.sort((a, b) => b.sessionCount - a.sessionCount)
-  }
-}
-
-function getActivityLevel(timestamp: number): 'active' | 'recent' | 'stale' {
-  if (!timestamp) return 'stale'
-  const diff = Date.now() - timestamp
-  if (diff < 60_000) return 'active'
-  if (diff < 300_000) return 'recent'
-  return 'stale'
-}
-
 export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) {
   const { data: projects = [], isLoading: loading } = useProjects()
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
@@ -211,6 +177,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
       <div className="panel-content">
         <div className="project-panel-header">
           <h5 className="panel-title">Projects</h5>
+          {themeToggle}
         </div>
         <p className="panel-muted">Loading...</p>
       </div>
@@ -222,6 +189,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
       <div className="panel-content">
         <div className="project-panel-header">
           <h5 className="panel-title">Projects</h5>
+          {themeToggle}
         </div>
         <p className="panel-muted">No projects found</p>
       </div>

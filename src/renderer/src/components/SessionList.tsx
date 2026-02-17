@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useSessions } from '../hooks/queries'
 import { Badge } from './ui/badge'
 import { Collapsible, CollapsibleContent } from './ui/collapsible'
+import { getSessionStatus, getStatusBadge, formatDateTime } from '../utils/session-utils'
 
 interface Session {
   id: string
@@ -16,39 +17,6 @@ interface Session {
 interface SessionListProps {
   projectEncodedName: string | null
   onSessionSelect?: (filePath: string) => void
-}
-
-type SessionStatus = 'active' | 'recent' | 'stale'
-
-function getSessionStatus(lastModified: number): SessionStatus {
-  const now = Date.now()
-  const diff = now - lastModified
-  if (diff < 60 * 1000) return 'active'
-  if (diff < 5 * 60 * 1000) return 'recent'
-  return 'stale'
-}
-
-function getStatusBadge(status: SessionStatus): { icon: string; variant: 'success' | 'info' | 'secondary' } {
-  switch (status) {
-    case 'active': return { icon: '🟢', variant: 'success' }
-    case 'recent': return { icon: '🔵', variant: 'info' }
-    case 'stale': return { icon: '⚪', variant: 'secondary' }
-  }
-}
-
-function formatDateTime(timestamp: number): string {
-  const date = new Date(timestamp)
-  const now = new Date()
-  const isToday = date.toDateString() === now.toDateString()
-  const yesterday = new Date(now)
-  yesterday.setDate(yesterday.getDate() - 1)
-  const isYesterday = date.toDateString() === yesterday.toDateString()
-
-  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-
-  if (isToday) return `Today ${time}`
-  if (isYesterday) return `Yesterday ${time}`
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ` ${time}`
 }
 
 export function SessionList({ projectEncodedName, onSessionSelect }: SessionListProps) {
