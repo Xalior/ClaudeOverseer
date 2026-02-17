@@ -29,6 +29,7 @@ function formatRelativeTime(timestamp: number): string {
 
 interface ProjectListProps {
   onProjectSelect: (encodedName: string) => void
+  themeToggle?: React.ReactNode
 }
 
 /**
@@ -130,7 +131,7 @@ function getActivityLevel(timestamp: number): 'active' | 'recent' | 'stale' {
   return 'stale'
 }
 
-export function ProjectList({ onProjectSelect }: ProjectListProps) {
+export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) {
   const { data: projects = [], isLoading: loading } = useProjects()
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [pinnedProjects, setPinnedProjects] = useState<string[]>([])
@@ -298,6 +299,7 @@ export function ProjectList({ onProjectSelect }: ProjectListProps) {
     <div className="panel-content">
       <div className="project-panel-header">
         <h5 className="panel-title">Projects</h5>
+        {themeToggle}
       </div>
 
       {/* Pinned Section */}

@@ -10,6 +10,7 @@ export interface WindowState {
 }
 
 export type ProjectSortOrder = 'alpha' | 'recent' | 'sessions'
+export type ThemeMode = 'light' | 'dark' | 'system'
 
 export interface AppPreferences {
   selectedProject: string | null
@@ -18,6 +19,7 @@ export interface AppPreferences {
   panelWidths: [number, number]
   pinnedProjects: string[]
   projectSortOrder: ProjectSortOrder
+  theme: ThemeMode
 }
 
 export interface NewMessagesData {

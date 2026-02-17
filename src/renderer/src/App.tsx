@@ -4,7 +4,9 @@ import { ProjectList } from './components/ProjectList'
 import { SessionList } from './components/SessionList'
 import { MessageStream } from './components/messages/MessageStream'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { ThemeToggle } from './components/ThemeToggle'
 import { useDirectoryWatcher } from './hooks/queries'
+import { useTheme } from './hooks/useTheme'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +32,7 @@ function App() {
 function AppContent() {
   // Start directory watcher on mount
   useDirectoryWatcher()
+  const { mode: themeMode, setTheme } = useTheme()
 
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [selectedSessionPath, setSelectedSessionPath] = useState<string | null>(null)
@@ -147,7 +150,10 @@ function AppContent() {
         ref={projectRef}
         tabIndex={-1}
       >
-        <ProjectList onProjectSelect={handleProjectSelect} />
+        <ProjectList
+          onProjectSelect={handleProjectSelect}
+          themeToggle={<ThemeToggle mode={themeMode} onModeChange={setTheme} />}
+        />
       </div>
 
       <div className="resize-handle" onMouseDown={handleMouseDown(0)} />

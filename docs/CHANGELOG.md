@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - Unreleased (partial)
 
 ### Added
+- **Dark / Light / System Theme Toggle** — Three-mode theme switcher (☀ Light, ⚙ System, 🌙 Dark) in the project sidebar header; System mode auto-follows macOS appearance (tracks sunset/sunrise changes via `prefers-color-scheme` media query listener); preference persists across sessions
+- **Light Theme** — Full light colour scheme with appropriate contrast ratios, light-mode syntax highlighting for code blocks, and theme-aware tool call cards
 - **Pinned Projects** — Pin favourite projects to a dedicated section at the top of the sidebar for quick access; pin state persists across sessions via preferences
 - **Project Sort Controls** — Cycle through sort modes (Recent / A-Z / Sessions) for discovered projects; sort preference persists
 - **Activity Indicators** — Small status dot on each project icon showing live activity state: green (active, <1min), blue (recent, <5min), gray (stale)
@@ -25,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Project Card Layout** — Compact cards now show relative time; full path only shown when expanded
 
 ### Improved
+- **Enterprise Design Refresh** — Removed coloured left-edge borders from message cards and project cards; replaced with subtle background tinting and border highlights; toned-down colour palette with less saturated accents; system font stack; thinner resize handles; consistent shadow tokens across themes
+- **Theme-Aware Tool Cards** — All inline styles in ToolCallCard (Bash, File, Search, AskQuestion, Generic, SystemReminder) converted from hardcoded hex colours to CSS variable references for proper light/dark rendering
 - **Project Sidebar Sections** — Sidebar split into Pinned and Discovered sections with section headers, count badges, and sort controls
 - **Tighter Project Cards** — More compact cards with hover shadow, smoother transitions, and pin button that appears on hover
 - **Larger Project Icons** — Project icons doubled in size using CSS grid layout; collapsed icons span both text lines, expanded cards give the full path full card width below the icon

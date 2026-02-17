@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import hljs from 'highlight.js'
-import 'highlight.js/styles/github-dark.css'
 import { Card, CardContent } from '../ui/card'
 import { Button } from '../ui/button'
 import { Collapsible, CollapsibleContent } from '../ui/collapsible'
@@ -143,10 +142,10 @@ function getLangFromPath(filePath: string): string | null {
 }
 
 const terminalStyle: React.CSSProperties = {
-  backgroundColor: '#1a1a2e',
-  color: '#e0e0e0',
+  backgroundColor: 'var(--surface-0)',
+  color: 'var(--text-0)',
   fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, Monaco, 'Courier New', monospace",
-  fontSize: '0.85rem',
+  fontSize: '0.82rem',
   borderRadius: '6px',
   padding: '12px',
   margin: '8px 0 0 0',
@@ -156,10 +155,10 @@ const terminalStyle: React.CSSProperties = {
 }
 
 const codeBlockStyle: React.CSSProperties = {
-  backgroundColor: '#0d1117',
-  color: '#c9d1d9',
+  backgroundColor: 'var(--surface-0)',
+  color: 'var(--text-0)',
   fontFamily: "'SF Mono', 'Fira Code', Menlo, Monaco, monospace",
-  fontSize: '0.85rem',
+  fontSize: '0.82rem',
   borderRadius: '6px',
   padding: '12px',
   margin: '8px 0 0 0',
@@ -172,9 +171,8 @@ const codeBlockStyle: React.CSSProperties = {
 function SystemReminder({ text }: { text: string }) {
   return (
     <div style={{
-      backgroundColor: '#1f2937',
-      border: '1px solid #4b5563',
-      borderLeft: '4px solid #60a5fa',
+      backgroundColor: 'var(--accent-subtle)',
+      border: '1px solid var(--border-1)',
       borderRadius: '6px',
       padding: '10px 12px',
       margin: '8px 0',
@@ -184,8 +182,8 @@ function SystemReminder({ text }: { text: string }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
         <span style={{ fontSize: '1rem', marginTop: '2px' }}>ℹ️</span>
-        <div style={{ color: '#d1d5db', flex: 1 }}>
-          <div style={{ color: '#9ca3af', fontSize: '0.7rem', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{ color: 'var(--text-1)', flex: 1 }}>
+          <div style={{ color: 'var(--text-2)', fontSize: '0.7rem', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             System Reminder
           </div>
           {text}
@@ -209,16 +207,16 @@ function BashPrettyPrint({ input, result, isError }: {
   const outputLines = mainContent ? mainContent.split('\n').length : 0
 
   return (
-    <div style={{ ...terminalStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
+    <div style={{ ...terminalStyle, border: '1px solid var(--border-0)' }} data-testid="tool-input-content">
       {/* Terminal header */}
-      <div style={{ marginBottom: '8px', borderBottom: '1px solid #30363d', paddingBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+      <div style={{ marginBottom: '8px', borderBottom: '1px solid var(--border-0)', paddingBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
         <span style={{ fontSize: '0.78rem' }}>💻</span>
-        <span style={{ color: '#8b949e', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>bash</span>
+        <span style={{ color: 'var(--text-2)', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>bash</span>
       </div>
       {/* Command */}
       <div>
-        <span style={{ color: '#7ee787' }}>$ </span>
-        <span style={{ color: '#f0f6fc' }}>{command}</span>
+        <span style={{ color: 'var(--ok)' }}>$ </span>
+        <span style={{ color: 'var(--text-0)' }}>{command}</span>
       </div>
       {/* Output */}
       {mainContent && (
@@ -228,7 +226,7 @@ function BashPrettyPrint({ input, result, isError }: {
               variant="link"
               size="sm"
               className="tool-toggle"
-              style={{ color: '#8b949e', fontSize: '0.72rem' }}
+              style={{ color: 'var(--text-2)', fontSize: '0.72rem' }}
               onClick={() => setShowOutput(!showOutput)}
             >
               {showOutput ? '▼' : '▶'} output ({outputLines} lines)
@@ -236,9 +234,9 @@ function BashPrettyPrint({ input, result, isError }: {
           </div>
           <Collapsible open={showOutput}>
             <CollapsibleContent className="ui-collapsible-content" data-testid="tool-output-content" style={{
-              color: isError ? '#f85149' : '#c8d6e5',
+              color: isError ? 'var(--danger)' : 'var(--text-1)',
               marginTop: '4px',
-              borderTop: '1px solid #30363d',
+              borderTop: '1px solid var(--border-0)',
               paddingTop: '8px',
               fontSize: '0.82rem',
               whiteSpace: 'pre-wrap',
@@ -298,19 +296,19 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
   }, [displayContent, lang, isEdit])
 
   return (
-    <div style={{ ...codeBlockStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
+    <div style={{ ...codeBlockStyle, border: '1px solid var(--border-0)' }} data-testid="tool-input-content">
       {/* File header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', borderBottom: '1px solid #30363d', paddingBottom: '6px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', borderBottom: '1px solid var(--border-0)', paddingBottom: '6px' }}>
         <div>
-          <span style={{ color: '#8b949e', marginRight: '6px' }}>{TOOL_ICONS[toolName]}</span>
-          <span style={{ color: '#79c0ff', fontWeight: 500 }}>{fileName}</span>
-          <span style={{ color: '#484f58', fontSize: '0.75rem', marginLeft: '8px' }}>{filePath}</span>
+          <span style={{ color: 'var(--text-2)', marginRight: '6px' }}>{TOOL_ICONS[toolName]}</span>
+          <span style={{ color: 'var(--accent)', fontWeight: 500 }}>{fileName}</span>
+          <span style={{ color: 'var(--text-2)', fontSize: '0.75rem', marginLeft: '8px' }}>{filePath}</span>
           {lang && (
             <span style={{
-              color: '#8b949e',
+              color: 'var(--text-2)',
               fontSize: '0.7rem',
               marginLeft: '8px',
-              backgroundColor: '#21262d',
+              backgroundColor: 'var(--surface-2)',
               padding: '1px 6px',
               borderRadius: '8px'
             }}>{lang}</span>
@@ -321,7 +319,7 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
             variant="link"
             size="sm"
             className="tool-toggle"
-            style={{ color: '#8b949e', fontSize: '0.72rem' }}
+            style={{ color: 'var(--text-2)', fontSize: '0.72rem' }}
             onClick={() => setShowContent(!showContent)}
           >
             {showContent ? '▼' : '▶'} {contentLines} lines
@@ -332,13 +330,13 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
       {/* Edit diff view */}
       {isEdit && oldStr && newStr && (
         <div style={{ marginBottom: '8px' }}>
-          <div style={{ backgroundColor: '#3d1f1f', padding: '6px 8px', borderRadius: '4px', marginBottom: '4px' }}>
-            <span style={{ color: '#f85149', fontWeight: 600 }}>- </span>
-            <span style={{ color: '#ffa198' }}>{oldStr.length > 200 ? oldStr.slice(0, 200) + '...' : oldStr}</span>
+          <div style={{ backgroundColor: 'var(--danger-muted)', padding: '6px 8px', borderRadius: '4px', marginBottom: '4px' }}>
+            <span style={{ color: 'var(--danger)', fontWeight: 600 }}>- </span>
+            <span style={{ color: 'var(--danger)' }}>{oldStr.length > 200 ? oldStr.slice(0, 200) + '...' : oldStr}</span>
           </div>
-          <div style={{ backgroundColor: '#1f3d1f', padding: '6px 8px', borderRadius: '4px' }}>
-            <span style={{ color: '#3fb950', fontWeight: 600 }}>+ </span>
-            <span style={{ color: '#7ee787' }}>{newStr.length > 200 ? newStr.slice(0, 200) + '...' : newStr}</span>
+          <div style={{ backgroundColor: 'var(--ok-muted)', padding: '6px 8px', borderRadius: '4px' }}>
+            <span style={{ color: 'var(--ok)', fontWeight: 600 }}>+ </span>
+            <span style={{ color: 'var(--ok)' }}>{newStr.length > 200 ? newStr.slice(0, 200) + '...' : newStr}</span>
           </div>
         </div>
       )}
@@ -356,7 +354,7 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
                 />
               </pre>
             ) : (
-              <div style={{ color: isError ? '#f85149' : '#c9d1d9' }}>
+              <div style={{ color: isError ? 'var(--danger)' : 'var(--text-0)' }}>
                 {displayContent}
               </div>
             )}
@@ -367,9 +365,9 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
       {/* Show write result status if there's also a result message */}
       {isWrite && result && (
         <div style={{
-          color: isError ? '#f85149' : '#3fb950',
+          color: isError ? 'var(--danger)' : 'var(--ok)',
           fontSize: '0.75rem',
-          borderTop: '1px solid #30363d',
+          borderTop: '1px solid var(--border-0)',
           paddingTop: '6px',
           marginTop: '6px'
         }}>
@@ -401,13 +399,13 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
   const resultLines = mainContent ? mainContent.split('\n').filter(l => l.trim()).length : 0
 
   return (
-    <div style={{ ...codeBlockStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
+    <div style={{ ...codeBlockStyle, border: '1px solid var(--border-0)' }} data-testid="tool-input-content">
       <div style={{ marginBottom: '8px' }}>
-        <span style={{ color: '#8b949e' }}>{TOOL_ICONS[toolName]} </span>
-        <span style={{ color: '#d2a8ff', fontWeight: 500 }}>{pattern}</span>
-        {path && <span style={{ color: '#484f58', marginLeft: '8px' }}>in {path}</span>}
+        <span style={{ color: 'var(--text-2)' }}>{TOOL_ICONS[toolName]} </span>
+        <span style={{ color: 'var(--accent)', fontWeight: 500 }}>{pattern}</span>
+        {path && <span style={{ color: 'var(--text-2)', marginLeft: '8px' }}>in {path}</span>}
         {resultLines > 0 && (
-          <span style={{ color: '#7ee787', marginLeft: '8px', fontSize: '0.8rem' }}>({resultLines} matches)</span>
+          <span style={{ color: 'var(--ok)', marginLeft: '8px', fontSize: '0.8rem' }}>({resultLines} matches)</span>
         )}
       </div>
 
@@ -417,15 +415,15 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
             variant="link"
             size="sm"
             className="tool-toggle"
-            style={{ color: '#8b949e', fontSize: '0.72rem', marginBottom: '4px' }}
+            style={{ color: 'var(--text-2)', fontSize: '0.72rem', marginBottom: '4px' }}
             onClick={() => setShowResults(!showResults)}
           >
             {showResults ? '▼' : '▶'} results
           </Button>
           <Collapsible open={showResults}>
             <CollapsibleContent className="ui-collapsible-content" data-testid="tool-output-content" style={{
-              color: isError ? '#f85149' : '#c9d1d9',
-              borderTop: '1px solid #30363d',
+              color: isError ? 'var(--danger)' : 'var(--text-0)',
+              borderTop: '1px solid var(--border-0)',
               paddingTop: '8px',
               marginTop: '4px'
             }}>
@@ -461,21 +459,21 @@ function AskUserQuestionPrettyPrint({ input, result }: {
 
   return (
     <div style={{
-      backgroundColor: '#1c1f2b',
-      border: '1px solid #3d4663',
+      backgroundColor: 'var(--surface-0)',
+      border: '1px solid var(--border-0)',
       borderRadius: '6px',
       padding: '12px',
       margin: '8px 0 0 0',
       fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-      fontSize: '0.85rem'
+      fontSize: '0.82rem'
     }} data-testid="tool-input-content">
       {questions.map((q, qi) => (
         <div key={qi}>
           {/* Header badge */}
           {q.header && (
             <span style={{
-              backgroundColor: '#30363d',
-              color: '#79c0ff',
+              backgroundColor: 'var(--surface-2)',
+              color: 'var(--accent)',
               padding: '2px 8px',
               borderRadius: '10px',
               fontSize: '0.75rem',
@@ -488,7 +486,7 @@ function AskUserQuestionPrettyPrint({ input, result }: {
           )}
 
           {/* Question text */}
-          <div style={{ color: '#e6edf3', fontWeight: 500, margin: '8px 0' }}>
+          <div style={{ color: 'var(--text-0)', fontWeight: 500, margin: '8px 0' }}>
             {q.question}
           </div>
 
@@ -499,8 +497,8 @@ function AskUserQuestionPrettyPrint({ input, result }: {
                 const isSelected = answer === opt.label
                 return (
                   <div key={oi} style={{
-                    backgroundColor: isSelected ? '#1f3d1f' : '#161b22',
-                    border: isSelected ? '1px solid #3fb950' : '1px solid #30363d',
+                    backgroundColor: isSelected ? 'var(--ok-muted)' : 'var(--surface-1)',
+                    border: isSelected ? '1px solid var(--ok)' : '1px solid var(--border-0)',
                     borderRadius: '6px',
                     padding: '8px 12px',
                     marginBottom: '4px',
@@ -509,18 +507,18 @@ function AskUserQuestionPrettyPrint({ input, result }: {
                     gap: '8px'
                   }}>
                     <span style={{
-                      color: isSelected ? '#3fb950' : '#484f58',
+                      color: isSelected ? 'var(--ok)' : 'var(--text-2)',
                       fontSize: '0.9rem',
                       marginTop: '1px'
                     }}>
                       {isSelected ? '●' : '○'}
                     </span>
                     <div>
-                      <span style={{ color: isSelected ? '#7ee787' : '#c9d1d9', fontWeight: 500 }}>
+                      <span style={{ color: isSelected ? 'var(--ok)' : 'var(--text-0)', fontWeight: 500 }}>
                         {opt.label}
                       </span>
                       {opt.description && (
-                        <div style={{ color: '#8b949e', fontSize: '0.8rem', marginTop: '2px' }}>
+                        <div style={{ color: 'var(--text-2)', fontSize: '0.8rem', marginTop: '2px' }}>
                           {opt.description}
                         </div>
                       )}
@@ -536,10 +534,10 @@ function AskUserQuestionPrettyPrint({ input, result }: {
       {/* Answer summary */}
       {answer && (
         <div style={{
-          borderTop: '1px solid #30363d',
+          borderTop: '1px solid var(--border-0)',
           paddingTop: '8px',
           marginTop: '8px',
-          color: '#7ee787',
+          color: 'var(--ok)',
           fontSize: '0.8rem'
         }} data-testid="tool-output-content">
           User selected: <strong>{answer}</strong>
@@ -565,16 +563,16 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
   const { icon, label, server } = formatToolName(toolName)
 
   return (
-    <div style={{ ...codeBlockStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
+    <div style={{ ...codeBlockStyle, border: '1px solid var(--border-0)' }} data-testid="tool-input-content">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
           <span>{icon}</span>
-          <span style={{ color: '#c9d1d9', fontWeight: 500 }}>{label}</span>
+          <span style={{ color: 'var(--text-0)', fontWeight: 500 }}>{label}</span>
           {server && (
             <span style={{
-              color: '#8b949e',
+              color: 'var(--text-2)',
               fontSize: '0.68rem',
-              backgroundColor: '#21262d',
+              backgroundColor: 'var(--surface-2)',
               padding: '1px 5px',
               borderRadius: '4px',
               fontStyle: 'italic'
@@ -586,7 +584,7 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
             variant="link"
             size="sm"
             className="tool-toggle tool-toggle--spaced"
-            style={{ color: '#8b949e', fontSize: '0.72rem' }}
+            style={{ color: 'var(--text-2)', fontSize: '0.72rem' }}
             onClick={() => setShowInput(!showInput)}
           >
             {showInput ? '▼' : '▶'} input
@@ -596,7 +594,7 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
               variant="link"
               size="sm"
               className="tool-toggle"
-              style={{ color: '#8b949e', fontSize: '0.72rem' }}
+              style={{ color: 'var(--text-2)', fontSize: '0.72rem' }}
               onClick={() => setShowOutput(!showOutput)}
             >
               {showOutput ? '▼' : '▶'} output
@@ -606,7 +604,7 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
       </div>
       <Collapsible open={showInput}>
         <CollapsibleContent className="ui-collapsible-content">
-          <pre style={{ color: '#c9d1d9', margin: '8px 0 0 0', fontSize: '0.78rem' }}>
+          <pre style={{ color: 'var(--text-0)', margin: '8px 0 0 0', fontSize: '0.78rem' }}>
             <code>{JSON.stringify(input, null, 2)}</code>
           </pre>
         </CollapsibleContent>
@@ -614,8 +612,8 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
       {mainContent && (
         <Collapsible open={showOutput}>
           <CollapsibleContent className="ui-collapsible-content" data-testid="tool-output-content" style={{
-            color: isError ? '#f85149' : '#c9d1d9',
-            borderTop: '1px solid #30363d',
+            color: isError ? 'var(--danger)' : 'var(--text-0)',
+            borderTop: '1px solid var(--border-0)',
             paddingTop: '8px',
             marginTop: '8px',
             fontSize: '0.82rem',
