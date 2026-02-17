@@ -177,6 +177,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
       <div className="panel-content">
         <div className="project-panel-header">
           <h5 className="panel-title">Projects</h5>
+          {themeToggle}
         </div>
         <p className="panel-muted">Loading...</p>
       </div>
@@ -188,6 +189,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
       <div className="panel-content">
         <div className="project-panel-header">
           <h5 className="panel-title">Projects</h5>
+          {themeToggle}
         </div>
         <p className="panel-muted">No projects found</p>
       </div>

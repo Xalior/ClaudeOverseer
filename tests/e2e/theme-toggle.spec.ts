@@ -12,9 +12,12 @@ test.describe('Theme Toggle', () => {
       const window = await app.firstWindow()
       await window.waitForLoadState('domcontentloaded')
 
-      // Wait for the theme toggle to appear
+      // Wait for the app panels to render first
+      await window.waitForSelector('[data-testid="project-sidebar"]', { timeout: 10000 })
+
+      // Theme toggle should be visible in all states (including empty project list)
       const themeToggle = window.locator('[data-testid="theme-toggle"]')
-      await expect(themeToggle).toBeVisible({ timeout: 5000 })
+      await expect(themeToggle).toBeVisible({ timeout: 10000 })
 
       // Should have three theme buttons
       const lightBtn = window.locator('[data-testid="theme-light"]')
@@ -44,7 +47,10 @@ test.describe('Theme Toggle', () => {
 
       const window = await app.firstWindow()
       await window.waitForLoadState('domcontentloaded')
-      await window.waitForSelector('[data-testid="theme-toggle"]', { timeout: 5000 })
+
+      // Wait for the app panels to render first
+      await window.waitForSelector('[data-testid="project-sidebar"]', { timeout: 10000 })
+      await window.waitForSelector('[data-testid="theme-toggle"]', { timeout: 10000 })
 
       // Click dark theme
       await window.click('[data-testid="theme-dark"]')
