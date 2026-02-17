@@ -1,4 +1,4 @@
-import { Card, CardContent, CardTitle } from '../ui/card'
+import { Card, CardContent } from '../ui/card'
 
 interface UserImage {
   mediaType: string
@@ -18,10 +18,11 @@ export function UserMessage({ text, images, timestamp }: UserMessageProps) {
     <Card className="message-card message-card--user" data-testid="user-message">
       <CardContent>
         <div className="message-card__header">
-          <CardTitle className="message-card__title">
-            <span className="message-card__title-icon">👤</span>User
-          </CardTitle>
-          <small className="panel-muted" data-testid="message-timestamp">{relativeTime}</small>
+          <div className="message-card__title">
+            <span className="message-card__title-icon">👤</span>
+            <span className="message-card__role">User</span>
+          </div>
+          <span className="message-card__time" data-testid="message-timestamp">{relativeTime}</span>
         </div>
         {text && (
           <p className="message-card__text" data-testid="user-message-text">{text}</p>
@@ -37,8 +38,8 @@ export function UserMessage({ text, images, timestamp }: UserMessageProps) {
                   maxWidth: '100%',
                   maxHeight: '400px',
                   borderRadius: '6px',
-                  border: '1px solid #30363d',
-                  marginBottom: i < images.length - 1 ? '8px' : 0
+                  border: '1px solid var(--border-0)',
+                  marginBottom: i < images.length - 1 ? '6px' : 0
                 }}
                 data-testid="user-image"
               />

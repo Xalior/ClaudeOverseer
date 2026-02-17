@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { UserMessage } from './UserMessage'
 import { AssistantMessage } from './AssistantMessage'
 import { RawJsonView } from './RawJsonView'
-import { TokenUsageBar } from './TokenUsageBar'
+import { StatusBar } from './StatusBar'
 import { useSessionMessages } from '../../hooks/queries'
 import type { FormattedMessage } from '../../../../main/services/message-formatter'
 import { Switch } from '../ui/switch'
@@ -99,47 +99,60 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
     return globalRaw || rawToggles.has(uuid)
   }
 
+  // Empty state: no session selected
   if (!sessionFilePath) {
     return (
-      <div className="panel-content">
-        <h5 className="panel-title">💬 Message Stream</h5>
-        <p className="panel-muted">Select a session to view messages</p>
+      <div className="message-stream__empty">
+        <span className="message-stream__empty-icon">💬</span>
+        <h5 className="message-stream__empty-title">Message Stream</h5>
+        <p className="message-stream__empty-hint">Select a session to view messages</p>
       </div>
     )
   }
 
+  // Loading state
   if (loading && !session) {
     return (
-      <div className="panel-content">
-        <h5 className="panel-title">💬 Message Stream</h5>
-        <p className="panel-muted">Loading messages...</p>
+      <div className="message-stream__empty">
+        <span className="message-stream__empty-icon">⏳</span>
+        <h5 className="message-stream__empty-title">Loading...</h5>
+        <p className="message-stream__empty-hint">Fetching session messages</p>
       </div>
     )
   }
 
+  // Empty session
   if (!session || session.messages.length === 0) {
     return (
-      <div className="panel-content">
-        <h5 className="panel-title">💬 Message Stream</h5>
-        <p className="panel-muted">No messages in this session</p>
+      <div className="message-stream__empty">
+        <span className="message-stream__empty-icon">📭</span>
+        <h5 className="message-stream__empty-title">Empty Session</h5>
+        <p className="message-stream__empty-hint">No messages in this session yet</p>
       </div>
     )
   }
+
+  const messageCount = session.messages.length
 
   return (
     <div className="message-stream" data-testid="message-stream-content">
       {/* Toolbar */}
       <div className="message-stream__toolbar">
-        <h6 className="message-stream__title">💬 Message Stream</h6>
-        <label className="switch-field" htmlFor="raw-toggle">
-          <span className="switch-field__label">Raw JSON</span>
-          <Switch
-            id="raw-toggle"
-            checked={globalRaw}
-            onCheckedChange={setGlobalRaw}
-            data-testid="global-raw-toggle"
-          />
-        </label>
+        <div className="message-stream__toolbar-left">
+          <h6 className="message-stream__title">💬 Messages</h6>
+          <span className="message-stream__msg-count">{messageCount}</span>
+        </div>
+        <div className="message-stream__toolbar-right">
+          <label className="switch-field" htmlFor="raw-toggle">
+            <span className="switch-field__label">Raw</span>
+            <Switch
+              id="raw-toggle"
+              checked={globalRaw}
+              onCheckedChange={setGlobalRaw}
+              data-testid="global-raw-toggle"
+            />
+          </label>
+        </div>
       </div>
 
       {/* Messages */}
@@ -158,7 +171,7 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
                   onClick={() => toggleRaw(msg.uuid)}
                   data-testid={`raw-toggle-${msg.uuid}`}
                 >
-                  [{rawToggles.has(msg.uuid) ? 'Formatted' : 'Raw'}]
+                  {rawToggles.has(msg.uuid) ? '◀ formatted' : 'raw ▶'}
                 </button>
               </div>
             )}
@@ -167,8 +180,8 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Token usage bar */}
-      <TokenUsageBar usage={session.totalUsage} />
+      {/* Status Bar */}
+      <StatusBar usage={session.totalUsage} messageCount={messageCount} />
     </div>
   )
 }
@@ -196,7 +209,7 @@ function renderMessage(msg: FormattedMessage) {
     case 'queue-operation':
       return (
         <div className="queue-op" data-testid="queue-operation">
-          ⏳ Session started
+          ⚡ Session started
         </div>
       )
     default:

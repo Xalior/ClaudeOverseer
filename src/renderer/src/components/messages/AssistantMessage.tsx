@@ -3,7 +3,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { ToolCallCard } from './ToolCallCard'
 import type { ToolUseBlock, ToolResultContent, TokenUsage } from '../../../../main/types'
-import { Card, CardContent, CardTitle } from '../ui/card'
+import { Card, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
 
 interface ToolPair {
@@ -27,19 +27,18 @@ export function AssistantMessage({ model, textContent, toolPairs, usage, timesta
     <Card className="message-card message-card--assistant" data-testid="assistant-message">
       <CardContent>
         <div className="message-card__header">
-          <div>
-            <CardTitle className="message-card__title message-card__title--inline">
-              <span className="message-card__title-icon">🤖</span>Claude
-            </CardTitle>
+          <div className="message-card__title">
+            <span className="message-card__title-icon">🤖</span>
+            <span className="message-card__role">Claude</span>
             <Badge variant="success" className="message-card__model" data-testid="model-badge">{modelShort}</Badge>
           </div>
           <div className="message-card__meta">
             {usage && (
-              <small className="panel-muted" data-testid="token-usage">
-                {usage.input_tokens}↓ {usage.output_tokens}↑
-              </small>
+              <span className="message-card__tokens" data-testid="token-usage">
+                {formatTokens(usage.input_tokens + (usage.cache_read_input_tokens || 0) + (usage.cache_creation_input_tokens || 0))}↓ {formatTokens(usage.output_tokens)}↑
+              </span>
             )}
-            <small className="panel-muted">{relativeTime}</small>
+            <span className="message-card__time">{relativeTime}</span>
           </div>
         </div>
 
@@ -62,6 +61,12 @@ export function AssistantMessage({ model, textContent, toolPairs, usage, timesta
       </CardContent>
     </Card>
   )
+}
+
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
+  return String(n)
 }
 
 function getRelativeTime(timestamp: string): string {

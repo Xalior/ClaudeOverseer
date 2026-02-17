@@ -61,7 +61,47 @@ const TOOL_ICONS: Record<string, string> = {
   Task: '📋',
   AskUserQuestion: '❓',
   NotebookEdit: '📓',
-  TodoWrite: '✅'
+  TodoWrite: '✅',
+  // MCP server tools
+  take_screenshot: '📸',
+  take_snapshot: '🌲',
+  navigate_page: '🧭',
+  click: '🖱️',
+  fill: '⌨️',
+  fill_form: '📝',
+  evaluate_script: '⚡',
+  list_pages: '📑',
+  list_network_requests: '🌐',
+  list_console_messages: '🖥️',
+  get_network_request: '📡',
+  get_console_message: '💬',
+  hover: '🖱️',
+  press_key: '⌨️',
+  wait_for: '⏳',
+  handle_dialog: '💬',
+  performance_start_trace: '⏱️',
+  performance_stop_trace: '⏹️',
+  upload_file: '📤',
+}
+
+/** Format a tool name for display — handles MCP double-underscore names */
+function formatToolName(rawName: string): { icon: string; label: string; server?: string } {
+  const icon = TOOL_ICONS[rawName] || '🔧'
+
+  // MCP tools: mcp__server-name__tool_name
+  if (rawName.includes('__')) {
+    const parts = rawName.split('__')
+    if (parts.length >= 3) {
+      const server = parts[1]
+      const tool = parts.slice(2).join('__')
+      const toolIcon = TOOL_ICONS[tool] || icon
+      // Convert snake_case to readable label
+      const label = tool.replace(/_/g, ' ')
+      return { icon: toolIcon, label, server }
+    }
+  }
+
+  return { icon, label: rawName }
 }
 
 /** Map file extensions to highlight.js language names */
@@ -171,8 +211,9 @@ function BashPrettyPrint({ input, result, isError }: {
   return (
     <div style={{ ...terminalStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
       {/* Terminal header */}
-      <div style={{ marginBottom: '8px', borderBottom: '1px solid #30363d', paddingBottom: '6px' }}>
-        <span style={{ color: '#8b949e', fontSize: '0.75rem' }}>💻 bash</span>
+      <div style={{ marginBottom: '8px', borderBottom: '1px solid #30363d', paddingBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+        <span style={{ fontSize: '0.78rem' }}>💻</span>
+        <span style={{ color: '#8b949e', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>bash</span>
       </div>
       {/* Command */}
       <div>
@@ -187,7 +228,7 @@ function BashPrettyPrint({ input, result, isError }: {
               variant="link"
               size="sm"
               className="tool-toggle"
-              style={{ color: '#8b949e', fontSize: '0.75rem' }}
+              style={{ color: '#8b949e', fontSize: '0.72rem' }}
               onClick={() => setShowOutput(!showOutput)}
             >
               {showOutput ? '▼' : '▶'} output ({outputLines} lines)
@@ -195,10 +236,13 @@ function BashPrettyPrint({ input, result, isError }: {
           </div>
           <Collapsible open={showOutput}>
             <CollapsibleContent className="ui-collapsible-content" data-testid="tool-output-content" style={{
-              color: isError ? '#f85149' : '#e0e0e0',
+              color: isError ? '#f85149' : '#c8d6e5',
               marginTop: '4px',
               borderTop: '1px solid #30363d',
-              paddingTop: '8px'
+              paddingTop: '8px',
+              fontSize: '0.82rem',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word'
             }}>
               {mainContent}
             </CollapsibleContent>
@@ -277,7 +321,7 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
             variant="link"
             size="sm"
             className="tool-toggle"
-            style={{ color: '#8b949e', fontSize: '0.75rem' }}
+            style={{ color: '#8b949e', fontSize: '0.72rem' }}
             onClick={() => setShowContent(!showContent)}
           >
             {showContent ? '▼' : '▶'} {contentLines} lines
@@ -373,7 +417,7 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
             variant="link"
             size="sm"
             className="tool-toggle"
-            style={{ color: '#8b949e', fontSize: '0.75rem', marginBottom: '4px' }}
+            style={{ color: '#8b949e', fontSize: '0.72rem', marginBottom: '4px' }}
             onClick={() => setShowResults(!showResults)}
           >
             {showResults ? '▼' : '▶'} results
@@ -518,16 +562,31 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
   // Parse out system reminders
   const { mainContent, systemReminders } = parseSystemReminders(result)
 
+  const { icon, label, server } = formatToolName(toolName)
+
   return (
     <div style={{ ...codeBlockStyle, border: '1px solid #30363d' }} data-testid="tool-input-content">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: '#c9d1d9' }}>{TOOL_ICONS[toolName] || '🔧'} {toolName}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+          <span>{icon}</span>
+          <span style={{ color: '#c9d1d9', fontWeight: 500 }}>{label}</span>
+          {server && (
+            <span style={{
+              color: '#8b949e',
+              fontSize: '0.68rem',
+              backgroundColor: '#21262d',
+              padding: '1px 5px',
+              borderRadius: '4px',
+              fontStyle: 'italic'
+            }}>{server}</span>
+          )}
+        </div>
         <div>
           <Button
             variant="link"
             size="sm"
             className="tool-toggle tool-toggle--spaced"
-            style={{ color: '#8b949e', fontSize: '0.75rem' }}
+            style={{ color: '#8b949e', fontSize: '0.72rem' }}
             onClick={() => setShowInput(!showInput)}
           >
             {showInput ? '▼' : '▶'} input
@@ -537,7 +596,7 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
               variant="link"
               size="sm"
               className="tool-toggle"
-              style={{ color: '#8b949e', fontSize: '0.75rem' }}
+              style={{ color: '#8b949e', fontSize: '0.72rem' }}
               onClick={() => setShowOutput(!showOutput)}
             >
               {showOutput ? '▼' : '▶'} output
@@ -547,7 +606,7 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
       </div>
       <Collapsible open={showInput}>
         <CollapsibleContent className="ui-collapsible-content">
-          <pre style={{ color: '#c9d1d9', margin: '8px 0 0 0', fontSize: '0.8rem' }}>
+          <pre style={{ color: '#c9d1d9', margin: '8px 0 0 0', fontSize: '0.78rem' }}>
             <code>{JSON.stringify(input, null, 2)}</code>
           </pre>
         </CollapsibleContent>
@@ -558,7 +617,10 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
             color: isError ? '#f85149' : '#c9d1d9',
             borderTop: '1px solid #30363d',
             paddingTop: '8px',
-            marginTop: '8px'
+            marginTop: '8px',
+            fontSize: '0.82rem',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word'
           }}>
             {mainContent}
           </CollapsibleContent>

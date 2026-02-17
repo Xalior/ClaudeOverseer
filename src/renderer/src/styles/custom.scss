@@ -486,6 +486,8 @@ body {
   user-select: none;
 }
 
+/* --- Message Stream --- */
+
 .message-stream {
   display: flex;
   flex-direction: column;
@@ -496,56 +498,135 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
+  padding: 7px 14px;
   border-bottom: 1px solid var(--border-0);
-  background: rgba(14, 24, 34, 0.86);
-  backdrop-filter: blur(6px);
+  background: rgba(14, 24, 34, 0.92);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+  min-height: 38px;
+}
+
+.message-stream__toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
 .message-stream__title {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-0);
+  white-space: nowrap;
+}
+
+.message-stream__msg-count {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-2);
+  background: rgba(125, 140, 162, 0.14);
+  border-radius: 999px;
+  padding: 1px 7px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.message-stream__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .switch-field {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .switch-field__label {
-  color: var(--text-1);
-  font-size: 0.78rem;
+  color: var(--text-2);
+  font-size: 0.72rem;
+  font-weight: 500;
+  user-select: none;
 }
 
 .message-stream__list {
   flex: 1;
   overflow: auto;
-  padding: 12px;
+  padding: 10px 14px;
 }
 
 .message-stream__raw-toggle-wrap {
   text-align: right;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+  margin-top: -2px;
 }
 
 .message-stream__raw-toggle {
   border: 0;
   background: transparent;
   color: var(--text-2);
-  font-size: 0.76rem;
+  font-size: 0.68rem;
   cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.14s ease, color 0.14s ease;
 }
 
 .message-stream__raw-toggle:hover {
   color: var(--accent);
+  opacity: 1;
 }
 
+/* --- Queue / Session Start Divider --- */
+
 .queue-op {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: var(--text-2);
-  font-size: 0.8rem;
-  margin: 8px 0;
+  font-size: 0.72rem;
+  margin: 12px 0;
+  font-weight: 500;
+}
+
+.queue-op::before,
+.queue-op::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-0);
+}
+
+/* --- Empty / Loading States --- */
+
+.message-stream__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  padding: 40px 20px;
+}
+
+.message-stream__empty-icon {
+  font-size: 2rem;
+  opacity: 0.3;
+}
+
+.message-stream__empty-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.message-stream__empty-hint {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-2);
 }
 
 .ui-card {
@@ -564,8 +645,15 @@ body {
   font-weight: 700;
 }
 
+/* --- Message Cards --- */
+
 .message-card {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+}
+
+.message-card .ui-card__content {
+  padding: 10px 12px;
 }
 
 .message-card--assistant {
@@ -581,21 +669,22 @@ body {
 }
 
 .message-card__raw-content {
-  padding: 8px;
+  padding: 6px 8px;
 }
 
 .message-card__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
 .message-card__title {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  font-size: 0.82rem;
 }
 
 .message-card__title--inline {
@@ -604,45 +693,90 @@ body {
 
 .message-card__title-icon {
   display: inline-flex;
-  width: 18px;
+  font-size: 0.85rem;
+  width: 16px;
+}
+
+.message-card__role {
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--text-1);
 }
 
 .message-card__model {
-  margin-left: 8px;
+  margin-left: 6px;
+  font-size: 0.64rem;
 }
 
 .message-card__meta {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.message-card__tokens {
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 0.66rem;
+  color: var(--text-2);
+  letter-spacing: -0.02em;
+}
+
+.message-card__time {
+  font-size: 0.68rem;
+  color: var(--text-2);
 }
 
 .message-card__body {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  font-size: 0.86rem;
+  line-height: 1.55;
 }
 
 .message-card__body p {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
+}
+
+.message-card__body p:last-child {
+  margin-bottom: 0;
 }
 
 .message-card__body pre {
-  border-radius: 8px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.message-card__body code {
+  font-size: 0.82rem;
+}
+
+.message-card__body ul,
+.message-card__body ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.message-card__body li {
+  margin-bottom: 2px;
 }
 
 .message-card__text {
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: 0.86rem;
+  line-height: 1.55;
 }
 
 .message-card__images {
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .raw-json {
   margin: 0;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-1);
+  line-height: 1.4;
 }
 
 .ui-badge {
@@ -761,7 +895,7 @@ body {
 }
 
 .tool-card-wrap {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   border: 0;
   background: transparent;
 }
@@ -770,14 +904,75 @@ body {
   padding: 0;
 }
 
-.token-usage-bar {
+/* --- Status Bar (Bottom) --- */
+
+.status-bar {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 5px 14px;
   border-top: 1px solid var(--border-0);
-  background: rgba(14, 24, 34, 0.9);
+  background: rgba(14, 24, 34, 0.94);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+  min-height: 30px;
+  font-size: 0.68rem;
+}
+
+.status-bar__section {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-2);
+}
+
+.status-bar__divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border-0);
+  flex-shrink: 0;
+}
+
+.status-bar__label {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.status-bar__value {
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  color: var(--text-1);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.status-bar__value--accent {
+  color: var(--accent);
+}
+
+.status-bar__value--ok {
+  color: var(--ok);
+}
+
+.status-bar__spacer {
+  flex: 1;
+}
+
+.status-bar__kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-2);
+  opacity: 0.6;
+}
+
+.status-bar__kbd kbd {
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 0.62rem;
+  background: rgba(125, 140, 162, 0.12);
+  border: 1px solid rgba(125, 140, 162, 0.2);
+  border-radius: 3px;
+  padding: 0 4px;
+  line-height: 1.5;
 }
 
 .error-boundary {
@@ -839,8 +1034,12 @@ body {
     align-items: flex-start;
   }
 
-  .token-usage-bar {
+  .status-bar {
     flex-wrap: wrap;
-    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .status-bar__kbd {
+    display: none;
   }
 }
