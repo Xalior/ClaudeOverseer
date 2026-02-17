@@ -13,7 +13,7 @@ const MODES: { value: ThemeMode; label: string; title: string }[] = [
 
 export function ThemeToggle({ mode, onModeChange }: ThemeToggleProps) {
   return (
-    <div className="theme-toggle" title={`Theme: ${mode}`}>
+    <div className="theme-toggle" data-testid="theme-toggle" title={`Theme: ${mode}`}>
       {MODES.map(({ value, label, title }) => (
         <button
           key={value}
@@ -21,6 +21,7 @@ export function ThemeToggle({ mode, onModeChange }: ThemeToggleProps) {
           onClick={() => onModeChange(value)}
           title={title}
           aria-label={`${title} theme`}
+          data-testid={`theme-${value}`}
         >
           {label}
         </button>

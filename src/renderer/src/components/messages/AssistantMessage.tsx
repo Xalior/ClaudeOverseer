@@ -5,6 +5,7 @@ import { ToolCallCard } from './ToolCallCard'
 import type { ToolUseBlock, ToolResultContent, TokenUsage } from '../../../../main/types'
 import { Card, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
+import { formatTokens } from '../../utils/format-utils'
 
 interface ToolPair {
   toolUse: ToolUseBlock
@@ -61,12 +62,6 @@ export function AssistantMessage({ model, textContent, toolPairs, usage, timesta
       </CardContent>
     </Card>
   )
-}
-
-function formatTokens(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`
-  return String(n)
 }
 
 function getRelativeTime(timestamp: string): string {
