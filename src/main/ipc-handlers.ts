@@ -9,6 +9,8 @@ import { formatMessages } from './services/message-formatter'
 import { JsonlWatcher } from './services/jsonl-watcher'
 import { DirectoryWatcher } from './services/directory-watcher'
 import { encodePath } from './utils/path-encoder'
+import { loadPreferences, savePreferences, savePreferencesSync } from './services/preferences'
+import type { AppPreferences } from './services/preferences'
 
 const DEFAULT_CLAUDE_DIR = join(homedir(), '.claude', 'projects')
 
@@ -145,5 +147,15 @@ export function registerIpcHandlers(): void {
       await directoryWatcher.stop()
       directoryWatcher = null
     }
+  })
+
+  // Load preferences
+  ipcMain.handle('overseer:load-preferences', async () => {
+    return loadPreferences()
+  })
+
+  // Save preferences (partial merge)
+  ipcMain.handle('overseer:save-preferences', async (_event, prefs: Partial<AppPreferences>) => {
+    savePreferencesSync(prefs)
   })
 }

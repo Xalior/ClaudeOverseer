@@ -15,21 +15,9 @@ const queryClient = new QueryClient({
   }
 })
 
-const STORAGE_KEY = 'overseer-panel-widths'
-const DEFAULT_WIDTHS = [220, 280] // px for panel 1 and 2; panel 3 gets the rest
+const DEFAULT_WIDTHS: [number, number] = [220, 280] // px for panel 1 and 2; panel 3 gets the rest
 const MIN_WIDTH = 120
 const MAX_WIDTH_FRACTION = 0.45 // no single panel > 45% of window
-
-function loadWidths(): [number, number] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed) && parsed.length === 2) return parsed as [number, number]
-    }
-  } catch { /* ignore */ }
-  return DEFAULT_WIDTHS as [number, number]
-}
 
 function App() {
   return (
@@ -45,18 +33,39 @@ function AppContent() {
 
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [selectedSessionPath, setSelectedSessionPath] = useState<string | null>(null)
+  const [prefsLoaded, setPrefsLoaded] = useState(false)
   const projectRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<HTMLDivElement>(null)
   const messageRef = useRef<HTMLDivElement>(null)
 
   // Resizable panel widths (px)
-  const [panelWidths, setPanelWidths] = useState<[number, number]>(loadWidths)
+  const [panelWidths, setPanelWidths] = useState<[number, number]>(DEFAULT_WIDTHS)
   const dragging = useRef<{ index: 0 | 1; startX: number; startWidths: [number, number] } | null>(null)
 
-  // Persist widths
+  // Load preferences on mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(panelWidths))
-  }, [panelWidths])
+    window.overseer.loadPreferences().then((prefs) => {
+      if (prefs.selectedProject) setSelectedProject(prefs.selectedProject)
+      if (prefs.selectedSessionPath) setSelectedSessionPath(prefs.selectedSessionPath)
+      if (prefs.panelWidths) setPanelWidths(prefs.panelWidths)
+      setPrefsLoaded(true)
+    }).catch(() => {
+      setPrefsLoaded(true)
+    })
+  }, [])
+
+  // Persist panel widths (debounced)
+  const panelSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (!prefsLoaded) return
+    if (panelSaveTimer.current) clearTimeout(panelSaveTimer.current)
+    panelSaveTimer.current = setTimeout(() => {
+      window.overseer.savePreferences({ panelWidths })
+    }, 300)
+    return () => {
+      if (panelSaveTimer.current) clearTimeout(panelSaveTimer.current)
+    }
+  }, [panelWidths, prefsLoaded])
 
   const handleMouseDown = useCallback((index: 0 | 1) => (e: React.MouseEvent) => {
     e.preventDefault()
@@ -96,6 +105,12 @@ function AppContent() {
   function handleProjectSelect(encodedName: string) {
     setSelectedProject(encodedName)
     setSelectedSessionPath(null)
+    window.overseer.savePreferences({ selectedProject: encodedName, selectedSessionPath: null })
+  }
+
+  function handleSessionSelect(sessionPath: string) {
+    setSelectedSessionPath(sessionPath)
+    window.overseer.savePreferences({ selectedSessionPath: sessionPath })
   }
 
   // Keyboard shortcuts
@@ -147,7 +162,7 @@ function AppContent() {
       >
         <SessionList
           projectEncodedName={selectedProject}
-          onSessionSelect={setSelectedSessionPath}
+          onSessionSelect={handleSessionSelect}
         />
       </div>
 

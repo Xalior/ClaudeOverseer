@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { registerIpcHandlers } from './ipc-handlers'
+import { loadPreferences, savePreferences } from './services/preferences'
 
 // Enable remote debugging on port 9222 for agent debugging (dev only)
 if (process.env.NODE_ENV === 'development') {
@@ -8,15 +9,47 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 function createWindow(): void {
+  const prefs = loadPreferences()
+  const { windowState } = prefs
+
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: windowState.width,
+    height: windowState.height,
+    x: windowState.x,
+    y: windowState.y,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
   })
+
+  if (windowState.isMaximized) {
+    mainWindow.maximize()
+  }
+
+  // Track window state changes
+  function saveWindowState(): void {
+    if (mainWindow.isMaximized()) {
+      savePreferences({ windowState: { ...prefs.windowState, isMaximized: true } })
+    } else {
+      const bounds = mainWindow.getBounds()
+      savePreferences({
+        windowState: {
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
+          isMaximized: false
+        }
+      })
+    }
+  }
+
+  mainWindow.on('resize', saveWindowState)
+  mainWindow.on('move', saveWindowState)
+  mainWindow.on('maximize', saveWindowState)
+  mainWindow.on('unmaximize', saveWindowState)
 
   // Load the renderer
   if (process.env.NODE_ENV === 'development') {

@@ -33,5 +33,8 @@ contextBridge.exposeInMainWorld('overseer', {
     return () => {
       ipcRenderer.removeListener('overseer:sessions-changed', handler)
     }
-  }
+  },
+  loadPreferences: () => ipcRenderer.invoke('overseer:load-preferences'),
+  savePreferences: (prefs: Record<string, unknown>) =>
+    ipcRenderer.invoke('overseer:save-preferences', prefs)
 })

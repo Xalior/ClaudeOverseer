@@ -1,6 +1,21 @@
 import type { Project, Session } from '../main/types'
 import type { FormattedSession } from '../main/services/message-formatter'
 
+export interface WindowState {
+  x: number | undefined
+  y: number | undefined
+  width: number
+  height: number
+  isMaximized: boolean
+}
+
+export interface AppPreferences {
+  selectedProject: string | null
+  selectedSessionPath: string | null
+  windowState: WindowState
+  panelWidths: [number, number]
+}
+
 export interface NewMessagesData {
   filePath: string
   messages: FormattedSession['messages']
@@ -19,6 +34,8 @@ export interface OverseerAPI {
   stopDirectoryWatch: () => Promise<void>
   onProjectsChanged: (callback: () => void) => () => void
   onSessionsChanged: (callback: (data: { projectEncodedName: string }) => void) => () => void
+  loadPreferences: () => Promise<AppPreferences>
+  savePreferences: (prefs: Partial<AppPreferences>) => Promise<void>
 }
 
 declare global {
