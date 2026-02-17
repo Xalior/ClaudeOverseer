@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useProjects } from '../hooks/queries'
 import { Badge } from './ui/badge'
+import type { ProjectSortOrder } from '../../../preload/index.d'
 
 interface Project {
   name: string
@@ -101,14 +102,75 @@ function generateProjectIcon(name: string): string {
   )}`
 }
 
+const SORT_LABELS: Record<ProjectSortOrder, string> = {
+  recent: 'Recent',
+  alpha: 'A-Z',
+  sessions: 'Sessions'
+}
+
+const SORT_OPTIONS: ProjectSortOrder[] = ['recent', 'alpha', 'sessions']
+
+function sortProjects(projects: Project[], order: ProjectSortOrder): Project[] {
+  const sorted = [...projects]
+  switch (order) {
+    case 'alpha':
+      return sorted.sort((a, b) => a.name.localeCompare(b.name))
+    case 'recent':
+      return sorted.sort((a, b) => b.lastModified - a.lastModified)
+    case 'sessions':
+      return sorted.sort((a, b) => b.sessionCount - a.sessionCount)
+  }
+}
+
+function getActivityLevel(timestamp: number): 'active' | 'recent' | 'stale' {
+  if (!timestamp) return 'stale'
+  const diff = Date.now() - timestamp
+  if (diff < 60_000) return 'active'
+  if (diff < 300_000) return 'recent'
+  return 'stale'
+}
+
 export function ProjectList({ onProjectSelect }: ProjectListProps) {
   const { data: projects = [], isLoading: loading } = useProjects()
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
+  const [pinnedProjects, setPinnedProjects] = useState<string[]>([])
+  const [sortOrder, setSortOrder] = useState<ProjectSortOrder>('recent')
+  const [prefsReady, setPrefsReady] = useState(false)
+
+  // Load pinned projects and sort order from preferences
+  useEffect(() => {
+    window.overseer.loadPreferences().then((prefs) => {
+      if (prefs.pinnedProjects) setPinnedProjects(prefs.pinnedProjects)
+      if (prefs.projectSortOrder) setSortOrder(prefs.projectSortOrder)
+      if (prefs.selectedProject) setSelectedProject(prefs.selectedProject)
+      setPrefsReady(true)
+    }).catch(() => setPrefsReady(true))
+  }, [])
 
   function handleProjectClick(encodedName: string) {
     setSelectedProject(encodedName)
     onProjectSelect(encodedName)
   }
+
+  const togglePin = useCallback((encodedName: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setPinnedProjects(prev => {
+      const next = prev.includes(encodedName)
+        ? prev.filter(p => p !== encodedName)
+        : [...prev, encodedName]
+      window.overseer.savePreferences({ pinnedProjects: next })
+      return next
+    })
+  }, [])
+
+  const cycleSortOrder = useCallback(() => {
+    setSortOrder(prev => {
+      const idx = SORT_OPTIONS.indexOf(prev)
+      const next = SORT_OPTIONS[(idx + 1) % SORT_OPTIONS.length]
+      window.overseer.savePreferences({ projectSortOrder: next })
+      return next
+    })
+  }, [])
 
   // Pre-compute icons so they're stable across renders
   const projectIcons = useMemo(() => {
@@ -119,10 +181,36 @@ export function ProjectList({ onProjectSelect }: ProjectListProps) {
     return map
   }, [projects])
 
-  if (loading) {
+  // Split and sort projects
+  const { pinned, discovered } = useMemo(() => {
+    const allProjects = projects as Project[]
+    const pinnedSet = new Set(pinnedProjects)
+    const pinnedList: Project[] = []
+    const discoveredList: Project[] = []
+
+    for (const p of allProjects) {
+      if (pinnedSet.has(p.encodedName)) {
+        pinnedList.push(p)
+      } else {
+        discoveredList.push(p)
+      }
+    }
+
+    // Pinned: maintain the order they were pinned in
+    pinnedList.sort((a, b) => pinnedProjects.indexOf(a.encodedName) - pinnedProjects.indexOf(b.encodedName))
+
+    return {
+      pinned: pinnedList,
+      discovered: sortProjects(discoveredList, sortOrder)
+    }
+  }, [projects, pinnedProjects, sortOrder])
+
+  if (loading && !prefsReady) {
     return (
       <div className="panel-content">
-        <h5 className="panel-title">Projects</h5>
+        <div className="project-panel-header">
+          <h5 className="panel-title">Projects</h5>
+        </div>
         <p className="panel-muted">Loading...</p>
       </div>
     )
@@ -131,58 +219,132 @@ export function ProjectList({ onProjectSelect }: ProjectListProps) {
   if (projects.length === 0) {
     return (
       <div className="panel-content">
-        <h5 className="panel-title">Projects</h5>
+        <div className="project-panel-header">
+          <h5 className="panel-title">Projects</h5>
+        </div>
         <p className="panel-muted">No projects found</p>
+      </div>
+    )
+  }
+
+  function renderCard(project: Project, isPinned: boolean) {
+    const isActive = selectedProject === project.encodedName
+    const accentColor = hashColor(project.name)
+    const activity = getActivityLevel(project.lastModified)
+
+    return (
+      <div
+        key={project.encodedName}
+        className={`project-card ${isActive ? 'project-card--active' : ''}`}
+        style={{ '--project-accent': accentColor } as React.CSSProperties}
+        onClick={() => handleProjectClick(project.encodedName)}
+        data-testid={`project-${project.encodedName}`}
+      >
+        <div className="project-card__icon-wrap">
+          <img
+            className="project-card__icon"
+            src={projectIcons[project.encodedName]}
+            alt=""
+            aria-hidden="true"
+          />
+          <span className={`project-card__activity project-card__activity--${activity}`} />
+        </div>
+
+        <div className="project-card__title">{project.name}</div>
+
+        <div className="project-card__actions">
+          <button
+            className={`project-card__pin-btn ${isPinned ? 'project-card__pin-btn--pinned' : ''}`}
+            onClick={(e) => togglePin(project.encodedName, e)}
+            title={isPinned ? 'Unpin project' : 'Pin project'}
+            aria-label={isPinned ? 'Unpin project' : 'Pin project'}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              {isPinned ? (
+                <path d="M9.828 1.114a.5.5 0 0 1 .358.143l4.557 4.557a.5.5 0 0 1-.247.843l-2.2.524-.775.776 1.535 5.26a.5.5 0 0 1-.837.476L8.5 9.973l-2.64 2.64a.5.5 0 0 1-.707-.707l2.64-2.64-3.72-3.72a.5.5 0 0 1 .477-.837l5.26 1.535.775-.775.524-2.2a.5.5 0 0 1 .485-.358l.234.003z" fill="currentColor"/>
+              ) : (
+                <path d="M9.828 1.114a.5.5 0 0 1 .358.143l4.557 4.557a.5.5 0 0 1-.247.843l-2.2.524-.775.776 1.535 5.26a.5.5 0 0 1-.837.476L8.5 9.973l-2.64 2.64a.5.5 0 0 1-.707-.707l2.64-2.64-3.72-3.72a.5.5 0 0 1 .477-.837l5.26 1.535.775-.775.524-2.2a.5.5 0 0 1 .485-.358l.234.003z" fill="none" stroke="currentColor" strokeWidth="1"/>
+              )}
+            </svg>
+          </button>
+          <Badge variant="secondary" className="project-card__badge">
+            {project.sessionCount}
+          </Badge>
+        </div>
+
+        {isActive ? (
+          <div className="project-card__details">
+            <div
+              className={`project-card__full-path ${!project.pathVerified ? 'project-card__full-path--unverified' : ''}`}
+              title={project.path}
+            >
+              {project.path}
+              {!project.pathVerified && <span className="project-card__unverified-tag">unverified</span>}
+            </div>
+            <div className="project-card__meta">
+              {formatRelativeTime(project.lastModified)}
+            </div>
+          </div>
+        ) : (
+          <div className="project-card__meta">
+            {formatRelativeTime(project.lastModified)}
+          </div>
+        )}
       </div>
     )
   }
 
   return (
     <div className="panel-content">
-      <h5 className="panel-title panel-title--spaced">Projects</h5>
-      <div className="project-card-list" data-testid="project-list">
-        {(projects as Project[]).map(project => {
-          const isActive = selectedProject === project.encodedName
-          const accentColor = hashColor(project.name)
-          return (
-            <div
-              key={project.encodedName}
-              className={`project-card ${isActive ? 'project-card--active' : ''}`}
-              style={{ '--project-accent': accentColor } as React.CSSProperties}
-              onClick={() => handleProjectClick(project.encodedName)}
-              data-testid={`project-${project.encodedName}`}
-            >
-              <img
-                className="project-card__icon"
-                src={projectIcons[project.encodedName]}
-                alt=""
-                aria-hidden="true"
-              />
-              <div className="project-card__title">{project.name}</div>
-              <Badge variant="secondary" className="project-card__badge">
-                {project.sessionCount}
-              </Badge>
-              {isActive ? (
-                <div className="project-card__details">
-                  <div
-                    className={`project-card__full-path ${!project.pathVerified ? 'project-card__full-path--unverified' : ''}`}
-                    title={project.path}
-                  >
-                    {project.path}
-                    {!project.pathVerified && <span className="project-card__unverified-tag">unverified</span>}
-                  </div>
-                  <div className="project-card__meta">
-                    {formatRelativeTime(project.lastModified)}
-                  </div>
-                </div>
-              ) : (
-                <div className="project-card__meta">
-                  {formatRelativeTime(project.lastModified)}
-                </div>
-              )}
-            </div>
-          )
-        })}
+      <div className="project-panel-header">
+        <h5 className="panel-title">Projects</h5>
+      </div>
+
+      {/* Pinned Section */}
+      <div className="project-section">
+        <div className="project-section__header">
+          <span className="project-section__label">
+            <svg className="project-section__icon" width="12" height="12" viewBox="0 0 16 16" fill="none">
+              <path d="M9.828 1.114a.5.5 0 0 1 .358.143l4.557 4.557a.5.5 0 0 1-.247.843l-2.2.524-.775.776 1.535 5.26a.5.5 0 0 1-.837.476L8.5 9.973l-2.64 2.64a.5.5 0 0 1-.707-.707l2.64-2.64-3.72-3.72a.5.5 0 0 1 .477-.837l5.26 1.535.775-.775.524-2.2a.5.5 0 0 1 .485-.358l.234.003z" fill="currentColor"/>
+            </svg>
+            Pinned
+          </span>
+          {pinned.length > 0 && <span className="project-section__count">{pinned.length}</span>}
+        </div>
+        {pinned.length > 0 ? (
+          <div className="project-card-list" data-testid="pinned-project-list">
+            {pinned.map(p => renderCard(p, true))}
+          </div>
+        ) : (
+          <div className="project-section__empty">
+            <svg className="project-section__empty-icon" width="20" height="20" viewBox="0 0 16 16" fill="none">
+              <path d="M9.828 1.114a.5.5 0 0 1 .358.143l4.557 4.557a.5.5 0 0 1-.247.843l-2.2.524-.775.776 1.535 5.26a.5.5 0 0 1-.837.476L8.5 9.973l-2.64 2.64a.5.5 0 0 1-.707-.707l2.64-2.64-3.72-3.72a.5.5 0 0 1 .477-.837l5.26 1.535.775-.775.524-2.2a.5.5 0 0 1 .485-.358l.234.003z" fill="none" stroke="currentColor" strokeWidth="0.8" strokeDasharray="2 1.5"/>
+            </svg>
+            <span className="project-section__empty-text">Pin your favourite projects for quick access</span>
+          </div>
+        )}
+      </div>
+
+      {/* Discovered Section */}
+      <div className="project-section">
+        <div className="project-section__header">
+          <span className="project-section__label">
+            Discovered
+          </span>
+          <button
+            className="project-section__sort-btn"
+            onClick={cycleSortOrder}
+            title={`Sort by: ${SORT_LABELS[sortOrder]} (click to change)`}
+          >
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+              <path d="M3 2v10m0 0L1 10m2 2l2-2m6-8v10m0 0l-2-2m2 2l2-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            {SORT_LABELS[sortOrder]}
+          </button>
+        </div>
+        <div className="project-card-list" data-testid="project-list">
+          {discovered.map(p => renderCard(p, false))}
+        </div>
       </div>
     </div>
   )

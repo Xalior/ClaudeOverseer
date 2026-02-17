@@ -9,11 +9,15 @@ export interface WindowState {
   isMaximized: boolean
 }
 
+export type ProjectSortOrder = 'alpha' | 'recent' | 'sessions'
+
 export interface AppPreferences {
   selectedProject: string | null
   selectedSessionPath: string | null
   windowState: WindowState
   panelWidths: [number, number]
+  pinnedProjects: string[]
+  projectSortOrder: ProjectSortOrder
 }
 
 export interface NewMessagesData {

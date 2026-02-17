@@ -10,11 +10,15 @@ export interface WindowState {
   isMaximized: boolean
 }
 
+export type ProjectSortOrder = 'alpha' | 'recent' | 'sessions'
+
 export interface AppPreferences {
   selectedProject: string | null
   selectedSessionPath: string | null
   windowState: WindowState
   panelWidths: [number, number]
+  pinnedProjects: string[]
+  projectSortOrder: ProjectSortOrder
 }
 
 const PREFS_DIR = join(homedir(), '.ClaudeOverseer')
@@ -30,7 +34,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
     height: 800,
     isMaximized: false
   },
-  panelWidths: [220, 280]
+  panelWidths: [220, 280],
+  pinnedProjects: [],
+  projectSortOrder: 'recent'
 }
 
 function isValidPreferences(obj: unknown): obj is Partial<AppPreferences> {

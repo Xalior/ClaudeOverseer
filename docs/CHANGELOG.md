@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1] - Unreleased (partial)
 
 ### Added
+- **Pinned Projects** — Pin favourite projects to a dedicated section at the top of the sidebar for quick access; pin state persists across sessions via preferences
+- **Project Sort Controls** — Cycle through sort modes (Recent / A-Z / Sessions) for discovered projects; sort preference persists
+- **Activity Indicators** — Small status dot on each project icon showing live activity state: green (active, <1min), blue (recent, <5min), gray (stale)
+- **Empty Pinned State** — Friendly placeholder with dashed border and hint text when no projects are pinned
 - **Preferences Persistence** — App state now survives restarts via `~/.ClaudeOverseer/prefs.json`; remembers selected project/session, window size/position, and panel widths
 - **Resizable Panels** — Three-panel layout with draggable dividers; widths persist across sessions
 - **Write Tool Syntax Highlighting** — Write tool calls now display file contents with highlight.js syntax highlighting instead of just a success message
@@ -21,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Project Card Layout** — Compact cards now show relative time; full path only shown when expanded
 
 ### Improved
+- **Project Sidebar Sections** — Sidebar split into Pinned and Discovered sections with section headers, count badges, and sort controls
+- **Tighter Project Cards** — More compact cards with hover shadow, smoother transitions, and pin button that appears on hover
 - **Larger Project Icons** — Project icons doubled in size using CSS grid layout; collapsed icons span both text lines, expanded cards give the full path full card width below the icon
 - **Slim Scrollbars** — Thin dark-themed scrollbars app-wide for a cleaner look
 
