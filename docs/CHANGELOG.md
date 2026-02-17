@@ -5,7 +5,7 @@ All notable changes to ClaudeOverseer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.1] - Unreleased (partial)
+## [0.2.0] - 2026-02-17
 
 ### Added
 - **Dark / Light / System Theme Toggle** — Three-mode theme switcher (☀ Light, ⚙ System, 🌙 Dark) in the project sidebar header; System mode auto-follows macOS appearance (tracks sunset/sunrise changes via `prefers-color-scheme` media query listener); preference persists across sessions
@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New IPC channels: `overseer:start-directory-watch`, `overseer:stop-directory-watch`, `overseer:projects-changed`, `overseer:sessions-changed`, `overseer:load-preferences`, `overseer:save-preferences`
 - Preferences service: debounced writes (300ms), atomic file operations (write-to-temp + rename), merge semantics for partial updates
 
-## [0.1.0] - 2025-02-15
+## [0.1.0] - 2026-02-15
 
 ### Added
 
@@ -126,5 +126,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero API costs — reads local transcript files only
 - No internet connection required for core functionality
 
-[0.1.1]: https://github.com/Xalior/ClaudeOverseer/releases/tag/v0.1.1
+[0.2.0]: https://github.com/Xalior/ClaudeOverseer/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Xalior/ClaudeOverseer/releases/tag/v0.1.0

@@ -1,6 +1,6 @@
 {
   "name": "claudeoverseer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Monitor Claude Code background agents in real-time",
   "homepage": "https://github.com/Xalior/ClaudeOverseer",
   "main": "./out/main/index.js",
