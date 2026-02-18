@@ -798,6 +798,36 @@ body {
   border-color: color-mix(in srgb, var(--accent) 20%, var(--border-0));
 }
 
+.message-card--system {
+  background: var(--bg-1);
+  border-color: var(--border-0);
+  opacity: 0.7;
+}
+
+.message-card__system-block {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  padding: 2px 0;
+}
+
+.message-card__system-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--fg-2);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.message-card__system-content {
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
 .message-card--raw {
   border-color: var(--border-1);
 }

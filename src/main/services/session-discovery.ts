@@ -2,9 +2,56 @@ import { readdir, stat, readFile } from 'fs/promises'
 import { join } from 'path'
 import type { Session } from '../types'
 
+/** Noise patterns that don't make useful session titles */
+const NOISE_PATTERNS = [
+  /^\[Request interrupted by user\]$/,
+  /^clear$/i,
+  /^\/\w+/,               // slash commands like /clear, /help
+  /^Caveat:/i,
+  /^commit$/i,
+  /^y(es)?$/i,
+  /^n(o)?$/i,
+  /^ok$/i,
+  /^continue$/i,
+]
+
 /**
- * Extract slug and first user message from a JSONL file.
- * Only reads the first ~20 lines for performance.
+ * Extract usable text from user message content.
+ * Handles both string and array-of-blocks formats.
+ */
+function extractUserText(content: unknown): string | undefined {
+  let raw: string | undefined
+  if (typeof content === 'string') {
+    raw = content
+  } else if (Array.isArray(content)) {
+    // Collect text from text blocks and tool_result blocks
+    const parts: string[] = []
+    for (const block of content) {
+      if (block?.type === 'text' && typeof block.text === 'string') {
+        parts.push(block.text)
+      }
+    }
+    raw = parts.join(' ')
+  }
+  if (!raw) return undefined
+
+  // Strip XML tags, collapse whitespace
+  const clean = raw
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\[Request interrupted by user\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!clean) return undefined
+  // Skip noise
+  if (NOISE_PATTERNS.some(p => p.test(clean))) return undefined
+
+  return clean.length > 100 ? clean.slice(0, 100) + '...' : clean
+}
+
+/**
+ * Extract slug and first meaningful user message from a JSONL file.
+ * Scans up to 60 lines to skip past command noise at the start.
  */
 async function extractSessionMetadata(filePath: string): Promise<{ slug?: string; summary?: string }> {
   try {
@@ -13,7 +60,7 @@ async function extractSessionMetadata(filePath: string): Promise<{ slug?: string
     let slug: string | undefined
     let summary: string | undefined
 
-    for (let i = 0; i < Math.min(lines.length, 30); i++) {
+    for (let i = 0; i < Math.min(lines.length, 60); i++) {
       const line = lines[i]?.trim()
       if (!line) continue
       try {
@@ -21,14 +68,15 @@ async function extractSessionMetadata(filePath: string): Promise<{ slug?: string
         if (!slug && obj.slug) {
           slug = obj.slug
         }
-        if (!summary && obj.type === 'user') {
-          const content = obj.message?.content
-          if (typeof content === 'string') {
-            // Strip XML tags and trim to get a clean summary
-            const clean = content.replace(/<[^>]+>/g, '').trim()
-            if (clean) {
-              summary = clean.length > 80 ? clean.slice(0, 80) + '...' : clean
-            }
+        if (!summary && obj.type === 'user' && obj.userType !== 'internal' && !obj.isMeta) {
+          // Skip tool_result-only messages (automated responses)
+          const msgContent = obj.message?.content
+          if (Array.isArray(msgContent) && msgContent.every((b: { type: string }) => b?.type === 'tool_result')) {
+            continue
+          }
+          const text = extractUserText(msgContent)
+          if (text) {
+            summary = text
           }
         }
         if (slug && summary) break

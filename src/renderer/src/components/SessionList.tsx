@@ -78,8 +78,8 @@ export function SessionList({ projectEncodedName, projectDir, onSessionSelect }:
   }
 
   function getSessionTitle(session: Session): string {
-    if (session.slug) return session.slug
     if (session.summary) return session.summary
+    if (session.slug) return session.slug
     return `${session.type}-${session.id}`
   }
 
@@ -151,9 +151,9 @@ export function SessionList({ projectEncodedName, projectDir, onSessionSelect }:
           <div className="session-item__title">
             {indent ? '↳ ' : badge.icon + ' '}{getSessionTitle(session)}
           </div>
-          {session.summary && (
+          {session.summary && session.slug && (
             <div className="session-item__summary">
-              {session.summary}
+              {session.slug}
             </div>
           )}
           <small className="session-item__meta">
