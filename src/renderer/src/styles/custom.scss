@@ -808,6 +808,12 @@ body {
   letter-spacing: -0.02em;
 }
 
+.message-card__cost {
+  margin-left: 6px;
+  color: var(--warning, #e8a735);
+  font-weight: 600;
+}
+
 .message-card__time {
   font-size: 0.66rem;
   color: var(--text-2);
@@ -1047,6 +1053,11 @@ body {
 
 .status-bar__value--ok {
   color: var(--ok);
+}
+
+.status-bar__value--cost {
+  color: var(--warning, #e8a735);
+  font-weight: 600;
 }
 
 .status-bar__spacer {

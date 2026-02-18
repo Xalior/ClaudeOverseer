@@ -181,7 +181,7 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
       </div>
 
       {/* Status Bar */}
-      <StatusBar usage={session.totalUsage} messageCount={messageCount} />
+      <StatusBar usage={session.totalUsage} messageCount={messageCount} messages={session.messages} />
     </div>
   )
 }

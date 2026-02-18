@@ -40,6 +40,7 @@ export interface FormattedMessage {
 export interface FormattedSession {
   messages: FormattedMessage[]
   totalUsage: TokenUsage
+  dominantModel: string | null
 }
 
 /**
@@ -54,6 +55,7 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
     cache_creation_input_tokens: 0,
     cache_read_input_tokens: 0
   }
+  const modelCounts = new Map<string, number>()
 
   // Build a map of tool_use_id -> tool_result for matching
   const toolResultMap = new Map<string, ToolResultContent>()
@@ -142,6 +144,12 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
         totalUsage.cache_read_input_tokens += assistantMsg.message.usage.cache_read_input_tokens || 0
       }
 
+      // Track model usage for dominant model detection
+      if (assistantMsg.message.model) {
+        const m = assistantMsg.message.model
+        modelCounts.set(m, (modelCounts.get(m) || 0) + 1)
+      }
+
       // Skip empty streaming partials (no real content, stop_reason is null)
       const combinedText = textParts.join('\n\n').trim()
       if (!combinedText && toolPairs.length === 0) {
@@ -162,5 +170,15 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
     }
   }
 
-  return { messages: formatted, totalUsage }
+  // Find the most-used model in the session
+  let dominantModel: string | null = null
+  let maxCount = 0
+  for (const [model, count] of modelCounts) {
+    if (count > maxCount) {
+      maxCount = count
+      dominantModel = model
+    }
+  }
+
+  return { messages: formatted, totalUsage, dominantModel }
 }

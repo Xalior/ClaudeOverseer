@@ -6,6 +6,7 @@ import type { ToolUseBlock, ToolResultContent, TokenUsage } from '../../../../ma
 import { Card, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { formatTokens } from '../../utils/format-utils'
+import { calculateCost, formatCost } from '../../utils/pricing'
 
 interface ToolPair {
   toolUse: ToolUseBlock
@@ -23,6 +24,7 @@ interface AssistantMessageProps {
 export function AssistantMessage({ model, textContent, toolPairs, usage, timestamp }: AssistantMessageProps) {
   const modelShort = model.replace(/^claude-/, '').replace(/-\d{8}$/, '')
   const relativeTime = getRelativeTime(timestamp)
+  const cost = usage ? calculateCost(usage, model) : null
 
   return (
     <Card className="message-card message-card--assistant" data-testid="assistant-message">
@@ -37,6 +39,7 @@ export function AssistantMessage({ model, textContent, toolPairs, usage, timesta
             {usage && (
               <span className="message-card__tokens" data-testid="token-usage">
                 {formatTokens(usage.input_tokens + (usage.cache_read_input_tokens || 0) + (usage.cache_creation_input_tokens || 0))}↓ {formatTokens(usage.output_tokens)}↑
+                {cost !== null && <span className="message-card__cost">{formatCost(cost)}</span>}
               </span>
             )}
             <span className="message-card__time">{relativeTime}</span>
