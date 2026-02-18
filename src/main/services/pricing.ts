@@ -53,3 +53,10 @@ export function formatCost(usd: number): string {
   if (usd < 0.01) return `$${usd.toFixed(3)}`
   return `$${usd.toFixed(2)}`
 }
+
+/** Returns a short human-friendly model name, e.g. "Opus 4.6" (strips "Claude " prefix). */
+export function getModelName(modelId: string): string {
+  const p = getModelPricing(modelId)
+  if (!p) return modelId
+  return p.name.replace(/^Claude\s+/i, '')
+}

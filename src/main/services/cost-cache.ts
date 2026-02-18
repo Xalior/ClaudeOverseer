@@ -16,7 +16,8 @@ import { calculateCost } from './pricing'
 import type { AssistantMessage } from '../types'
 
 interface CacheEntry {
-  cost: number
+  total: number
+  byModel: Record<string, number>
   lastModified: number
 }
 
@@ -35,9 +36,11 @@ export class CostCache {
       const parsed = JSON.parse(content)
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         for (const [key, val] of Object.entries(parsed)) {
-          const v = val as { cost?: number; lastModified?: number }
-          if (typeof v.cost === 'number' && typeof v.lastModified === 'number') {
-            this.store.set(key, { cost: v.cost, lastModified: v.lastModified })
+          const v = val as { total?: number; cost?: number; byModel?: Record<string, number>; lastModified?: number }
+          const total = typeof v.total === 'number' ? v.total : (typeof v.cost === 'number' ? v.cost : null)
+          // Entries without byModel are treated as stale (missing field) — skip them so they recompute
+          if (total !== null && typeof v.lastModified === 'number' && v.byModel && typeof v.byModel === 'object') {
+            this.store.set(key, { total, byModel: v.byModel, lastModified: v.lastModified })
           }
         }
       }
@@ -78,12 +81,13 @@ export class CostCache {
     }
   }
 
-  /** Parse a session JSONL and compute total cost. */
+  /** Parse a session JSONL and compute total cost, tracking per-model breakdown. */
   async recomputeSession(path: string): Promise<void> {
     try {
       const stat = statSync(path)
       const messages = await parseJsonlFile(path)
       let total = 0
+      const byModel: Record<string, number> = {}
 
       for (const msg of messages) {
         if (msg.type === 'assistant') {
@@ -92,12 +96,15 @@ export class CostCache {
           const model = assistant.message.model
           if (usage && model) {
             const cost = calculateCost(usage, model)
-            if (cost !== null) total += cost
+            if (cost !== null) {
+              total += cost
+              byModel[model] = (byModel[model] ?? 0) + cost
+            }
           }
         }
       }
 
-      this.store.set(path, { cost: total, lastModified: stat.mtimeMs })
+      this.store.set(path, { total, byModel, lastModified: stat.mtimeMs })
       this.scheduleSave()
     } catch {
       // File unreadable — skip
@@ -134,28 +141,32 @@ export class CostCache {
     const result: Record<string, number> = {}
     for (const [path, entry] of this.store) {
       if (path.startsWith(projectDir)) {
-        result[path] = entry.cost
+        result[path] = entry.total
       }
     }
     return result
   }
 
-  /** Sum of all session costs under a project directory. */
-  getProjectCost(projectDir: string): number {
+  /** Aggregate per-model costs across all sessions under a project directory. */
+  getProjectCostsByModel(projectDir: string): { total: number; byModel: Record<string, number> } {
     let total = 0
+    const byModel: Record<string, number> = {}
     for (const [path, entry] of this.store) {
       if (path.startsWith(projectDir)) {
-        total += entry.cost
+        total += entry.total
+        for (const [model, cost] of Object.entries(entry.byModel)) {
+          byModel[model] = (byModel[model] ?? 0) + cost
+        }
       }
     }
-    return total
+    return { total, byModel }
   }
 
-  /** Get costs for multiple project directories at once. */
-  getAllProjectCosts(projectDirs: string[]): Record<string, number> {
-    const result: Record<string, number> = {}
+  /** Get costs for multiple project directories at once, with per-model breakdown. */
+  getAllProjectCosts(projectDirs: string[]): Record<string, { total: number; byModel: Record<string, number> }> {
+    const result: Record<string, { total: number; byModel: Record<string, number> }> = {}
     for (const dir of projectDirs) {
-      result[dir] = this.getProjectCost(dir)
+      result[dir] = this.getProjectCostsByModel(dir)
     }
     return result
   }
