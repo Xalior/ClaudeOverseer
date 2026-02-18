@@ -61,7 +61,7 @@ export async function resolveEncodedPath(
 }
 
 // Characters that Claude encodes as dashes (besides /, which becomes a path separator)
-const ALT_JOINERS = ['-', '.', ' ']
+const ALT_JOINERS = ['-', '.', ' ', '_']
 
 /**
  * Recursively try combining remaining segments with various separators,
