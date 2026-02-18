@@ -295,60 +295,64 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
   }
 
   return (
-    <div className="panel-content">
-      <div className="project-panel-header">
-        <h5 className="panel-title">Projects</h5>
-        {themeToggle}
-      </div>
-
-      {/* Pinned Section */}
-      <div className="project-section">
-        <div className="project-section__header">
-          <span className="project-section__label">
-            <svg className="project-section__icon" width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path d="M9.828 1.114a.5.5 0 0 1 .358.143l4.557 4.557a.5.5 0 0 1-.247.843l-2.2.524-.775.776 1.535 5.26a.5.5 0 0 1-.837.476L8.5 9.973l-2.64 2.64a.5.5 0 0 1-.707-.707l2.64-2.64-3.72-3.72a.5.5 0 0 1 .477-.837l5.26 1.535.775-.775.524-2.2a.5.5 0 0 1 .485-.358l.234.003z" fill="currentColor"/>
-            </svg>
-            Pinned
-          </span>
-          {pinned.length > 0 && <span className="project-section__count">{pinned.length}</span>}
-        </div>
-        {pinned.length > 0 ? (
-          <div className="project-card-list" data-testid="pinned-project-list">
-            {pinned.map(p => renderCard(p, true))}
+    <div className="project-panel">
+      <div className="project-panel__scroll">
+        <div className="panel-content">
+          <div className="project-panel-header">
+            <h5 className="panel-title">Projects</h5>
+            {themeToggle}
           </div>
-        ) : (
-          <div className="project-section__empty">
-            <svg className="project-section__empty-icon" width="20" height="20" viewBox="0 0 16 16" fill="none">
-              <path d="M9.828 1.114a.5.5 0 0 1 .358.143l4.557 4.557a.5.5 0 0 1-.247.843l-2.2.524-.775.776 1.535 5.26a.5.5 0 0 1-.837.476L8.5 9.973l-2.64 2.64a.5.5 0 0 1-.707-.707l2.64-2.64-3.72-3.72a.5.5 0 0 1 .477-.837l5.26 1.535.775-.775.524-2.2a.5.5 0 0 1 .485-.358l.234.003z" fill="none" stroke="currentColor" strokeWidth="0.8" strokeDasharray="2 1.5"/>
-            </svg>
-            <span className="project-section__empty-text">Pin your favourite projects for quick access</span>
+
+          {/* Pinned Section */}
+          <div className="project-section">
+            <div className="project-section__header">
+              <span className="project-section__label">
+                <svg className="project-section__icon" width="12" height="12" viewBox="0 0 16 16" fill="none">
+                  <path d="M9.828 1.114a.5.5 0 0 1 .358.143l4.557 4.557a.5.5 0 0 1-.247.843l-2.2.524-.775.776 1.535 5.26a.5.5 0 0 1-.837.476L8.5 9.973l-2.64 2.64a.5.5 0 0 1-.707-.707l2.64-2.64-3.72-3.72a.5.5 0 0 1 .477-.837l5.26 1.535.775-.775.524-2.2a.5.5 0 0 1 .485-.358l.234.003z" fill="currentColor"/>
+                </svg>
+                Pinned
+              </span>
+              {pinned.length > 0 && <span className="project-section__count">{pinned.length}</span>}
+            </div>
+            {pinned.length > 0 ? (
+              <div className="project-card-list" data-testid="pinned-project-list">
+                {pinned.map(p => renderCard(p, true))}
+              </div>
+            ) : (
+              <div className="project-section__empty">
+                <svg className="project-section__empty-icon" width="20" height="20" viewBox="0 0 16 16" fill="none">
+                  <path d="M9.828 1.114a.5.5 0 0 1 .358.143l4.557 4.557a.5.5 0 0 1-.247.843l-2.2.524-.775.776 1.535 5.26a.5.5 0 0 1-.837.476L8.5 9.973l-2.64 2.64a.5.5 0 0 1-.707-.707l2.64-2.64-3.72-3.72a.5.5 0 0 1 .477-.837l5.26 1.535.775-.775.524-2.2a.5.5 0 0 1 .485-.358l.234.003z" fill="none" stroke="currentColor" strokeWidth="0.8" strokeDasharray="2 1.5"/>
+                </svg>
+                <span className="project-section__empty-text">Pin your favourite projects for quick access</span>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Discovered Section */}
+          <div className="project-section">
+            <div className="project-section__header">
+              <span className="project-section__label">
+                Discovered
+              </span>
+              <button
+                className="project-section__sort-btn"
+                onClick={cycleSortOrder}
+                title={`Sort by: ${SORT_LABELS[sortOrder]} (click to change)`}
+              >
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 2v10m0 0L1 10m2 2l2-2m6-8v10m0 0l-2-2m2 2l2-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {SORT_LABELS[sortOrder]}
+              </button>
+            </div>
+            <div className="project-card-list" data-testid="project-list">
+              {discovered.map(p => renderCard(p, false))}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Discovered Section */}
-      <div className="project-section project-section--discovered">
-        <div className="project-section__header">
-          <span className="project-section__label">
-            Discovered
-          </span>
-          <button
-            className="project-section__sort-btn"
-            onClick={cycleSortOrder}
-            title={`Sort by: ${SORT_LABELS[sortOrder]} (click to change)`}
-          >
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-              <path d="M3 2v10m0 0L1 10m2 2l2-2m6-8v10m0 0l-2-2m2 2l2-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            {SORT_LABELS[sortOrder]}
-          </button>
-        </div>
-        <div className="project-card-list" data-testid="project-list">
-          {discovered.map(p => renderCard(p, false))}
-        </div>
-      </div>
-
-      {/* Mascot */}
+      {/* Mascot — absolutely pinned to panel bottom, full width, behind scroll content */}
       <div className="project-panel__mascot" aria-hidden="true" />
     </div>
   )
