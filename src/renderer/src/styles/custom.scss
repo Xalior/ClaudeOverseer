@@ -457,6 +457,14 @@ body {
   color: var(--warn);
 }
 
+.project-card__cost {
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 0.64rem;
+  color: var(--warn);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
 .project-card__badge {
   font-size: 0.66rem;
 }
@@ -562,6 +570,14 @@ body {
 .session-item__meta {
   color: var(--text-2);
   font-size: 0.72rem;
+}
+
+.session-item__cost {
+  margin-left: 6px;
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  color: var(--warn);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .session-item__sub-toggle {

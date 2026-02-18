@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { useProjects } from '../hooks/queries'
+import { useProjects, useProjectsDir, useProjectCosts } from '../hooks/queries'
 import { Badge } from './ui/badge'
 import { sortProjects, getActivityLevel, formatRelativeTime } from '../utils/project-utils'
+import { formatCost } from '../utils/pricing'
 import type { ProjectSortOrder } from '../../../preload/index.d'
 
 interface Project {
@@ -99,6 +100,7 @@ const SORT_OPTIONS: ProjectSortOrder[] = ['recent', 'alpha', 'sessions']
 
 export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) {
   const { data: projects = [], isLoading: loading } = useProjects()
+  const { data: projectsDir } = useProjectsDir()
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [pinnedProjects, setPinnedProjects] = useState<string[]>([])
   const [sortOrder, setSortOrder] = useState<ProjectSortOrder>('recent')
@@ -172,6 +174,14 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
     }
   }, [projects, pinnedProjects, sortOrder])
 
+  // Compute project directory paths for cost lookups
+  const projectDirPaths = useMemo(() => {
+    if (!projectsDir) return []
+    return pinned.map(p => `${projectsDir}/${p.encodedName}`)
+  }, [pinned, projectsDir])
+
+  const { data: projectCosts = {} } = useProjectCosts(projectDirPaths)
+
   if (loading && !prefsReady) {
     return (
       <div className="panel-content">
@@ -200,6 +210,8 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
     const isActive = selectedProject === project.encodedName
     const accentColor = hashColor(project.name)
     const activity = getActivityLevel(project.lastModified)
+    const dirPath = projectsDir ? `${projectsDir}/${project.encodedName}` : null
+    const cost = dirPath ? projectCosts[dirPath] : undefined
 
     return (
       <div
@@ -236,6 +248,9 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
               )}
             </svg>
           </button>
+          {isPinned && cost != null && cost > 0 && (
+            <span className="project-card__cost">{formatCost(cost)}</span>
+          )}
           <Badge variant="secondary" className="project-card__badge">
             {project.sessionCount}
           </Badge>

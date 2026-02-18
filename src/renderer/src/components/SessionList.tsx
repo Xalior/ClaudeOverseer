@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useSessions } from '../hooks/queries'
+import { useSessions, useSessionCosts } from '../hooks/queries'
 import { Badge } from './ui/badge'
 import { Collapsible, CollapsibleContent } from './ui/collapsible'
 import { getSessionStatus, getStatusBadge, formatDateTime } from '../utils/session-utils'
+import { formatCost } from '../utils/pricing'
 
 interface Session {
   id: string
@@ -16,11 +17,13 @@ interface Session {
 
 interface SessionListProps {
   projectEncodedName: string | null
+  projectDir: string | null
   onSessionSelect?: (filePath: string) => void
 }
 
-export function SessionList({ projectEncodedName, onSessionSelect }: SessionListProps) {
+export function SessionList({ projectEncodedName, projectDir, onSessionSelect }: SessionListProps) {
   const { data: sessions = [], isLoading: loading } = useSessions(projectEncodedName)
+  const { data: sessionCosts = {} } = useSessionCosts(projectDir)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set())
 
@@ -126,6 +129,7 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
     const children = subagentsByParent.get(session.id) || []
     const hasChildren = children.length > 0
     const isExpanded = expandedParents.has(session.id)
+    const cost = sessionCosts[session.filePath]
 
     return (
       <div
@@ -154,6 +158,9 @@ export function SessionList({ projectEncodedName, onSessionSelect }: SessionList
           )}
           <small className="session-item__meta">
             {formatDateTime(session.lastModified)} · {session.type}
+            {cost != null && cost > 0 && (
+              <span className="session-item__cost">{formatCost(cost)}</span>
+            )}
             {hasChildren && (
               <span
                 role="button"

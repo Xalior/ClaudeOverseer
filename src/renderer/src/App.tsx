@@ -5,7 +5,7 @@ import { SessionList } from './components/SessionList'
 import { MessageStream } from './components/messages/MessageStream'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ThemeToggle } from './components/ThemeToggle'
-import { useDirectoryWatcher } from './hooks/queries'
+import { useDirectoryWatcher, useProjectsDir } from './hooks/queries'
 import { useTheme } from './hooks/useTheme'
 
 const queryClient = new QueryClient({
@@ -33,6 +33,7 @@ function AppContent() {
   // Start directory watcher on mount
   useDirectoryWatcher()
   const { mode: themeMode, setTheme } = useTheme()
+  const { data: projectsDir } = useProjectsDir()
 
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [selectedSessionPath, setSelectedSessionPath] = useState<string | null>(null)
@@ -168,6 +169,7 @@ function AppContent() {
       >
         <SessionList
           projectEncodedName={selectedProject}
+          projectDir={selectedProject && projectsDir ? `${projectsDir}/${selectedProject}` : null}
           onSessionSelect={handleSessionSelect}
         />
       </div>
