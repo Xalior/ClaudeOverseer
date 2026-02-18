@@ -169,7 +169,7 @@ function AppContent() {
       >
         <SessionList
           projectEncodedName={selectedProject}
-          projectDir={selectedProject && projectsDir ? `${projectsDir}/${selectedProject}` : null}
+          projectDir={selectedProject && projectsDir ? `${projectsDir.replace(/\/$/, '')}/${selectedProject}` : null}
           onSessionSelect={handleSessionSelect}
         />
       </div>

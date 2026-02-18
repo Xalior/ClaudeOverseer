@@ -128,13 +128,13 @@ export function registerIpcHandlers(costCache: CostCache): void {
       onProjectsChanged: () => {
         // Broadcast to all windows
         for (const win of BrowserWindow.getAllWindows()) {
-          win.webContents.send('overseer:projects-changed')
+          try { win.webContents.send('overseer:projects-changed') } catch { /* frame not ready */ }
         }
       },
       onSessionsChanged: (projectEncodedName) => {
         // Broadcast to all windows
         for (const win of BrowserWindow.getAllWindows()) {
-          win.webContents.send('overseer:sessions-changed', { projectEncodedName })
+          try { win.webContents.send('overseer:sessions-changed', { projectEncodedName }) } catch { /* frame not ready */ }
         }
         // Recompute costs for this project's sessions
         const projectPath = join(projectsDir, projectEncodedName)

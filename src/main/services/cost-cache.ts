@@ -107,7 +107,11 @@ export class CostCache {
   /** Broadcast cost update to all renderer windows. */
   broadcastCostUpdate(): void {
     for (const win of BrowserWindow.getAllWindows()) {
-      win.webContents.send('overseer:cost-updated')
+      try {
+        win.webContents.send('overseer:cost-updated')
+      } catch {
+        // Window may not be ready yet during startup — ignore
+      }
     }
   }
 

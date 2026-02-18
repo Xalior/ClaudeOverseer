@@ -177,7 +177,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
   // Compute project directory paths for cost lookups
   const projectDirPaths = useMemo(() => {
     if (!projectsDir) return []
-    return pinned.map(p => `${projectsDir}/${p.encodedName}`)
+    return pinned.map(p => `${projectsDir!.replace(/\/$/, '')}/${p.encodedName}`)
   }, [pinned, projectsDir])
 
   const { data: projectCosts = {} } = useProjectCosts(projectDirPaths)
@@ -210,7 +210,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
     const isActive = selectedProject === project.encodedName
     const accentColor = hashColor(project.name)
     const activity = getActivityLevel(project.lastModified)
-    const dirPath = projectsDir ? `${projectsDir}/${project.encodedName}` : null
+    const dirPath = projectsDir ? `${projectsDir.replace(/\/$/, '')}/${project.encodedName}` : null
     const cost = dirPath ? projectCosts[dirPath] : undefined
 
     return (
