@@ -64,6 +64,47 @@ export function useSessionMessages(sessionFilePath: string | null) {
   return query
 }
 
+export function useSessionCosts(projectDir: string | null) {
+  const queryClient = useQueryClient()
+
+  const query = useQuery({
+    queryKey: ['sessionCosts', projectDir],
+    queryFn: () => window.overseer.getSessionCosts(projectDir!),
+    enabled: !!projectDir,
+    staleTime: Infinity
+  })
+
+  useEffect(() => {
+    const unsub = window.overseer.onCostUpdated(() => {
+      queryClient.invalidateQueries({ queryKey: ['sessionCosts', projectDir] })
+    })
+    return unsub
+  }, [projectDir, queryClient])
+
+  return query
+}
+
+export function useProjectCosts(projectDirs: string[]) {
+  const queryClient = useQueryClient()
+  const key = projectDirs.join('|')
+
+  const query = useQuery({
+    queryKey: ['projectCosts', key],
+    queryFn: () => window.overseer.getAllProjectCosts(projectDirs),
+    enabled: projectDirs.length > 0,
+    staleTime: Infinity
+  })
+
+  useEffect(() => {
+    const unsub = window.overseer.onCostUpdated(() => {
+      queryClient.invalidateQueries({ queryKey: ['projectCosts'] })
+    })
+    return unsub
+  }, [key, queryClient])
+
+  return query
+}
+
 /**
  * Directory watcher hook - start filesystem monitoring on mount, stop on unmount.
  * Invalidates React Query caches when projects/sessions change.

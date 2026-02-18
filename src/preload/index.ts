@@ -36,5 +36,16 @@ contextBridge.exposeInMainWorld('overseer', {
   },
   loadPreferences: () => ipcRenderer.invoke('overseer:load-preferences'),
   savePreferences: (prefs: Record<string, unknown>) =>
-    ipcRenderer.invoke('overseer:save-preferences', prefs)
+    ipcRenderer.invoke('overseer:save-preferences', prefs),
+  getSessionCosts: (projectDir: string) =>
+    ipcRenderer.invoke('overseer:get-session-costs', projectDir),
+  getAllProjectCosts: (projectDirs: string[]) =>
+    ipcRenderer.invoke('overseer:get-all-project-costs', projectDirs),
+  onCostUpdated: (callback: () => void) => {
+    const handler = () => callback()
+    ipcRenderer.on('overseer:cost-updated', handler)
+    return () => {
+      ipcRenderer.removeListener('overseer:cost-updated', handler)
+    }
+  }
 })

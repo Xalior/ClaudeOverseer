@@ -42,6 +42,9 @@ export interface OverseerAPI {
   onSessionsChanged: (callback: (data: { projectEncodedName: string }) => void) => () => void
   loadPreferences: () => Promise<AppPreferences>
   savePreferences: (prefs: Partial<AppPreferences>) => Promise<void>
+  getSessionCosts: (projectDir: string) => Promise<Record<string, number>>
+  getAllProjectCosts: (projectDirs: string[]) => Promise<Record<string, number>>
+  onCostUpdated: (callback: () => void) => () => void
 }
 
 declare global {
