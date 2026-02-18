@@ -18,6 +18,7 @@ export interface AppPreferences {
   windowState: WindowState
   panelWidths: [number, number]
   pinnedProjects: string[]
+  hiddenProjects: string[]
   projectSortOrder: ProjectSortOrder
 }
 
@@ -36,6 +37,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   },
   panelWidths: [220, 280],
   pinnedProjects: [],
+  hiddenProjects: [],
   projectSortOrder: 'recent'
 }
 

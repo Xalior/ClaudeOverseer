@@ -336,10 +336,34 @@ body {
   padding: 12px;
 }
 
-.project-card--active {
+.project-card--active,
+.project-card--active:hover {
   background: var(--card-active-bg);
   border-color: var(--accent);
   box-shadow: var(--shadow-md);
+}
+
+/* ===== Drag-and-Drop Reordering ===== */
+
+.project-card--dragging {
+  opacity: 0.4;
+}
+
+.project-card--drop-top {
+  box-shadow: 0 -2px 0 0 var(--accent) !important;
+}
+
+.project-card--drop-bottom {
+  box-shadow: 0 2px 0 0 var(--accent) !important;
+}
+
+
+.project-card[draggable="true"] {
+  cursor: grab;
+}
+
+.project-card[draggable="true"]:active {
+  cursor: grabbing;
 }
 
 /* ===== Icon Wrap with Activity Dot ===== */
@@ -462,6 +486,31 @@ body {
 
 .project-card__pin-btn--pinned {
   color: var(--warn);
+}
+
+.project-card__hide-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.14s ease, color 0.14s ease, background 0.14s ease;
+  padding: 0;
+}
+
+.project-card:hover .project-card__hide-btn {
+  opacity: 1;
+}
+
+.project-card__hide-btn:hover {
+  color: var(--danger, #e55);
+  background: rgba(200, 50, 50, 0.12);
 }
 
 .project-card__cost {
@@ -1278,7 +1327,7 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 320px;
+  height: 100%;
   background-image: url('/mascot.png');
   background-size: 100% auto;
   background-repeat: no-repeat;
@@ -1286,8 +1335,6 @@ body {
   pointer-events: none;
   z-index: 0;
   opacity: 0.6;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 40%, black 72%);
-  mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 40%, black 72%);
 }
 
 /* ===== Responsive ===== */

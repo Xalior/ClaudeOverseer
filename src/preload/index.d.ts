@@ -18,6 +18,7 @@ export interface AppPreferences {
   windowState: WindowState
   panelWidths: [number, number]
   pinnedProjects: string[]
+  hiddenProjects: string[]
   projectSortOrder: ProjectSortOrder
   theme: ThemeMode
 }

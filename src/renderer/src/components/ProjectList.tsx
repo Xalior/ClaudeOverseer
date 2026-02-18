@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useProjects, useProjectsDir, useProjectCosts } from '../hooks/queries'
 import { Badge } from './ui/badge'
 import { sortProjects, getActivityLevel, formatRelativeTime } from '../utils/project-utils'
@@ -103,6 +103,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
   const { data: projectsDir } = useProjectsDir()
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [pinnedProjects, setPinnedProjects] = useState<string[]>([])
+  const [hiddenProjects, setHiddenProjects] = useState<string[]>([])
   const [sortOrder, setSortOrder] = useState<ProjectSortOrder>('recent')
   const [prefsReady, setPrefsReady] = useState(false)
 
@@ -110,6 +111,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
   useEffect(() => {
     window.overseer.loadPreferences().then((prefs) => {
       if (prefs.pinnedProjects) setPinnedProjects(prefs.pinnedProjects)
+      if (prefs.hiddenProjects) setHiddenProjects(prefs.hiddenProjects)
       if (prefs.projectSortOrder) setSortOrder(prefs.projectSortOrder)
       if (prefs.selectedProject) setSelectedProject(prefs.selectedProject)
       setPrefsReady(true)
@@ -132,6 +134,15 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
     })
   }, [])
 
+  const hideProject = useCallback((encodedName: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setHiddenProjects(prev => {
+      const next = [...prev, encodedName]
+      window.overseer.savePreferences({ hiddenProjects: next })
+      return next
+    })
+  }, [])
+
   const cycleSortOrder = useCallback(() => {
     setSortOrder(prev => {
       const idx = SORT_OPTIONS.indexOf(prev)
@@ -140,6 +151,62 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
       return next
     })
   }, [])
+
+  // Drag-and-drop reordering for pinned projects
+  const dragItem = useRef<string | null>(null)
+  const [dragOverItem, setDragOverItem] = useState<string | null>(null)
+  const [dragOverHalf, setDragOverHalf] = useState<'top' | 'bottom'>('bottom')
+
+  const handleDragStart = useCallback((encodedName: string) => (e: React.DragEvent) => {
+    dragItem.current = encodedName
+    e.dataTransfer.effectAllowed = 'move'
+    // Make the dragged card semi-transparent
+    const target = e.currentTarget as HTMLElement
+    requestAnimationFrame(() => target.classList.add('project-card--dragging'))
+  }, [])
+
+  const handleDragOver = useCallback((encodedName: string) => (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (!dragItem.current || dragItem.current === encodedName) {
+      setDragOverItem(null)
+      return
+    }
+    // Determine if cursor is in top or bottom half
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const half = e.clientY < rect.top + rect.height / 2 ? 'top' : 'bottom'
+    setDragOverItem(encodedName)
+    setDragOverHalf(half)
+  }, [])
+
+  const handleDragEnd = useCallback((e?: React.DragEvent) => {
+    if (e) (e.currentTarget as HTMLElement).classList.remove('project-card--dragging')
+    document.querySelectorAll('.project-card--dragging').forEach(el => el.classList.remove('project-card--dragging'))
+    dragItem.current = null
+    setDragOverItem(null)
+  }, [])
+
+  const handleDrop = useCallback((targetName: string) => (e: React.DragEvent) => {
+    e.preventDefault()
+    const sourceName = dragItem.current
+    if (!sourceName || sourceName === targetName) {
+      handleDragEnd()
+      return
+    }
+    // Compute drop half from event
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const half = e.clientY < rect.top + rect.height / 2 ? 'top' : 'bottom'
+
+    setPinnedProjects(prev => {
+      const next = prev.filter(p => p !== sourceName)
+      const targetIdx = next.indexOf(targetName)
+      const insertIdx = half === 'top' ? targetIdx : targetIdx + 1
+      next.splice(insertIdx, 0, sourceName)
+      window.overseer.savePreferences({ pinnedProjects: next })
+      return next
+    })
+    handleDragEnd()
+  }, [handleDragEnd])
 
   // Pre-compute icons so they're stable across renders
   const projectIcons = useMemo(() => {
@@ -154,13 +221,14 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
   const { pinned, discovered } = useMemo(() => {
     const allProjects = projects as Project[]
     const pinnedSet = new Set(pinnedProjects)
+    const hiddenSet = new Set(hiddenProjects)
     const pinnedList: Project[] = []
     const discoveredList: Project[] = []
 
     for (const p of allProjects) {
       if (pinnedSet.has(p.encodedName)) {
         pinnedList.push(p)
-      } else {
+      } else if (!hiddenSet.has(p.encodedName)) {
         discoveredList.push(p)
       }
     }
@@ -172,7 +240,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
       pinned: pinnedList,
       discovered: sortProjects(discoveredList, sortOrder)
     }
-  }, [projects, pinnedProjects, sortOrder])
+  }, [projects, pinnedProjects, hiddenProjects, sortOrder])
 
   // Compute project directory paths for cost lookups (all projects)
   const projectDirPaths = useMemo(() => {
@@ -217,13 +285,24 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
     const costEntry = rawEntry && typeof rawEntry === 'object' ? rawEntry : undefined
     const cost = costEntry?.total
 
+    const isDragOver = isPinned && dragOverItem === project.encodedName
+    const dragOverClass = isDragOver ? `project-card--drop-${dragOverHalf}` : ''
+
     return (
       <div
         key={project.encodedName}
-        className={`project-card ${isExpanded ? 'project-card--expanded' : ''} ${isSelected ? 'project-card--active' : ''}`}
+        className={`project-card ${isExpanded ? 'project-card--expanded' : ''} ${isSelected ? 'project-card--active' : ''} ${dragOverClass}`}
         style={{ '--project-accent': accentColor } as React.CSSProperties}
         onClick={() => handleProjectClick(project.encodedName)}
         data-testid={`project-${project.encodedName}`}
+        {...(isPinned ? {
+          draggable: true,
+          onDragStart: handleDragStart(project.encodedName),
+          onDragOver: handleDragOver(project.encodedName),
+          onDragEnd: handleDragEnd,
+          onDrop: handleDrop(project.encodedName),
+          onDragLeave: () => setDragOverItem(null),
+        } : {})}
       >
         <div className="project-card__icon-wrap">
           <img
@@ -252,6 +331,19 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
               )}
             </svg>
           </button>
+          {!isPinned && (
+            <button
+              className="project-card__hide-btn"
+              onClick={(e) => hideProject(project.encodedName, e)}
+              title="Hide project"
+              aria-label="Hide project"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M2.5 2.5l11 11M4.7 4.7C3.3 5.8 2.2 7.3 1.5 8c1.3 1.5 3.5 4 6.5 4 1.1 0 2.1-.3 3-.8M6.5 4.2C7 4.1 7.5 4 8 4c3 0 5.2 2.5 6.5 4-.5.6-1.1 1.3-1.8 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.2" fill="none"/>
+              </svg>
+            </button>
+          )}
           {cost != null && cost > 0 && (
             <span className="project-card__cost">{formatCost(cost)}</span>
           )}
