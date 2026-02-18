@@ -327,7 +327,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
       </div>
 
       {/* Discovered Section */}
-      <div className="project-section">
+      <div className="project-section project-section--discovered">
         <div className="project-section__header">
           <span className="project-section__label">
             Discovered
@@ -347,6 +347,9 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
           {discovered.map(p => renderCard(p, false))}
         </div>
       </div>
+
+      {/* Mascot */}
+      <div className="project-panel__mascot" aria-hidden="true" />
     </div>
   )
 }
