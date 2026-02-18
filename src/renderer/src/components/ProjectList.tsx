@@ -211,7 +211,9 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
     const accentColor = hashColor(project.name)
     const activity = getActivityLevel(project.lastModified)
     const dirPath = projectsDir ? `${projectsDir.replace(/\/$/, '')}/${project.encodedName}` : null
-    const costEntry = dirPath ? projectCosts[dirPath] : undefined
+    const rawEntry = dirPath ? projectCosts[dirPath] : undefined
+    // Guard against stale number values from old cache format before restart
+    const costEntry = rawEntry && typeof rawEntry === 'object' ? rawEntry : undefined
     const cost = costEntry?.total
 
     return (
