@@ -332,11 +332,14 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.project-card--expanded {
+  padding: 12px;
+}
+
 .project-card--active {
   background: var(--card-active-bg);
   border-color: var(--accent);
   box-shadow: var(--shadow-md);
-  padding: 12px;
 }
 
 /* ===== Icon Wrap with Activity Dot ===== */
@@ -357,11 +360,11 @@ body {
   transition: all 0.15s ease;
 }
 
-.project-card--active .project-card__icon-wrap {
+.project-card--expanded .project-card__icon-wrap {
   grid-row: 1;
 }
 
-.project-card--active .project-card__icon {
+.project-card--expanded .project-card__icon {
   width: 48px;
   height: 42px;
 }
@@ -394,6 +397,10 @@ body {
   border-color: var(--card-hover);
 }
 
+.project-card--expanded .project-card__activity {
+  border-color: var(--card-bg);
+}
+
 .project-card--active .project-card__activity {
   border-color: var(--card-active-bg);
 }
@@ -413,7 +420,7 @@ body {
   line-height: 1.3;
 }
 
-.project-card--active .project-card__title {
+.project-card--expanded .project-card__title {
   font-size: 0.9rem;
 }
 

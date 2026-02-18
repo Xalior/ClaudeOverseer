@@ -207,7 +207,8 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
   }
 
   function renderCard(project: Project, isPinned: boolean) {
-    const isActive = isPinned || selectedProject === project.encodedName
+    const isExpanded = isPinned || selectedProject === project.encodedName
+    const isSelected = selectedProject === project.encodedName
     const accentColor = hashColor(project.name)
     const activity = getActivityLevel(project.lastModified)
     const dirPath = projectsDir ? `${projectsDir.replace(/\/$/, '')}/${project.encodedName}` : null
@@ -219,7 +220,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
     return (
       <div
         key={project.encodedName}
-        className={`project-card ${isActive ? 'project-card--active' : ''}`}
+        className={`project-card ${isExpanded ? 'project-card--expanded' : ''} ${isSelected ? 'project-card--active' : ''}`}
         style={{ '--project-accent': accentColor } as React.CSSProperties}
         onClick={() => handleProjectClick(project.encodedName)}
         data-testid={`project-${project.encodedName}`}
@@ -259,7 +260,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
           </Badge>
         </div>
 
-        {isActive ? (
+        {isExpanded ? (
           <div className="project-card__details">
             <div
               className={`project-card__full-path ${!project.pathVerified ? 'project-card__full-path--unverified' : ''}`}
@@ -271,7 +272,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
             <div className="project-card__meta">
               {formatRelativeTime(project.lastModified)}
             </div>
-            {isPinned && costEntry && Object.keys(costEntry.byModel).length > 0 && (
+            {costEntry && Object.keys(costEntry.byModel).length > 0 && (
               <div className="project-card__cost-breakdown">
                 {Object.entries(costEntry.byModel)
                   .sort(([, a], [, b]) => b - a)
