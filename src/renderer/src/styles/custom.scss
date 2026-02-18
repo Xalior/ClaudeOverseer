@@ -1248,9 +1248,9 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 260px;
+  height: 320px;
   background-image: url('/mascot.png');
-  background-size: contain;
+  background-size: 100% auto;
   background-repeat: no-repeat;
   background-position: bottom center;
   pointer-events: none;
