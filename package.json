@@ -28,6 +28,9 @@
     "dist:docker": "electron-builder --linux --win",
     "docker:build": "./docker-build.sh",
     "postdist": "npm run clean:extra",
+    "postdist:mac": "npm run clean:extra",
+    "postdist:linux": "npm run clean:extra",
+    "postdist:win": "npm run clean:extra",
     "postdist:docker": "npm run clean:extra",
     "clean:extra": "find release -name '*.blockmap' -delete && find release -name '*.yml' -delete && find release -name 'builder-*.y*ml' -delete && find release -type d \\( -name '*-unpacked' -o -name 'mac*' -o -name 'linux-*' -o -name 'win-*' -o -name '.icon-*' \\) -exec rm -rf {} + 2>/dev/null || true && echo '🧹 Cleaned up intermediate build files'"
   },
