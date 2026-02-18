@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useProjects, useProjectsDir, useProjectCosts } from '../hooks/queries'
 import { Badge } from './ui/badge'
 import { sortProjects, getActivityLevel, formatRelativeTime } from '../utils/project-utils'
-import { formatCost } from '../utils/pricing'
+import { formatCost, getModelName } from '../utils/pricing'
 import type { ProjectSortOrder } from '../../../preload/index.d'
 
 interface Project {
@@ -174,11 +174,11 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
     }
   }, [projects, pinnedProjects, sortOrder])
 
-  // Compute project directory paths for cost lookups
+  // Compute project directory paths for cost lookups (all projects)
   const projectDirPaths = useMemo(() => {
     if (!projectsDir) return []
-    return pinned.map(p => `${projectsDir!.replace(/\/$/, '')}/${p.encodedName}`)
-  }, [pinned, projectsDir])
+    return (projects as Project[]).map(p => `${projectsDir!.replace(/\/$/, '')}/${p.encodedName}`)
+  }, [projects, projectsDir])
 
   const { data: projectCosts = {} } = useProjectCosts(projectDirPaths)
 
@@ -207,11 +207,12 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
   }
 
   function renderCard(project: Project, isPinned: boolean) {
-    const isActive = selectedProject === project.encodedName
+    const isActive = isPinned || selectedProject === project.encodedName
     const accentColor = hashColor(project.name)
     const activity = getActivityLevel(project.lastModified)
     const dirPath = projectsDir ? `${projectsDir.replace(/\/$/, '')}/${project.encodedName}` : null
-    const cost = dirPath ? projectCosts[dirPath] : undefined
+    const costEntry = dirPath ? projectCosts[dirPath] : undefined
+    const cost = costEntry?.total
 
     return (
       <div
@@ -248,7 +249,7 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
               )}
             </svg>
           </button>
-          {isPinned && cost != null && cost > 0 && (
+          {cost != null && cost > 0 && (
             <span className="project-card__cost">{formatCost(cost)}</span>
           )}
           <Badge variant="secondary" className="project-card__badge">
@@ -268,6 +269,18 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
             <div className="project-card__meta">
               {formatRelativeTime(project.lastModified)}
             </div>
+            {isPinned && costEntry && Object.keys(costEntry.byModel).length > 0 && (
+              <div className="project-card__cost-breakdown">
+                {Object.entries(costEntry.byModel)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([modelId, modelCost]) => (
+                    <div key={modelId} className="project-card__cost-line">
+                      <span className="project-card__cost-model">{getModelName(modelId)}</span>
+                      <span className="project-card__cost-value">{formatCost(modelCost)}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="project-card__meta">

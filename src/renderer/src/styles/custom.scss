@@ -511,6 +511,31 @@ body {
   font-style: italic;
 }
 
+.project-card__cost-breakdown {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.project-card__cost-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.62rem;
+}
+
+.project-card__cost-model {
+  color: var(--text-2);
+}
+
+.project-card__cost-value {
+  font-family: 'SF Mono', Menlo, Monaco, monospace;
+  color: var(--warn);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
 /* ===== Session List ===== */
 
 .session-list {
