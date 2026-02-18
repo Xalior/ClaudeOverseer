@@ -17,6 +17,7 @@
     "test:watch": "vitest watch tests/unit",
     "test:coverage": "vitest run --coverage",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "fetch-pricing": "node scripts/fetch-pricing.mjs",
     "clean": "rm -rf release out",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
