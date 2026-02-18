@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { registerIpcHandlers } from './ipc-handlers'
 import { loadPreferences, savePreferences } from './services/preferences'
+import { CostCache } from './services/cost-cache'
 
 // Enable remote debugging on port 9222 for agent debugging (dev only)
 if (process.env.NODE_ENV === 'development') {
@@ -60,8 +61,11 @@ function createWindow(): void {
   }
 }
 
+const costCache = new CostCache()
+costCache.loadFromDisk()
+
 app.whenReady().then(() => {
-  registerIpcHandlers()
+  registerIpcHandlers(costCache)
   createWindow()
 
   app.on('activate', () => {

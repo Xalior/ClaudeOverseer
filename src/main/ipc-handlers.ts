@@ -10,6 +10,7 @@ import { JsonlWatcher } from './services/jsonl-watcher'
 import { DirectoryWatcher } from './services/directory-watcher'
 import { loadPreferences, savePreferencesSync } from './services/preferences'
 import type { AppPreferences } from './services/preferences'
+import type { CostCache } from './services/cost-cache'
 
 const DEFAULT_CLAUDE_DIR = join(homedir(), '.claude', 'projects')
 
@@ -22,7 +23,7 @@ let directoryWatcher: DirectoryWatcher | null = null
 /**
  * Register all IPC handlers for the main process
  */
-export function registerIpcHandlers(): void {
+export function registerIpcHandlers(costCache: CostCache): void {
   // Get Claude projects directory from paths.txt or use default
   ipcMain.handle('overseer:get-projects-dir', async () => {
     try {
@@ -78,6 +79,10 @@ export function registerIpcHandlers(): void {
             usage: formatted.totalUsage
           })
         }
+        // Recompute cost for this session
+        costCache.recomputeSession(sessionFilePath).then(() => {
+          costCache.broadcastCostUpdate()
+        })
       },
       onError: (error) => {
         console.error('Watcher error:', error.message)
@@ -131,6 +136,14 @@ export function registerIpcHandlers(): void {
         for (const win of BrowserWindow.getAllWindows()) {
           win.webContents.send('overseer:sessions-changed', { projectEncodedName })
         }
+        // Recompute costs for this project's sessions
+        const projectPath = join(projectsDir, projectEncodedName)
+        discoverSessions(projectPath).then((sessions) => {
+          const paths = sessions.map((s) => s.filePath)
+          costCache.recomputeAllStale(paths).then(() => {
+            costCache.broadcastCostUpdate()
+          })
+        }).catch(() => {})
       },
       onError: (error) => {
         console.error('Directory watcher error:', error.message)
@@ -138,6 +151,22 @@ export function registerIpcHandlers(): void {
     })
 
     await directoryWatcher.start()
+
+    // Background scan: recompute costs for all sessions
+    setImmediate(async () => {
+      try {
+        const projects = await scanProjects(projectsDir)
+        const allPaths: string[] = []
+        for (const project of projects) {
+          const sessions = await discoverSessions(join(projectsDir, project.encodedName))
+          for (const s of sessions) allPaths.push(s.filePath)
+        }
+        await costCache.recomputeAllStale(allPaths)
+        costCache.broadcastCostUpdate()
+      } catch (err) {
+        console.error('Background cost scan failed:', err)
+      }
+    })
   })
 
   // Stop directory watcher
@@ -156,5 +185,15 @@ export function registerIpcHandlers(): void {
   // Save preferences (partial merge)
   ipcMain.handle('overseer:save-preferences', async (_event, prefs: Partial<AppPreferences>) => {
     savePreferencesSync(prefs)
+  })
+
+  // Get session costs for a project directory
+  ipcMain.handle('overseer:get-session-costs', async (_event, projectDir: string) => {
+    return costCache.getSessionCosts(projectDir)
+  })
+
+  // Get aggregated costs for multiple project directories
+  ipcMain.handle('overseer:get-all-project-costs', async (_event, projectDirs: string[]) => {
+    return costCache.getAllProjectCosts(projectDirs)
   })
 }
