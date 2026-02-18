@@ -123,7 +123,45 @@ export function SessionList({ projectEncodedName, projectDir, onSessionSelect }:
     )
   }
 
-  function renderSessionItem(session: Session, indent: boolean = false) {
+  function renderSubagentRow(session: Session, isLast: boolean) {
+    const status = getSessionStatus(session.lastModified)
+    const cost = sessionCosts[session.filePath]
+    const isSelected = session.id === selectedId
+
+    return (
+      <div
+        key={session.id}
+        className={`session-sub ${isSelected ? 'session-sub--active' : ''}`}
+        data-testid={`session-${session.type}-${session.id}`}
+        onClick={() => handleSelect(session)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleSelect(session)
+          }
+        }}
+      >
+        <div className="session-sub__connector">
+          <div className={`session-sub__line ${isLast ? 'session-sub__line--last' : ''}`} />
+          <div className="session-sub__branch" />
+        </div>
+        <div className="session-sub__content">
+          <div className="session-sub__title">{getSessionTitle(session)}</div>
+          <div className="session-sub__meta">
+            {formatDateTime(session.lastModified)}
+            {cost != null && cost > 0 && (
+              <span className="session-sub__cost">{formatCost(cost)}</span>
+            )}
+          </div>
+        </div>
+        <div className={`session-sub__dot session-sub__dot--${status}`} />
+      </div>
+    )
+  }
+
+  function renderSessionGroup(session: Session) {
     const status = getSessionStatus(session.lastModified)
     const badge = getStatusBadge(status)
     const children = subagentsByParent.get(session.id) || []
@@ -134,47 +172,65 @@ export function SessionList({ projectEncodedName, projectDir, onSessionSelect }:
     return (
       <div
         key={session.id}
-        className={`session-item ${session.id === selectedId ? 'session-item--active' : ''}`}
-        data-testid={`session-${session.type}-${session.id}`}
-        onClick={() => handleSelect(session)}
-        style={{ paddingLeft: indent ? '2rem' : undefined }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            handleSelect(session)
-          }
-        }}
+        className={`session-group ${hasChildren ? 'session-group--has-children' : ''} ${isExpanded ? 'session-group--expanded' : ''}`}
       >
-        <div className="session-item__main">
-          <div className="session-item__title">
-            {indent ? '↳ ' : badge.icon + ' '}{getSessionTitle(session)}
-          </div>
-          {session.summary && session.slug && (
-            <div className="session-item__summary">
-              {session.slug}
+        <div
+          className={`session-item ${session.id === selectedId ? 'session-item--active' : ''} ${hasChildren ? 'session-item--parent' : ''}`}
+          data-testid={`session-${session.type}-${session.id}`}
+          onClick={() => handleSelect(session)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleSelect(session)
+            }
+          }}
+        >
+          <div className="session-item__main">
+            <div className="session-item__title">
+              {badge.icon + ' '}{getSessionTitle(session)}
             </div>
-          )}
-          <small className="session-item__meta">
-            {formatDateTime(session.lastModified)} · {session.type}
-            {cost != null && cost > 0 && (
-              <span className="session-item__cost">{formatCost(cost)}</span>
+            {session.summary && session.slug && (
+              <div className="session-item__summary">
+                {session.slug}
+              </div>
             )}
-            {hasChildren && (
-              <span
-                role="button"
-                onClick={(e) => toggleExpand(session.id, e)}
-                className="session-item__sub-toggle"
-              >
-                {isExpanded ? '▼' : '▶'} {children.length} sub
-              </span>
-            )}
-          </small>
+            <small className="session-item__meta">
+              {formatDateTime(session.lastModified)} · {session.type}
+              {cost != null && cost > 0 && (
+                <span className="session-item__cost">{formatCost(cost)}</span>
+              )}
+              {hasChildren && (
+                <span
+                  role="button"
+                  onClick={(e) => toggleExpand(session.id, e)}
+                  className="session-item__sub-toggle"
+                >
+                  <svg
+                    className={`session-item__chevron ${isExpanded ? 'session-item__chevron--open' : ''}`}
+                    width="10" height="10" viewBox="0 0 10 10" fill="none"
+                  >
+                    <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {children.length} sub
+                </span>
+              )}
+            </small>
+          </div>
+          <Badge variant={badge.variant} data-testid={`status-${session.id}`}>
+            {status}
+          </Badge>
         </div>
-        <Badge variant={badge.variant} data-testid={`status-${session.id}`}>
-          {status}
-        </Badge>
+        {hasChildren && (
+          <Collapsible open={isExpanded}>
+            <CollapsibleContent className="ui-collapsible-content">
+              <div className="session-group__children">
+                {children.map((child, i) => renderSubagentRow(child, i === children.length - 1))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </div>
     )
   }
@@ -183,22 +239,7 @@ export function SessionList({ projectEncodedName, projectDir, onSessionSelect }:
     <div className="panel-content">
       <h5 className="panel-title panel-title--spaced">📄 Sessions</h5>
       <div className="session-list" data-testid="session-list-items">
-        {topLevel.map((session: Session) => {
-          const children = subagentsByParent.get(session.id) || []
-          const isExpanded = expandedParents.has(session.id)
-          return (
-            <div key={session.id}>
-              {renderSessionItem(session)}
-              {children.length > 0 && (
-                <Collapsible open={isExpanded}>
-                  <CollapsibleContent className="ui-collapsible-content">
-                    {children.map(child => renderSessionItem(child, true))}
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-            </div>
-          )
-        })}
+        {topLevel.map((session: Session) => renderSessionGroup(session))}
       </div>
     </div>
   )
