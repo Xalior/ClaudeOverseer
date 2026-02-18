@@ -43,7 +43,7 @@ export interface OverseerAPI {
   loadPreferences: () => Promise<AppPreferences>
   savePreferences: (prefs: Partial<AppPreferences>) => Promise<void>
   getSessionCosts: (projectDir: string) => Promise<Record<string, number>>
-  getAllProjectCosts: (projectDirs: string[]) => Promise<Record<string, number>>
+  getAllProjectCosts: (projectDirs: string[]) => Promise<Record<string, { total: number; byModel: Record<string, number> }>>
   onCostUpdated: (callback: () => void) => () => void
 }
 
