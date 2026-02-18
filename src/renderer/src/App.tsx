@@ -17,8 +17,8 @@ const queryClient = new QueryClient({
   }
 })
 
-const DEFAULT_WIDTHS: [number, number] = [220, 280] // px for panel 1 and 2; panel 3 gets the rest
-const MIN_WIDTH = 120
+const DEFAULT_WIDTHS: [number, number] = [240, 280] // px for panel 1 and 2; panel 3 gets the rest
+const MIN_WIDTHS: [number, number] = [240, 120]
 const MAX_WIDTH_FRACTION = 0.45 // no single panel > 45% of window
 
 function App() {
@@ -85,10 +85,10 @@ function AppContent() {
       const delta = e.clientX - d.startX
       const maxPx = window.innerWidth * MAX_WIDTH_FRACTION
       const newWidths: [number, number] = [...d.startWidths]
-      newWidths[d.index] = Math.max(MIN_WIDTH, Math.min(maxPx, d.startWidths[d.index] + delta))
-      // Ensure panel 3 keeps at least MIN_WIDTH
+      newWidths[d.index] = Math.max(MIN_WIDTHS[d.index], Math.min(maxPx, d.startWidths[d.index] + delta))
+      // Ensure panel 3 keeps at least its minimum width
       const remaining = window.innerWidth - newWidths[0] - newWidths[1] - 8 // 8px for two handles
-      if (remaining < MIN_WIDTH) return
+      if (remaining < MIN_WIDTHS[1]) return
       setPanelWidths(newWidths)
     }
     function onMouseUp() {
