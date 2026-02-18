@@ -75,10 +75,6 @@ export function UserMessage({ text, images, timestamp }: UserMessageProps) {
   // If it's entirely system segments with no real text, render compact
   const isAllSystem = segments !== null && segments.every(s => s.type === 'system')
 
-  // Nothing to show (e.g. empty <local-command-stdout/>)
-  if (!segments && !text && (!images || images.length === 0)) return null
-  if (hasSystemTags && !segments && (!images || images.length === 0)) return null
-
   return (
     <Card
       className={`message-card message-card--user ${isAllSystem ? 'message-card--system' : ''}`}
