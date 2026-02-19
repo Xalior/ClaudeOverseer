@@ -44,8 +44,33 @@ export interface FormattedSession {
 }
 
 /**
+ * Estimate output token count from content blocks.
+ * Claude Code JSONL records usage from the streaming start event, which has
+ * near-zero output_tokens. The real count comes from the final streaming event
+ * which isn't persisted. We estimate from actual content (~4 chars per token).
+ */
+function estimateOutputTokens(content: AssistantMessage['message']['content']): number {
+  let totalChars = 0
+  for (const block of content) {
+    if (block.type === 'text') {
+      totalChars += block.text.length
+    } else if (block.type === 'tool_use') {
+      // Tool name + serialized input
+      totalChars += block.name.length + JSON.stringify(block.input).length
+    } else if (block.type === 'thinking') {
+      totalChars += block.thinking.length
+    }
+  }
+  return Math.ceil(totalChars / 4)
+}
+
+/**
  * Format parsed messages into display-ready structures.
  * Groups tool_use blocks with their corresponding tool_result responses.
+ *
+ * Claude Code writes multiple JSONL entries per API response (progressive
+ * streaming snapshots). We deduplicate by API message ID, keeping only the
+ * last (most complete) entry for each response.
  */
 export function formatMessages(messages: ParsedMessage[]): FormattedSession {
   const formatted: FormattedMessage[] = []
@@ -68,6 +93,31 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
       }
     }
   }
+
+  // Deduplicate assistant messages by API message ID.
+  // Later entries supersede earlier ones (more complete content + usage).
+  const assistantById = new Map<string, AssistantMessage>()
+  const assistantOrder: string[] = []
+  for (const msg of messages) {
+    if (msg.type === 'assistant') {
+      const aMsg = msg as AssistantMessage
+      const mid = aMsg.message.id
+      if (mid) {
+        if (!assistantById.has(mid)) {
+          assistantOrder.push(mid)
+        }
+        assistantById.set(mid, aMsg)
+      } else {
+        // No message ID — treat as unique (fallback)
+        const fallbackId = `__no_id_${aMsg.uuid}`
+        assistantOrder.push(fallbackId)
+        assistantById.set(fallbackId, aMsg)
+      }
+    }
+  }
+  const dedupedAssistants = new Set(
+    assistantOrder.map((mid) => assistantById.get(mid)!)
+  )
 
   for (const msg of messages) {
     if (msg.type === 'queue-operation') {
@@ -121,6 +171,11 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
     }
 
     if (msg.type === 'assistant') {
+      // Skip duplicate streaming entries — only process the last entry per API message ID
+      if (!dedupedAssistants.has(msg as AssistantMessage)) {
+        continue
+      }
+
       const assistantMsg = msg as AssistantMessage
       const textParts: string[] = []
       const toolPairs: ToolPair[] = []
@@ -136,10 +191,14 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
         }
       }
 
-      // Accumulate token usage
+      // Accumulate token usage.
+      // output_tokens from JSONL is unreliable (captured at streaming start, not end),
+      // so we use the higher of recorded vs content-estimated value.
       if (assistantMsg.message.usage) {
+        const recorded = assistantMsg.message.usage.output_tokens || 0
+        const estimated = estimateOutputTokens(assistantMsg.message.content)
         totalUsage.input_tokens += assistantMsg.message.usage.input_tokens || 0
-        totalUsage.output_tokens += assistantMsg.message.usage.output_tokens || 0
+        totalUsage.output_tokens += Math.max(recorded, estimated)
         totalUsage.cache_creation_input_tokens += assistantMsg.message.usage.cache_creation_input_tokens || 0
         totalUsage.cache_read_input_tokens += assistantMsg.message.usage.cache_read_input_tokens || 0
       }
@@ -156,6 +215,17 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
         continue
       }
 
+      // Store usage with corrected output_tokens for per-message cost calculation
+      const correctedUsage: TokenUsage | undefined = assistantMsg.message.usage
+        ? {
+            ...assistantMsg.message.usage,
+            output_tokens: Math.max(
+              assistantMsg.message.usage.output_tokens || 0,
+              estimateOutputTokens(assistantMsg.message.content)
+            )
+          }
+        : undefined
+
       formatted.push({
         type: 'assistant',
         uuid: assistantMsg.uuid,
@@ -163,7 +233,7 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
         model: assistantMsg.message.model,
         textContent: combinedText || undefined,
         toolPairs: toolPairs.length > 0 ? toolPairs : undefined,
-        usage: assistantMsg.message.usage,
+        usage: correctedUsage,
         stopReason: assistantMsg.message.stop_reason,
         raw: msg
       })

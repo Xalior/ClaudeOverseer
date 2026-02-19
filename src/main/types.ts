@@ -98,6 +98,7 @@ export interface AssistantMessage {
   version?: string
   message: {
     role: 'assistant'
+    id?: string
     model: string
     content: (TextBlock | ToolUseBlock | ThinkingBlock)[]
     usage?: TokenUsage

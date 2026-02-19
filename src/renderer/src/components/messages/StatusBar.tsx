@@ -43,7 +43,7 @@ export function StatusBar({ usage, messageCount, messages }: StatusBarProps) {
       </div>
 
       <div className="status-bar__section">
-        <span className="status-bar__value status-bar__value--ok">{formatNum(usage.output_tokens)}</span>
+        <span className="status-bar__value status-bar__value--ok">~{formatNum(usage.output_tokens)}</span>
         <span className="status-bar__label">out</span>
       </div>
 

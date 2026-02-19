@@ -38,7 +38,7 @@ export function AssistantMessage({ model, textContent, toolPairs, usage, timesta
           <div className="message-card__meta">
             {usage && (
               <span className="message-card__tokens" data-testid="token-usage">
-                {formatTokens(usage.input_tokens + (usage.cache_read_input_tokens || 0) + (usage.cache_creation_input_tokens || 0))}↓ {formatTokens(usage.output_tokens)}↑
+                {formatTokens(usage.input_tokens + (usage.cache_read_input_tokens || 0) + (usage.cache_creation_input_tokens || 0))}↓ ~{formatTokens(usage.output_tokens)}↑
                 {cost !== null && <span className="message-card__cost">{formatCost(cost)}</span>}
               </span>
             )}
