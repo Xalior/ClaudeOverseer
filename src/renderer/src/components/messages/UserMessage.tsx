@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Card, CardContent } from '../ui/card'
+import { TaskNotificationCard, parseTaskNotificationXml } from './TaskNotificationCard'
 
 interface UserImage {
   mediaType: string
@@ -22,7 +23,7 @@ const SYSTEM_TAGS: Record<string, { label: string; icon: string }> = {
 }
 
 interface ParsedSegment {
-  type: 'text' | 'system'
+  type: 'text' | 'system' | 'task-notification'
   content: string
   tag?: string
 }
@@ -33,44 +34,80 @@ interface ParsedSegment {
  */
 function parseUserText(text: string): ParsedSegment[] {
   const segments: ParsedSegment[] = []
-  // Match self-closing or content-bearing XML tags we recognise
+
+  // First pass: extract task-notification blocks, leaving placeholders
+  const taskNotifRe = /<task-notification>([\s\S]*?)<\/task-notification>/g
+  const taskNotifs: { index: number; end: number; content: string }[] = []
+  let tnMatch: RegExpExecArray | null
+  while ((tnMatch = taskNotifRe.exec(text)) !== null) {
+    taskNotifs.push({ index: tnMatch.index, end: taskNotifRe.lastIndex, content: tnMatch[1] })
+  }
+
+  // Split text into chunks around task-notification blocks
+  const chunks: { type: 'raw' | 'task-notification'; content: string }[] = []
+  let cursor = 0
+  for (const tn of taskNotifs) {
+    if (tn.index > cursor) {
+      chunks.push({ type: 'raw', content: text.slice(cursor, tn.index) })
+    }
+    chunks.push({ type: 'task-notification', content: tn.content })
+    cursor = tn.end
+  }
+  if (cursor < text.length) {
+    chunks.push({ type: 'raw', content: text.slice(cursor) })
+  }
+  // If no task notifications, process normally
+  if (taskNotifs.length === 0) {
+    chunks.length = 0
+    chunks.push({ type: 'raw', content: text })
+  }
+
+  // Second pass: parse system tags within raw chunks
   const tagNames = Object.keys(SYSTEM_TAGS).join('|')
   const re = new RegExp(
     `<(${tagNames})>([\\s\\S]*?)</\\1>|<(${tagNames})\\s*/>`,
     'g'
   )
 
-  let lastIndex = 0
-  let match: RegExpExecArray | null
-  while ((match = re.exec(text)) !== null) {
-    // Text before this tag
-    if (match.index > lastIndex) {
-      const before = text.slice(lastIndex, match.index).trim()
-      if (before) segments.push({ type: 'text', content: before })
+  for (const chunk of chunks) {
+    if (chunk.type === 'task-notification') {
+      segments.push({ type: 'task-notification', content: chunk.content })
+      continue
     }
-    const tag = match[1] || match[3]
-    const inner = (match[2] || '').trim()
-    segments.push({ type: 'system', content: inner, tag })
-    lastIndex = re.lastIndex
+
+    re.lastIndex = 0
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+    while ((match = re.exec(chunk.content)) !== null) {
+      if (match.index > lastIndex) {
+        const before = chunk.content.slice(lastIndex, match.index).trim()
+        if (before) segments.push({ type: 'text', content: before })
+      }
+      const tag = match[1] || match[3]
+      const inner = (match[2] || '').trim()
+      segments.push({ type: 'system', content: inner, tag })
+      lastIndex = re.lastIndex
+    }
+    if (lastIndex < chunk.content.length) {
+      const rest = chunk.content.slice(lastIndex).trim()
+      if (rest) segments.push({ type: 'text', content: rest })
+    }
   }
-  // Remaining text
-  if (lastIndex < text.length) {
-    const rest = text.slice(lastIndex).trim()
-    if (rest) segments.push({ type: 'text', content: rest })
-  }
+
   return segments
 }
 
 export function UserMessage({ text, images, timestamp }: UserMessageProps) {
   const relativeTime = getRelativeTime(timestamp)
   const hasSystemTags = text && /<(?:local-command-caveat|local-command-stdout|command-name|command-message|command-args)[>\s/]/.test(text)
+  const hasTaskNotifs = text && /<task-notification>/.test(text)
 
   const segments = useMemo(() => {
-    if (!hasSystemTags) return null
+    if (!hasSystemTags && !hasTaskNotifs) return null
     // Filter out empty segments (e.g. <local-command-stdout></local-command-stdout>)
     const filtered = parseUserText(text).filter(s => s.content)
     return filtered.length > 0 ? filtered : null
-  }, [text, hasSystemTags])
+  }, [text, hasSystemTags, hasTaskNotifs])
 
   // If it's entirely system segments with no real text, render compact
   const isAllSystem = segments !== null && segments.every(s => s.type === 'system')
@@ -91,6 +128,9 @@ export function UserMessage({ text, images, timestamp }: UserMessageProps) {
         {segments ? (
           <div className="message-card__text" data-testid="user-message-text">
             {segments.map((seg, i) => {
+              if (seg.type === 'task-notification') {
+                return <TaskNotificationCard key={i} data={parseTaskNotificationXml(seg.content)} />
+              }
               if (seg.type === 'system') {
                 const info = SYSTEM_TAGS[seg.tag || ''] || { label: 'System', icon: '⚙️' }
                 if (!seg.content) return null

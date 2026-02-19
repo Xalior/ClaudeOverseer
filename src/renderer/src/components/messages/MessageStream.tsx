@@ -9,7 +9,7 @@ import type { FormattedMessage } from '../../../../main/services/message-formatt
 import { Switch } from '../ui/switch'
 
 /** Tags that mark system/command XML in user messages */
-const SYSTEM_TAG_RE = /^<(?:local-command-caveat|local-command-stdout|command-name|command-message|command-args)[>\s/]/
+const SYSTEM_TAG_RE = /^<(?:local-command-caveat|local-command-stdout|command-name|command-message|command-args|task-notification)[>\s/]/
 
 /** Check if a user message is purely empty system XML (nothing visible to render) */
 function isEmptySystemMessage(msg: FormattedMessage): boolean {
@@ -17,7 +17,7 @@ function isEmptySystemMessage(msg: FormattedMessage): boolean {
   const text = msg.userText.trim()
   if (!SYSTEM_TAG_RE.test(text)) return false
   // Extract all content from inside system tags
-  const TAG_NAMES = 'local-command-caveat|local-command-stdout|command-name|command-message|command-args'
+  const TAG_NAMES = 'local-command-caveat|local-command-stdout|command-name|command-message|command-args|task-notification'
   const contentRe = new RegExp(`<(${TAG_NAMES})[^>]*>([\\s\\S]*?)<\\/\\1>`, 'g')
   let hasContent = false
   let match: RegExpExecArray | null

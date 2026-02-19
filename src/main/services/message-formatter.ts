@@ -123,7 +123,7 @@ export function formatMessages(messages: ParsedMessage[]): FormattedSession {
     if (msg.type === 'queue-operation') {
       formatted.push({
         type: 'queue-operation',
-        uuid: `qo-${msg.timestamp}`,
+        uuid: `qo-${msg.timestamp}-${formatted.length}`,
         timestamp: msg.timestamp,
         raw: msg
       })

@@ -35,8 +35,9 @@ function extractUserText(content: unknown): string | undefined {
   }
   if (!raw) return undefined
 
-  // Strip XML tags, collapse whitespace
+  // Strip task-notification blocks entirely, then strip remaining XML tags
   const clean = raw
+    .replace(/<task-notification>[\s\S]*?<\/task-notification>/g, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\[Request interrupted by user\]/g, '')
     .replace(/\s+/g, ' ')
