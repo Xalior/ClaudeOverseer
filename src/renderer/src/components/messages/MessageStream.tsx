@@ -72,7 +72,7 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
     if (!shouldAutoScrollRef.current || messageCount === 0) return
 
     isProgrammaticScrollRef.current = true
-    virtualizer.scrollToIndex(messageCount - 1, { align: 'end', behavior: 'smooth' })
+    virtualizer.scrollToIndex(messageCount - 1, { align: 'end' })
 
     setTimeout(() => {
       isProgrammaticScrollRef.current = false
