@@ -3,7 +3,7 @@ import hljs from 'highlight.js'
 import { Card, CardContent } from '../ui/card'
 import { Button } from '../ui/button'
 import { Collapsible, CollapsibleContent } from '../ui/collapsible'
-import { TOOL_ICONS, formatToolName, parseSystemReminders, getLangFromPath } from '../../utils/tool-formatting'
+import { TOOL_ICONS, formatToolName, parseSystemReminders, getLangFromPath, type PersistedOutput } from '../../utils/tool-formatting'
 
 interface ToolCallCardProps {
   toolName: string
@@ -71,6 +71,96 @@ function SystemReminder({ text }: { text: string }) {
   )
 }
 
+/** Persisted output display — large output saved to file with preview */
+function PersistedOutputCard({ output }: { output: PersistedOutput }) {
+  const [showPreview, setShowPreview] = useState(true)
+  const fileName = output.filePath.split('/').pop() || output.filePath
+  const previewLines = output.preview ? output.preview.split('\n').length : 0
+
+  return (
+    <div style={{
+      backgroundColor: 'var(--surface-0)',
+      border: '1px solid var(--border-1)',
+      borderRadius: '6px',
+      padding: '10px 12px',
+      margin: '8px 0',
+      fontFamily: "'SF Mono', 'Fira Code', Menlo, Monaco, monospace",
+      fontSize: '0.82rem'
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingBottom: '8px',
+        borderBottom: '1px solid var(--border-0)',
+        marginBottom: '8px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            backgroundColor: 'var(--warning-muted, rgba(234, 179, 8, 0.15))',
+            color: 'var(--warning, #eab308)',
+            padding: '2px 8px',
+            borderRadius: '10px',
+            fontSize: '0.72rem',
+            fontWeight: 600,
+            fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+            letterSpacing: '0.03em'
+          }}>
+            {output.sizeInfo}
+          </span>
+          <span style={{
+            color: 'var(--text-2)',
+            fontSize: '0.75rem',
+            fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'
+          }}>
+            Output truncated — full result saved to file
+          </span>
+        </div>
+        {output.preview && (
+          <Button
+            variant="link"
+            size="sm"
+            className="tool-toggle"
+            style={{ color: 'var(--text-2)', fontSize: '0.72rem' }}
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? '▼' : '▶'} preview ({previewLines} lines)
+          </Button>
+        )}
+      </div>
+
+      {/* File path */}
+      <div style={{
+        color: 'var(--text-2)',
+        fontSize: '0.75rem',
+        marginBottom: output.preview ? '8px' : 0,
+        wordBreak: 'break-all'
+      }}>
+        <span style={{ color: 'var(--text-2)', marginRight: '4px' }}>📄</span>
+        <span style={{ color: 'var(--accent)' }}>{fileName}</span>
+        <span style={{ color: 'var(--text-2)', marginLeft: '6px', fontSize: '0.7rem' }}>{output.filePath}</span>
+      </div>
+
+      {/* Preview content */}
+      {output.preview && (
+        <Collapsible open={showPreview}>
+          <CollapsibleContent className="ui-collapsible-content" style={{
+            color: 'var(--text-1)',
+            borderTop: '1px solid var(--border-0)',
+            paddingTop: '8px',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            lineHeight: 1.5,
+          }}>
+            {output.preview}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  )
+}
+
 /** Bash: render like a terminal */
 function BashPrettyPrint({ input, result, isError }: {
   input: Record<string, unknown>
@@ -81,7 +171,7 @@ function BashPrettyPrint({ input, result, isError }: {
   const command = (input.command as string) || ''
 
   // Parse out system reminders
-  const { mainContent, systemReminders } = parseSystemReminders(result)
+  const { mainContent, systemReminders, persistedOutputs } = parseSystemReminders(result)
   const outputLines = mainContent ? mainContent.split('\n').length : 0
 
   return (
@@ -126,6 +216,10 @@ function BashPrettyPrint({ input, result, isError }: {
         </>
       )}
 
+      {/* Persisted outputs */}
+      {persistedOutputs.length > 0 && persistedOutputs.map((po, idx) => (
+        <PersistedOutputCard key={`po-${idx}`} output={po} />
+      ))}
       {/* System reminders */}
       {systemReminders.length > 0 && systemReminders.map((reminder, idx) => (
         <SystemReminder key={idx} text={reminder} />
@@ -151,7 +245,7 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
   const rawDisplayContent = isWrite ? fileContent : result
 
   // Parse out system reminders
-  const { mainContent: displayContent, systemReminders } = parseSystemReminders(rawDisplayContent)
+  const { mainContent: displayContent, systemReminders, persistedOutputs } = parseSystemReminders(rawDisplayContent)
   const contentLines = displayContent ? displayContent.split('\n').length : 0
 
   // For Edit, show old_string -> new_string
@@ -253,6 +347,10 @@ function FilePrettyPrint({ toolName, input, result, isError }: {
         </div>
       )}
 
+      {/* Persisted outputs */}
+      {persistedOutputs.length > 0 && persistedOutputs.map((po, idx) => (
+        <PersistedOutputCard key={`po-${idx}`} output={po} />
+      ))}
       {/* System reminders */}
       {systemReminders.length > 0 && systemReminders.map((reminder, idx) => (
         <SystemReminder key={idx} text={reminder} />
@@ -273,7 +371,7 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
   const path = (input.path as string) || (input.file_path as string) || ''
 
   // Parse out system reminders
-  const { mainContent, systemReminders } = parseSystemReminders(result)
+  const { mainContent, systemReminders, persistedOutputs } = parseSystemReminders(result)
   const resultLines = mainContent ? mainContent.split('\n').filter(l => l.trim()).length : 0
 
   return (
@@ -311,6 +409,10 @@ function SearchPrettyPrint({ toolName, input, result, isError }: {
         </>
       )}
 
+      {/* Persisted outputs */}
+      {persistedOutputs.length > 0 && persistedOutputs.map((po, idx) => (
+        <PersistedOutputCard key={`po-${idx}`} output={po} />
+      ))}
       {/* System reminders */}
       {systemReminders.length > 0 && systemReminders.map((reminder, idx) => (
         <SystemReminder key={idx} text={reminder} />
@@ -436,7 +538,7 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
   const [showOutput, setShowOutput] = useState(true)
 
   // Parse out system reminders
-  const { mainContent, systemReminders } = parseSystemReminders(result)
+  const { mainContent, systemReminders, persistedOutputs } = parseSystemReminders(result)
 
   const { icon, label, server } = formatToolName(toolName)
 
@@ -503,6 +605,10 @@ function GenericPrettyPrint({ toolName, input, result, isError }: {
         </Collapsible>
       )}
 
+      {/* Persisted outputs */}
+      {persistedOutputs.length > 0 && persistedOutputs.map((po, idx) => (
+        <PersistedOutputCard key={`po-${idx}`} output={po} />
+      ))}
       {/* System reminders */}
       {systemReminders.length > 0 && systemReminders.map((reminder, idx) => (
         <SystemReminder key={idx} text={reminder} />

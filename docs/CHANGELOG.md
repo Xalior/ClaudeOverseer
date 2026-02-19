@@ -5,6 +5,20 @@ All notable changes to ClaudeOverseer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - Unreleased
+
+### Added
+- **Virtualised Message Stream** — Messages rendered with `@tanstack/react-virtual` for smooth scrolling performance on large sessions
+- **Redesigned Session Subagent Display** — Subagents shown as connected groups with tree-line connectors instead of flat list
+- **Persisted Output Cards** — Large tool outputs saved to file are displayed as styled collapsible cards with size info, file path, and preview content
+- **Task Notification Cards** — Subagent-to-agent communications rendered as dedicated notification cards
+- **Estimated Output Tokens** — Output token counts estimated from content blocks (~4 chars/token) since Claude Code JSONL only records streaming start usage
+
+### Fixed
+- **Smooth Scroll Incompatibility** — Removed smooth scroll CSS that conflicted with dynamic virtualizer row sizing
+- **Assistant Message Deduplication** — Deduplicate progressive streaming snapshots by API message ID, keeping only the most complete entry per response
+- **Text Contrast** — Improved text-to-background contrast in both dark and light themes; brighter text in dark mode, darker text in light mode; active project cards get additional contrast boost to compensate for their brighter surface background
+
 ## [0.2.0] - 2026-02-17
 
 ### Added

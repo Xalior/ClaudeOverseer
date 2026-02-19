@@ -33,9 +33,11 @@
   --surface-2: #2d3845;
   --border-0: #2e3b4a;
   --border-1: #3a4a5c;
-  --text-0: #d8e2ec;
-  --text-1: #9baab9;
-  --text-2: #6b7b8d;
+  --text-0: #e8eff6;
+  --text-1: #b4c4d2;
+  --text-2: #8a9db0;
+  --text-active-0: #f0f5fb;
+  --text-active-2: #9db0c3;
   --accent: #4a9eca;
   --accent-muted: rgba(74, 158, 202, 0.14);
   --accent-subtle: rgba(74, 158, 202, 0.08);
@@ -68,9 +70,11 @@
   --surface-2: #eef0f4;
   --border-0: #d8dce3;
   --border-1: #c5cbd4;
-  --text-0: #1a2233;
-  --text-1: #556172;
-  --text-2: #8693a4;
+  --text-0: #0f1520;
+  --text-1: #3d4d60;
+  --text-2: #627589;
+  --text-active-0: #0a0f18;
+  --text-active-2: #4e6275;
   --accent: #2d7fb5;
   --accent-muted: rgba(45, 127, 181, 0.10);
   --accent-subtle: rgba(45, 127, 181, 0.05);
@@ -341,6 +345,11 @@ body {
   background: var(--card-active-bg);
   border-color: var(--accent);
   box-shadow: var(--shadow-md);
+
+  .project-card__title { color: var(--text-active-0, var(--text-0)); }
+  .project-card__meta,
+  .project-card__full-path,
+  .project-card__cost-breakdown { color: var(--text-active-2, var(--text-2)); }
 }
 
 /* ===== Drag-and-Drop Reordering ===== */

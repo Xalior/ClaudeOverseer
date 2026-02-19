@@ -58,13 +58,58 @@ export function formatToolName(rawName: string): { icon: string; label: string; 
   return { icon, label: rawName }
 }
 
+export interface PersistedOutput {
+  filePath: string
+  sizeInfo: string   // e.g. "228.3KB"
+  preview: string    // the preview text
+}
+
 export interface ParsedResult {
   mainContent: string
   systemReminders: string[]
+  persistedOutputs: PersistedOutput[]
 }
 
-/** Parse out <system-reminder> tags from result text */
+/** Parse out <persisted-output> blocks from result text */
+export function parsePersistedOutputs(text: string): { mainContent: string; persistedOutputs: PersistedOutput[] } {
+  const persistedOutputs: PersistedOutput[] = []
+  // Match the full persisted-output block pattern:
+  // <persisted-output>\nOutput too large (SIZE). Full output saved to: PATH\n\nPreview (first NKB):\nCONTENT\n</persisted-output>
+  const persistedRegex = /<persisted-output>\s*([\s\S]*?)<\/persisted-output>/g
+
+  let match
+  let lastIndex = 0
+  const contentParts: string[] = []
+
+  while ((match = persistedRegex.exec(text)) !== null) {
+    contentParts.push(text.slice(lastIndex, match.index))
+    const body = match[1].trim()
+
+    // Extract size and file path
+    const headerMatch = body.match(/Output too large \(([^)]+)\)\.\s*Full output saved to:\s*(\S+)/)
+    const filePath = headerMatch ? headerMatch[2] : ''
+    const sizeInfo = headerMatch ? headerMatch[1] : ''
+
+    // Extract preview content (everything after "Preview (first ...):\n")
+    const previewMatch = body.match(/Preview \([^)]*\):\s*\n([\s\S]*)/)
+    const preview = previewMatch ? previewMatch[1].trimEnd() : body
+
+    persistedOutputs.push({ filePath, sizeInfo, preview })
+    lastIndex = match.index + match[0].length
+  }
+
+  contentParts.push(text.slice(lastIndex))
+  const mainContent = contentParts.join('').trim()
+
+  return { mainContent, persistedOutputs }
+}
+
+/** Parse out <system-reminder> and <persisted-output> tags from result text */
 export function parseSystemReminders(text: string): ParsedResult {
+  // First extract persisted outputs
+  const { mainContent: afterPersisted, persistedOutputs } = parsePersistedOutputs(text)
+
+  // Then extract system reminders
   const systemReminders: string[] = []
   const reminderRegex = /<system-reminder>([\s\S]*?)<\/system-reminder>/g
 
@@ -72,20 +117,16 @@ export function parseSystemReminders(text: string): ParsedResult {
   let lastIndex = 0
   const contentParts: string[] = []
 
-  while ((match = reminderRegex.exec(text)) !== null) {
-    // Add content before this reminder
-    contentParts.push(text.slice(lastIndex, match.index))
-    // Store the reminder content
+  while ((match = reminderRegex.exec(afterPersisted)) !== null) {
+    contentParts.push(afterPersisted.slice(lastIndex, match.index))
     systemReminders.push(match[1].trim())
     lastIndex = match.index + match[0].length
   }
 
-  // Add any remaining content after the last reminder
-  contentParts.push(text.slice(lastIndex))
-
+  contentParts.push(afterPersisted.slice(lastIndex))
   const mainContent = contentParts.join('').trim()
 
-  return { mainContent, systemReminders }
+  return { mainContent, systemReminders, persistedOutputs }
 }
 
 /** Map file extensions to highlight.js language names */
