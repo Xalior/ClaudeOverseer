@@ -141,7 +141,7 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
       <div className="message-stream__empty">
         <span className="message-stream__empty-icon">💬</span>
         <h5 className="message-stream__empty-title">Message Stream</h5>
-        <p className="message-stream__empty-hint">Select a session to view messages</p>
+        <p className="message-stream__empty-hint">Select a thread to view messages</p>
       </div>
     )
   }
@@ -152,7 +152,7 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
       <div className="message-stream__empty">
         <span className="message-stream__empty-icon">⏳</span>
         <h5 className="message-stream__empty-title">Loading...</h5>
-        <p className="message-stream__empty-hint">Fetching session messages</p>
+        <p className="message-stream__empty-hint">Fetching thread messages</p>
       </div>
     )
   }
@@ -162,8 +162,8 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
     return (
       <div className="message-stream__empty">
         <span className="message-stream__empty-icon">📭</span>
-        <h5 className="message-stream__empty-title">Empty Session</h5>
-        <p className="message-stream__empty-hint">No messages in this session yet</p>
+        <h5 className="message-stream__empty-title">Empty Thread</h5>
+        <p className="message-stream__empty-hint">No messages in this thread yet</p>
       </div>
     )
   }

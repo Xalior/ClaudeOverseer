@@ -99,7 +99,7 @@ export function SessionList({ projectEncodedName, projectDir, onSessionSelect }:
   if (!projectEncodedName) {
     return (
       <div className="panel-content">
-        <h5 className="panel-title">📄 Sessions</h5>
+        <h5 className="panel-title">📄 Threads</h5>
         <p className="panel-muted">Select a project first</p>
       </div>
     )
@@ -108,7 +108,7 @@ export function SessionList({ projectEncodedName, projectDir, onSessionSelect }:
   if (loading) {
     return (
       <div className="panel-content">
-        <h5 className="panel-title">📄 Sessions</h5>
+        <h5 className="panel-title">📄 Threads</h5>
         <p className="panel-muted">Loading...</p>
       </div>
     )
@@ -117,8 +117,8 @@ export function SessionList({ projectEncodedName, projectDir, onSessionSelect }:
   if (sessions.length === 0) {
     return (
       <div className="panel-content">
-        <h5 className="panel-title">📄 Sessions</h5>
-        <p className="panel-muted">No sessions found</p>
+        <h5 className="panel-title">📄 Threads</h5>
+        <p className="panel-muted">No threads found</p>
       </div>
     )
   }
@@ -237,7 +237,7 @@ export function SessionList({ projectEncodedName, projectDir, onSessionSelect }:
 
   return (
     <div className="panel-content">
-      <h5 className="panel-title panel-title--spaced">📄 Sessions</h5>
+      <h5 className="panel-title panel-title--spaced">📄 Threads</h5>
       <div className="session-list" data-testid="session-list-items">
         {topLevel.map((session: Session) => renderSessionGroup(session))}
       </div>

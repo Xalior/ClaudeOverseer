@@ -93,7 +93,7 @@ function generateProjectIcon(name: string): string {
 const SORT_LABELS: Record<ProjectSortOrder, string> = {
   recent: 'Recent',
   alpha: 'A-Z',
-  sessions: 'Sessions'
+  sessions: 'Threads'
 }
 
 const SORT_OPTIONS: ProjectSortOrder[] = ['recent', 'alpha', 'sessions']
