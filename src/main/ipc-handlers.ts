@@ -191,7 +191,7 @@ export function registerIpcHandlers(costCache: CostCache, broadcaster: Broadcast
     return costCache.getAllProjectCosts(projectDirs)
   })
 
-  // Resume a session via the Claude CLI
+  // Resume a session via the Agent SDK (fire-and-forget; status updates via broadcaster)
   ipcMain.handle('overseer:resume-session', async (_event, sessionId: string, projectPath: string, prompt: string) => {
     resumeSession({ sessionId, projectPath, prompt })
   })

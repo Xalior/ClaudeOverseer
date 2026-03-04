@@ -130,6 +130,5 @@ export interface ResumeSessionRequest {
 export interface ResumeSessionStatus {
   sessionId: string
   status: 'running' | 'completed' | 'error'
-  exitCode?: number
   error?: string
 }

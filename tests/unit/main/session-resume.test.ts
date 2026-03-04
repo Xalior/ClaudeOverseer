@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { EventEmitter } from 'events'
 
-// Mock electron (still needed for Broadcaster)
+// Mock electron (needed for Broadcaster)
 const mockSend = vi.fn()
 vi.mock('electron', () => ({
   BrowserWindow: {
@@ -9,13 +8,16 @@ vi.mock('electron', () => ({
   }
 }))
 
-// Mock child_process.spawn
-const mockChild = new EventEmitter() as EventEmitter & { pid: number }
-mockChild.pid = 12345
+// Mock the SDK query function
+const mockQuery = vi.fn()
+vi.mock('@anthropic-ai/claude-agent-sdk', () => ({
+  query: (...args: unknown[]) => mockQuery(...args)
+}))
 
-const mockSpawn = vi.fn(() => mockChild)
-vi.mock('child_process', () => ({
-  spawn: (...args: unknown[]) => mockSpawn(...args)
+// Mock fs/promises for .mcp.json loading
+const mockReadFile = vi.fn()
+vi.mock('fs/promises', () => ({
+  readFile: (...args: unknown[]) => mockReadFile(...args)
 }))
 
 describe('session-resume', () => {
@@ -26,19 +28,19 @@ describe('session-resume', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
-    // Re-import to reset module state
     vi.resetModules()
 
-    // Re-setup mocks after module reset
     vi.doMock('electron', () => ({
       BrowserWindow: {
         getAllWindows: () => [{ webContents: { send: mockSend } }]
       }
     }))
 
-    const freshChild = new EventEmitter() as EventEmitter & { pid: number }
-    freshChild.pid = 12345
-    mockSpawn.mockReturnValue(freshChild)
+    // Default: query returns an empty async generator (successful completion)
+    mockQuery.mockReturnValue((async function* () {})())
+
+    // Default: no .mcp.json found
+    mockReadFile.mockRejectedValue(new Error('ENOENT'))
 
     const mod = await import('../../../src/main/services/session-resume')
     const broadcasterMod = await import('../../../src/main/services/broadcaster')
@@ -47,7 +49,6 @@ describe('session-resume', () => {
     setResumeBroadcaster = mod.setResumeBroadcaster
     Broadcaster = broadcasterMod.Broadcaster
 
-    // Set up broadcaster for the module
     const broadcaster = new Broadcaster()
     setResumeBroadcaster(broadcaster)
   })
@@ -56,26 +57,74 @@ describe('session-resume', () => {
     vi.restoreAllMocks()
   })
 
-  it('spawns claude with correct arguments', () => {
-    resumeSession({
+  it('calls SDK query with correct options', async () => {
+    await resumeSession({
       sessionId: 'session-abc123',
       projectPath: '/home/user/project',
       prompt: 'fix the bug'
     })
 
-    expect(mockSpawn).toHaveBeenCalledWith(
-      'claude',
-      ['--resume', 'session-abc123', '-p', 'fix the bug'],
-      expect.objectContaining({
+    expect(mockQuery).toHaveBeenCalledWith({
+      prompt: 'fix the bug',
+      options: expect.objectContaining({
+        resume: 'session-abc123',
         cwd: '/home/user/project',
-        shell: true,
-        stdio: 'ignore'
+        permissionMode: 'bypassPermissions',
+        allowDangerouslySkipPermissions: true,
+        settingSources: ['user', 'project', 'local'],
+        mcpServers: {}
       })
-    )
+    })
   })
 
-  it('broadcasts running status on spawn', () => {
-    resumeSession({
+  it('passes an AbortController in options', async () => {
+    await resumeSession({
+      sessionId: 'session-abc123',
+      projectPath: '/home/user/project',
+      prompt: 'hello'
+    })
+
+    const callArgs = mockQuery.mock.calls[0][0]
+    expect(callArgs.options.abortController).toBeInstanceOf(AbortController)
+  })
+
+  it('loads MCP servers from .mcp.json in project path', async () => {
+    const mcpConfig = {
+      mcpServers: {
+        'chrome-devtools': {
+          command: 'npx',
+          args: ['-y', 'chrome-devtools-mcp@latest', '--browserUrl', 'http://127.0.0.1:19222']
+        }
+      }
+    }
+    mockReadFile.mockResolvedValue(JSON.stringify(mcpConfig))
+
+    await resumeSession({
+      sessionId: 'session-abc123',
+      projectPath: '/home/user/project',
+      prompt: 'hello'
+    })
+
+    expect(mockReadFile).toHaveBeenCalledWith('/home/user/project/.mcp.json', 'utf-8')
+    const callArgs = mockQuery.mock.calls[0][0]
+    expect(callArgs.options.mcpServers).toEqual(mcpConfig.mcpServers)
+  })
+
+  it('passes empty mcpServers when .mcp.json is missing', async () => {
+    mockReadFile.mockRejectedValue(new Error('ENOENT'))
+
+    await resumeSession({
+      sessionId: 'session-abc123',
+      projectPath: '/home/user/project',
+      prompt: 'hello'
+    })
+
+    const callArgs = mockQuery.mock.calls[0][0]
+    expect(callArgs.options.mcpServers).toEqual({})
+  })
+
+  it('broadcasts running status on start', async () => {
+    await resumeSession({
       sessionId: 'session-abc123',
       projectPath: '/home/user/project',
       prompt: 'hello'
@@ -87,91 +136,113 @@ describe('session-resume', () => {
     })
   })
 
-  it('broadcasts completed status on exit code 0', () => {
-    const child = new EventEmitter()
-    mockSpawn.mockReturnValue(child)
-
-    resumeSession({
+  it('broadcasts completed status on successful completion', async () => {
+    await resumeSession({
       sessionId: 'session-abc123',
       projectPath: '/home/user/project',
       prompt: 'hello'
     })
-
-    mockSend.mockClear()
-    child.emit('exit', 0)
 
     expect(mockSend).toHaveBeenCalledWith('overseer:resume-status', {
       sessionId: 'session-abc123',
-      status: 'completed',
-      exitCode: 0
+      status: 'completed'
     })
   })
 
-  it('broadcasts error status on non-zero exit', () => {
-    const child = new EventEmitter()
-    mockSpawn.mockReturnValue(child)
+  it('broadcasts error status when SDK throws', async () => {
+    mockQuery.mockReturnValue((async function* () {
+      throw new Error('API key invalid')
+    })())
 
-    resumeSession({
+    await resumeSession({
       sessionId: 'session-abc123',
       projectPath: '/home/user/project',
       prompt: 'hello'
     })
-
-    mockSend.mockClear()
-    child.emit('exit', 1)
 
     expect(mockSend).toHaveBeenCalledWith('overseer:resume-status', {
       sessionId: 'session-abc123',
       status: 'error',
-      exitCode: 1,
-      error: 'Process exited with code 1'
+      error: 'API key invalid'
     })
   })
 
-  it('broadcasts error status on spawn error', () => {
-    const child = new EventEmitter()
-    mockSpawn.mockReturnValue(child)
+  it('broadcasts error status for non-Error throws', async () => {
+    mockQuery.mockReturnValue((async function* () {
+      throw 'something went wrong'
+    })())
 
-    resumeSession({
+    await resumeSession({
       sessionId: 'session-abc123',
       projectPath: '/home/user/project',
       prompt: 'hello'
     })
 
-    mockSend.mockClear()
-    child.emit('error', new Error('ENOENT'))
-
     expect(mockSend).toHaveBeenCalledWith('overseer:resume-status', {
       sessionId: 'session-abc123',
       status: 'error',
-      error: 'ENOENT'
+      error: 'something went wrong'
     })
   })
 
-  it('prevents double-spawning on the same session', () => {
-    const child = new EventEmitter()
-    mockSpawn.mockReturnValue(child)
+  it('prevents double-resume on the same session', async () => {
+    // Make query hang (never resolves) to simulate in-progress
+    mockQuery.mockReturnValue((async function* () {
+      await new Promise(() => {}) // never resolves
+    })())
 
-    resumeSession({
+    // Start first resume (don't await — it won't finish)
+    const first = resumeSession({
       sessionId: 'session-abc123',
       projectPath: '/home/user/project',
       prompt: 'first'
     })
 
-    mockSpawn.mockClear()
+    // Wait a tick for the first call to register
+    await new Promise((r) => setTimeout(r, 10))
+
+    mockQuery.mockClear()
     mockSend.mockClear()
 
-    resumeSession({
+    // Try second resume on same session
+    await resumeSession({
       sessionId: 'session-abc123',
       projectPath: '/home/user/project',
       prompt: 'second'
     })
 
-    expect(mockSpawn).not.toHaveBeenCalled()
+    expect(mockQuery).not.toHaveBeenCalled()
     expect(mockSend).toHaveBeenCalledWith('overseer:resume-status', {
       sessionId: 'session-abc123',
       status: 'error',
       error: 'Session is already being resumed'
     })
+
+    // Clean up the hanging promise (suppress unhandled rejection)
+    first.catch(() => {})
+  })
+
+  it('clears active state after completion', async () => {
+    await resumeSession({
+      sessionId: 'session-abc123',
+      projectPath: '/home/user/project',
+      prompt: 'hello'
+    })
+
+    expect(isSessionResuming('session-abc123')).toBe(false)
+  })
+
+  it('clears active state after error', async () => {
+    mockQuery.mockReturnValue((async function* () {
+      throw new Error('fail')
+    })())
+
+    await resumeSession({
+      sessionId: 'session-abc123',
+      projectPath: '/home/user/project',
+      prompt: 'hello'
+    })
+
+    expect(isSessionResuming('session-abc123')).toBe(false)
   })
 })
