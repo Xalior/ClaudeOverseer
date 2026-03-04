@@ -5,6 +5,7 @@ import { SessionList } from './components/SessionList'
 import { MessageStream } from './components/messages/MessageStream'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ThemeToggle } from './components/ThemeToggle'
+import { PreferencesPanel } from './components/PreferencesPanel'
 import { useDirectoryWatcher, useProjectsDir, useProjects } from './hooks/queries'
 import { useTheme } from './hooks/useTheme'
 
@@ -39,6 +40,7 @@ function AppContent() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [selectedSessionPath, setSelectedSessionPath] = useState<string | null>(null)
   const [prefsLoaded, setPrefsLoaded] = useState(false)
+  const [prefsOpen, setPrefsOpen] = useState(false)
   const projectRef = useRef<HTMLDivElement>(null)
   const sessionRef = useRef<HTMLDivElement>(null)
   const messageRef = useRef<HTMLDivElement>(null)
@@ -125,10 +127,24 @@ function AppContent() {
     return project?.path ?? null
   }, [selectedProject, projects])
 
+  // Listen for menu-triggered preferences open
+  useEffect(() => {
+    if (!window.overseer?.onOpenPreferences) return
+    const unsub = window.overseer.onOpenPreferences(() => setPrefsOpen(true))
+    return unsub
+  }, [])
+
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const isMeta = e.metaKey || e.ctrlKey
+
+      // Cmd+, — open preferences (fallback if menu doesn't fire)
+      if (isMeta && e.key === ',') {
+        e.preventDefault()
+        setPrefsOpen(true)
+        return
+      }
 
       // Cmd+1/2/3 — focus panels
       if (isMeta && e.key === '1') {
@@ -195,6 +211,14 @@ function AppContent() {
           <MessageStream sessionFilePath={selectedSessionPath} projectPath={selectedProjectPath} />
         </ErrorBoundary>
       </div>
+
+      {/* Preferences Panel */}
+      <PreferencesPanel
+        open={prefsOpen}
+        onClose={() => setPrefsOpen(false)}
+        themeMode={themeMode}
+        onThemeChange={setTheme}
+      />
     </div>
   )
 }

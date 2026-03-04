@@ -11,6 +11,13 @@ export interface WindowState {
 }
 
 export type ProjectSortOrder = 'alpha' | 'recent' | 'sessions'
+export type ThemeMode = 'light' | 'dark' | 'system'
+
+export interface RemoteServerConfig {
+  enabled: boolean
+  port: number
+  bindAddress: string
+}
 
 export interface AppPreferences {
   selectedProject: string | null
@@ -20,6 +27,8 @@ export interface AppPreferences {
   pinnedProjects: string[]
   hiddenProjects: string[]
   projectSortOrder: ProjectSortOrder
+  theme: ThemeMode
+  remoteServer: RemoteServerConfig
 }
 
 const PREFS_DIR = join(homedir(), '.ClaudeOverseer')
@@ -38,7 +47,13 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   panelWidths: [220, 280],
   pinnedProjects: [],
   hiddenProjects: [],
-  projectSortOrder: 'recent'
+  projectSortOrder: 'recent',
+  theme: 'system',
+  remoteServer: {
+    enabled: false,
+    port: 19280,
+    bindAddress: '0.0.0.0'
+  }
 }
 
 function isValidPreferences(obj: unknown): obj is Partial<AppPreferences> {
@@ -56,6 +71,10 @@ export function loadPreferences(): AppPreferences {
       windowState: {
         ...DEFAULT_PREFERENCES.windowState,
         ...(parsed.windowState || {})
+      },
+      remoteServer: {
+        ...DEFAULT_PREFERENCES.remoteServer,
+        ...(parsed.remoteServer || {})
       }
     }
   } catch {
@@ -77,7 +96,10 @@ export function savePreferences(partial: Partial<AppPreferences>): void {
         ...partial,
         windowState: partial.windowState
           ? { ...current.windowState, ...partial.windowState }
-          : current.windowState
+          : current.windowState,
+        remoteServer: partial.remoteServer
+          ? { ...current.remoteServer, ...partial.remoteServer }
+          : current.remoteServer
       }
       const tmpFile = PREFS_FILE + '.tmp'
       writeFileSync(tmpFile, JSON.stringify(merged, null, 2), 'utf-8')
@@ -97,7 +119,10 @@ export function savePreferencesSync(partial: Partial<AppPreferences>): void {
       ...partial,
       windowState: partial.windowState
         ? { ...current.windowState, ...partial.windowState }
-        : current.windowState
+        : current.windowState,
+      remoteServer: partial.remoteServer
+        ? { ...current.remoteServer, ...partial.remoteServer }
+        : current.remoteServer
     }
     const tmpFile = PREFS_FILE + '.tmp'
     writeFileSync(tmpFile, JSON.stringify(merged, null, 2), 'utf-8')

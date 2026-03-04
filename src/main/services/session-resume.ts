@@ -1,17 +1,19 @@
 import { spawn, type ChildProcess } from 'child_process'
-import { BrowserWindow } from 'electron'
+import type { Broadcaster } from './broadcaster'
 import type { ResumeSessionRequest, ResumeSessionStatus } from '../types'
 
 // Track active child processes by session ID
 const activeProcesses = new Map<string, ChildProcess>()
 
+let _broadcaster: Broadcaster | null = null
+
+export function setResumeBroadcaster(broadcaster: Broadcaster): void {
+  _broadcaster = broadcaster
+}
+
 function broadcastStatus(status: ResumeSessionStatus): void {
-  for (const win of BrowserWindow.getAllWindows()) {
-    try {
-      win.webContents.send('overseer:resume-status', status)
-    } catch {
-      /* window not ready */
-    }
+  if (_broadcaster) {
+    _broadcaster.send('overseer:resume-status', status)
   }
 }
 

@@ -28,8 +28,9 @@ test.describe('Theme Toggle', () => {
       await expect(systemBtn).toBeVisible()
       await expect(darkBtn).toBeVisible()
 
-      // System should be the default active mode
-      await expect(systemBtn).toHaveClass(/theme-toggle__btn--active/)
+      // Exactly one theme button should be active (whichever was saved in prefs)
+      const activeButtons = window.locator('.theme-toggle__btn--active')
+      await expect(activeButtons).toHaveCount(1)
 
     } finally {
       if (app) {

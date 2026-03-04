@@ -108,6 +108,19 @@ export interface AssistantMessage {
 
 export type ParsedMessage = QueueOperationMessage | UserMessage | AssistantMessage
 
+export interface RemoteServerConfig {
+  enabled: boolean
+  port: number
+  bindAddress: string
+}
+
+export interface RemoteServerStatus {
+  running: boolean
+  port: number
+  address: string
+  clientCount: number
+}
+
 export interface ResumeSessionRequest {
   sessionId: string
   projectPath: string

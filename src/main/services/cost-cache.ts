@@ -10,9 +10,9 @@
 import { homedir } from 'os'
 import { join } from 'path'
 import { readFileSync, writeFileSync, mkdirSync, renameSync, statSync } from 'fs'
-import { BrowserWindow } from 'electron'
 import { parseJsonlFile } from './jsonl-parser'
 import { calculateCost } from './pricing'
+import type { Broadcaster } from './broadcaster'
 import type { AssistantMessage } from '../types'
 
 interface CacheEntry {
@@ -28,6 +28,11 @@ const SAVE_DEBOUNCE_MS = 5_000
 export class CostCache {
   private store = new Map<string, CacheEntry>()
   private saveTimer: ReturnType<typeof setTimeout> | null = null
+  private broadcaster: Broadcaster | null = null
+
+  constructor(broadcaster?: Broadcaster) {
+    this.broadcaster = broadcaster ?? null
+  }
 
   /** Load cached costs from disk (sync, called at startup). */
   loadFromDisk(): void {
@@ -111,14 +116,10 @@ export class CostCache {
     }
   }
 
-  /** Broadcast cost update to all renderer windows. */
+  /** Broadcast cost update to all renderer windows + remote clients. */
   broadcastCostUpdate(): void {
-    for (const win of BrowserWindow.getAllWindows()) {
-      try {
-        win.webContents.send('overseer:cost-updated')
-      } catch {
-        // Window may not be ready yet during startup — ignore
-      }
+    if (this.broadcaster) {
+      this.broadcaster.send('overseer:cost-updated')
     }
   }
 

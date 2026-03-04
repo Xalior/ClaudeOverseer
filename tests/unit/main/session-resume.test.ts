@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from 'events'
 
-// Mock electron BrowserWindow
+// Mock electron (still needed for Broadcaster)
 const mockSend = vi.fn()
 vi.mock('electron', () => ({
   BrowserWindow: {
@@ -21,6 +21,8 @@ vi.mock('child_process', () => ({
 describe('session-resume', () => {
   let resumeSession: typeof import('../../../src/main/services/session-resume').resumeSession
   let isSessionResuming: typeof import('../../../src/main/services/session-resume').isSessionResuming
+  let setResumeBroadcaster: typeof import('../../../src/main/services/session-resume').setResumeBroadcaster
+  let Broadcaster: typeof import('../../../src/main/services/broadcaster').Broadcaster
 
   beforeEach(async () => {
     vi.clearAllMocks()
@@ -39,8 +41,15 @@ describe('session-resume', () => {
     mockSpawn.mockReturnValue(freshChild)
 
     const mod = await import('../../../src/main/services/session-resume')
+    const broadcasterMod = await import('../../../src/main/services/broadcaster')
     resumeSession = mod.resumeSession
     isSessionResuming = mod.isSessionResuming
+    setResumeBroadcaster = mod.setResumeBroadcaster
+    Broadcaster = broadcasterMod.Broadcaster
+
+    // Set up broadcaster for the module
+    const broadcaster = new Broadcaster()
+    setResumeBroadcaster(broadcaster)
   })
 
   afterEach(() => {

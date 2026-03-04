@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from 'electron'
+import { ipcMain } from 'electron'
 import { homedir } from 'os'
 import { join } from 'path'
 import { readFile } from 'fs/promises'
@@ -12,6 +12,8 @@ import { loadPreferences, savePreferencesSync } from './services/preferences'
 import { resumeSession } from './services/session-resume'
 import type { AppPreferences } from './services/preferences'
 import type { CostCache } from './services/cost-cache'
+import type { Broadcaster } from './services/broadcaster'
+import { RemoteServer } from './services/remote-server'
 
 const DEFAULT_CLAUDE_DIR = join(homedir(), '.claude', 'projects')
 
@@ -24,7 +26,7 @@ let directoryWatcher: DirectoryWatcher | null = null
 /**
  * Register all IPC handlers for the main process
  */
-export function registerIpcHandlers(costCache: CostCache): void {
+export function registerIpcHandlers(costCache: CostCache, broadcaster: Broadcaster): void {
   // Get Claude projects directory from paths.txt or use default
   ipcMain.handle('overseer:get-projects-dir', async () => {
     try {
@@ -72,14 +74,11 @@ export function registerIpcHandlers(costCache: CostCache): void {
     const watcher = new JsonlWatcher(sessionFilePath, {
       onNewMessages: (messages) => {
         const formatted = formatMessages(messages)
-        // Send to all renderer windows
-        for (const win of BrowserWindow.getAllWindows()) {
-          win.webContents.send('overseer:new-messages', {
-            filePath: sessionFilePath,
-            messages: formatted.messages,
-            usage: formatted.totalUsage
-          })
-        }
+        broadcaster.send('overseer:new-messages', {
+          filePath: sessionFilePath,
+          messages: formatted.messages,
+          usage: formatted.totalUsage
+        })
         // Recompute cost for this session
         costCache.recomputeSession(sessionFilePath).then(() => {
           costCache.broadcastCostUpdate()
@@ -127,16 +126,10 @@ export function registerIpcHandlers(costCache: CostCache): void {
     // Create and start directory watcher
     directoryWatcher = new DirectoryWatcher(projectsDir, {
       onProjectsChanged: () => {
-        // Broadcast to all windows
-        for (const win of BrowserWindow.getAllWindows()) {
-          try { win.webContents.send('overseer:projects-changed') } catch { /* frame not ready */ }
-        }
+        broadcaster.send('overseer:projects-changed')
       },
       onSessionsChanged: (projectEncodedName) => {
-        // Broadcast to all windows
-        for (const win of BrowserWindow.getAllWindows()) {
-          try { win.webContents.send('overseer:sessions-changed', { projectEncodedName }) } catch { /* frame not ready */ }
-        }
+        broadcaster.send('overseer:sessions-changed', { projectEncodedName })
         // Recompute costs for this project's sessions
         const projectPath = join(projectsDir, projectEncodedName)
         discoverSessions(projectPath).then((sessions) => {
@@ -202,4 +195,41 @@ export function registerIpcHandlers(costCache: CostCache): void {
   ipcMain.handle('overseer:resume-session', async (_event, sessionId: string, projectPath: string, prompt: string) => {
     resumeSession({ sessionId, projectPath, prompt })
   })
+
+  // --- Remote server control ---
+  let remoteServer: RemoteServer | null = null
+
+  ipcMain.handle('overseer:start-remote-server', async () => {
+    if (remoteServer) {
+      await remoteServer.stop()
+    }
+    const prefs = loadPreferences()
+    const { port, bindAddress } = prefs.remoteServer
+    remoteServer = new RemoteServer({ port, bindAddress, costCache, broadcaster })
+    await remoteServer.start()
+  })
+
+  ipcMain.handle('overseer:stop-remote-server', async () => {
+    if (remoteServer) {
+      await remoteServer.stop()
+      remoteServer = null
+    }
+  })
+
+  ipcMain.handle('overseer:get-remote-server-status', async () => {
+    if (!remoteServer) {
+      return { running: false, port: 0, address: '', clientCount: 0 }
+    }
+    return remoteServer.getStatus()
+  })
+
+  // Auto-start remote server if enabled in preferences
+  const prefs = loadPreferences()
+  if (prefs.remoteServer.enabled) {
+    const { port, bindAddress } = prefs.remoteServer
+    remoteServer = new RemoteServer({ port, bindAddress, costCache, broadcaster })
+    remoteServer.start().catch((err) => {
+      console.error('Failed to auto-start remote server:', err)
+    })
+  }
 }

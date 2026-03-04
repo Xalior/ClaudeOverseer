@@ -3,6 +3,9 @@ import { join } from 'path'
 import { registerIpcHandlers } from './ipc-handlers'
 import { loadPreferences, savePreferences } from './services/preferences'
 import { CostCache } from './services/cost-cache'
+import { Broadcaster } from './services/broadcaster'
+import { setResumeBroadcaster } from './services/session-resume'
+import { createAppMenu } from './menu'
 
 // Enable remote debugging on port 9222 for agent debugging (dev only)
 if (process.env.NODE_ENV === 'development') {
@@ -61,11 +64,14 @@ function createWindow(): void {
   }
 }
 
-const costCache = new CostCache()
+const broadcaster = new Broadcaster()
+const costCache = new CostCache(broadcaster)
 costCache.loadFromDisk()
+setResumeBroadcaster(broadcaster)
 
 app.whenReady().then(() => {
-  registerIpcHandlers(costCache)
+  createAppMenu()
+  registerIpcHandlers(costCache, broadcaster)
   createWindow()
 
   app.on('activate', () => {

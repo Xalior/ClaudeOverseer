@@ -215,6 +215,105 @@ Status badges based on `lastModified`:
 | `team-reader.ts` | `src/main/services/` | Team configuration file parsing |
 | `path-encoder.ts` | `src/main/utils/` | Claude's dash-encoded path resolution |
 
+## Testing Infrastructure
+
+Three test tiers, each with different scope and speed:
+
+### Unit Tests (`tests/unit/`)
+
+**Runner:** Vitest (`vitest.config.ts`)
+**Run:** `npm run test:unit` or `npx vitest run tests/unit`
+**Speed:** ~500ms for 156 tests
+
+Pure function tests with no Electron context. Mock `electron` module via `vi.mock('electron')`. Tests are organized by process:
+
+| Directory | Tests | What they cover |
+|-----------|-------|----------------|
+| `tests/unit/main/` | jsonl-parser, message-formatter, path-encoder, team-reader, session-resume, broadcaster, remote-server | Main process services |
+| `tests/unit/renderer/` | format-utils, project-utils, session-utils, tool-formatting | Renderer utility functions |
+
+**Mocking patterns:**
+- Electron: `vi.mock('electron', () => ({ BrowserWindow: { getAllWindows: () => [...] } }))`
+- Node modules: `vi.mock('child_process', () => ({ spawn: vi.fn() }))`
+- Services: `vi.mock('../../../src/main/services/foo', () => ({ bar: vi.fn() }))`
+- Module re-import for state reset: `vi.resetModules()` then `await import(...)`
+
+**Key rule:** Unit tests must never touch the filesystem, network, or real Electron APIs. Everything external is mocked.
+
+### Integration Tests (`tests/integration/`)
+
+**Runner:** Vitest (same config, different directory)
+**Run:** `npm run test:integration` or `npx vitest run tests/integration`
+**Speed:** ~1.5s for 21 tests
+
+Tests that exercise real service code against fixture data on disk. No Electron, no mocks — real file I/O against `tests/fixtures/`.
+
+| Test file | What it covers |
+|-----------|---------------|
+| `ipc-contract.test.ts` | Verifies service return shapes match the IPC contract |
+| `project-scanner.test.ts` | Real directory scanning against fixture projects |
+| `session-discovery.test.ts` | Real session enumeration with subagents |
+| `jsonl-watcher.test.ts` | Real chokidar file watching (creates temp files) |
+
+### E2E Tests (`tests/e2e/`)
+
+**Runner:** Playwright (`playwright.config.ts`)
+**Run:** `npm run test:e2e` (builds first!) or `npm run build && playwright test tests/e2e`
+**Speed:** ~18s for 11 tests (serial, 1 worker)
+
+Full Electron app tests — builds the app, launches it, interacts via Playwright's Electron API.
+
+| Test file | What it covers |
+|-----------|---------------|
+| `app-launch.spec.ts` | Three panels visible, correct headings, cleanup on close |
+| `message-stream.spec.ts` | Message rendering, raw toggle, tool cards |
+| `project-discovery.spec.ts` | Project list from fixtures, session list |
+| `theme-toggle.spec.ts` | Theme buttons visible, switching applies `data-theme` |
+| `live-watching.spec.ts` | New messages appear when JSONL is appended |
+
+**Important caveats:**
+- E2E tests require `npm run build` first (they launch from `out/`)
+- They read the user's real `~/.ClaudeOverseer/prefs.json` — **do not assert on saved preference values** like theme or selected project. Assert on behavior (e.g., "one button is active") not specific state.
+- Use `PATHS_FILE` env var to point to fixture data instead of the user's real Claude projects
+- Playwright config: serial execution, 1 worker (Electron can't run parallel instances reliably)
+- Always wrap in try/finally with `app.close()` to prevent orphaned Electron processes
+
+### Test Fixtures (`tests/fixtures/`)
+
+```
+tests/fixtures/
+  projects/
+    -test-project/
+      session-test-123.jsonl        # Main session with user + assistant + tool messages
+      session-935ce02d.jsonl        # Additional main session
+      session-ac1708b5.jsonl        # Parent session (has subagents)
+      session-ac1708b5/subagents/
+        agent-a8af19b.jsonl         # Subagent session
+      agent-atest99.jsonl           # Background agent session
+  tasks/
+    test-team/                      # Task fixtures for team-reader tests
+  teams/
+    test-team/config.json           # Team config fixture
+```
+
+### Running All Tests
+
+| Command | What runs | When to use |
+|---------|-----------|-------------|
+| `npx vitest run` | Unit + integration | After any code change (fast feedback) |
+| `npm run test:unit` | Unit only | Quick check during development |
+| `npm run test:e2e` | Build + e2e | Before commits, after UI changes |
+| `npm run test:all` | Unit + integration + e2e | Full validation before merge |
+| `npx vitest watch` | Unit (watch mode) | During active development |
+
+### Writing New Tests
+
+- **New main process service?** Add unit test in `tests/unit/main/`. Mock Electron and external deps.
+- **New renderer utility?** Add unit test in `tests/unit/renderer/`.
+- **New IPC handler?** Add contract test in `tests/integration/ipc-contract.test.ts`.
+- **New UI component or interaction?** Add e2e test in `tests/e2e/`. Remember: build first.
+- **Changed existing behavior?** Update existing test assertions to match. Rule 7 applies.
+
 ## Rules
 
 1. **Never build** during development. Vite HMR handles everything.

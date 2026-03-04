@@ -56,5 +56,15 @@ contextBridge.exposeInMainWorld('overseer', {
     return () => {
       ipcRenderer.removeListener('overseer:resume-status', handler)
     }
-  }
+  },
+  onOpenPreferences: (callback: () => void) => {
+    const handler = () => callback()
+    ipcRenderer.on('overseer:open-preferences', handler)
+    return () => {
+      ipcRenderer.removeListener('overseer:open-preferences', handler)
+    }
+  },
+  startRemoteServer: () => ipcRenderer.invoke('overseer:start-remote-server'),
+  stopRemoteServer: () => ipcRenderer.invoke('overseer:stop-remote-server'),
+  getRemoteServerStatus: () => ipcRenderer.invoke('overseer:get-remote-server-status')
 })

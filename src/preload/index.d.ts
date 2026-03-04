@@ -1,4 +1,4 @@
-import type { Project, Session, ResumeSessionStatus } from '../main/types'
+import type { Project, Session, ResumeSessionStatus, RemoteServerStatus } from '../main/types'
 import type { FormattedSession } from '../main/services/message-formatter'
 
 export interface WindowState {
@@ -12,6 +12,12 @@ export interface WindowState {
 export type ProjectSortOrder = 'alpha' | 'recent' | 'sessions'
 export type ThemeMode = 'light' | 'dark' | 'system'
 
+export interface RemoteServerConfig {
+  enabled: boolean
+  port: number
+  bindAddress: string
+}
+
 export interface AppPreferences {
   selectedProject: string | null
   selectedSessionPath: string | null
@@ -21,6 +27,7 @@ export interface AppPreferences {
   hiddenProjects: string[]
   projectSortOrder: ProjectSortOrder
   theme: ThemeMode
+  remoteServer: RemoteServerConfig
 }
 
 export interface NewMessagesData {
@@ -48,6 +55,10 @@ export interface OverseerAPI {
   onCostUpdated: (callback: () => void) => () => void
   resumeSession: (sessionId: string, projectPath: string, prompt: string) => Promise<void>
   onResumeStatus: (callback: (status: ResumeSessionStatus) => void) => () => void
+  onOpenPreferences: (callback: () => void) => () => void
+  startRemoteServer: () => Promise<void>
+  stopRemoteServer: () => Promise<void>
+  getRemoteServerStatus: () => Promise<RemoteServerStatus>
 }
 
 declare global {
