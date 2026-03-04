@@ -9,16 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Resume Session via CLI** — Text input at the bottom of the MessageStream panel lets users resume any displayed session by sending a prompt; spawns `claude --resume <id> -p "<prompt>"` as a child process, with status indicators (running/completed/error) and double-spawn prevention; existing file watcher picks up new messages automatically
+- **Session Cost Tracking** — Per-session and per-project cost estimates calculated from token usage and model pricing; costs displayed in session rows, pinned project cards (with per-model breakdown), and the status bar
+- **Per-Message Cost Display** — Individual assistant message costs shown inline using the model's pricing rates
+- **Per-Model Cost Breakdown** — Expanded project cards show cost split by model (e.g. Opus, Sonnet, Haiku)
 - **Virtualised Message Stream** — Messages rendered with `@tanstack/react-virtual` for smooth scrolling performance on large sessions
 - **Redesigned Session Subagent Display** — Subagents shown as connected groups with tree-line connectors instead of flat list
+- **Session Titles** — Sessions display the first user message as a human-readable title instead of raw session IDs
+- **System XML Styled Cards** — System reminder and command XML tags in user messages rendered as styled info cards instead of raw XML
 - **Persisted Output Cards** — Large tool outputs saved to file are displayed as styled collapsible cards with size info, file path, and preview content
 - **Task Notification Cards** — Subagent-to-agent communications rendered as dedicated notification cards
 - **Estimated Output Tokens** — Output token counts estimated from content blocks (~4 chars/token) since Claude Code JSONL only records streaming start usage
+- **Mascot** — Mech-lobster mascot fixed to the bottom of the Projects panel; cards scroll over it
+- **Pinned Project Reorder** — Drag-and-drop reordering for pinned projects
+- **Hide Projects** — Discovered projects can be hidden from the sidebar
+- **Post-Dist Build Hooks** — Platform-specific postdist hooks for macOS, Linux, and Windows build targets
+
+### Changed
+- **Sessions → Threads** — "Sessions" renamed to "Threads" throughout the UI for clarity
+- **Split Expanded/Selected States** — Project cards now have independent expanded and selected states; expanding a card no longer selects it and vice versa
 
 ### Fixed
 - **Smooth Scroll Incompatibility** — Removed smooth scroll CSS that conflicted with dynamic virtualizer row sizing
 - **Assistant Message Deduplication** — Deduplicate progressive streaming snapshots by API message ID, keeping only the most complete entry per response
 - **Text Contrast** — Improved text-to-background contrast in both dark and light themes; brighter text in dark mode, darker text in light mode; active project cards get additional contrast boost to compensate for their brighter surface background
+- **Underscore Path Handling** — Correctly resolve project paths containing underscores in the source directory name
+- **Stale Cost Cache** — Guard against stale numeric cost entries before main process restart
+- **IPC Broadcast Timing** — Guard IPC broadcasts during startup when renderer frames aren't ready; fix double-slash in project paths
 
 ## [0.2.0] - 2026-02-17
 
