@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - Unreleased
 
 ### Added
+- **Resume Session via CLI** — Text input at the bottom of the MessageStream panel lets users resume any displayed session by sending a prompt; spawns `claude --resume <id> -p "<prompt>"` as a child process, with status indicators (running/completed/error) and double-spawn prevention; existing file watcher picks up new messages automatically
 - **Virtualised Message Stream** — Messages rendered with `@tanstack/react-virtual` for smooth scrolling performance on large sessions
 - **Redesigned Session Subagent Display** — Subagents shown as connected groups with tree-line connectors instead of flat list
 - **Persisted Output Cards** — Large tool outputs saved to file are displayed as styled collapsible cards with size info, file path, and preview content
