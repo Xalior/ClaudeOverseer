@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - Unreleased
 
 ### Added
+- **Preferences Dialog** — Full preferences panel accessible via `Cmd+,` (or from the app menu); overlay UI with Appearance (theme toggle) and Remote Monitoring sections; Escape key or backdrop click to close
+- **Native App Menu** — Standard Electron menu bar with App (About, Preferences, Quit), Edit (Undo/Redo/Cut/Copy/Paste), View (Reload, DevTools, Zoom, Fullscreen), and Window (Minimize, Zoom, Front) menus
+- **Remote Monitoring Server** — Built-in HTTP + WebSocket server for read-only remote access to sessions; 7 REST API routes (`/api/projects`, `/api/sessions/:name`, `/api/messages`, `/api/preferences`, `/api/session-costs`, `/api/project-costs`, `/api/projects-dir`); WebSocket broadcasts all real-time events (new messages, project/session changes, cost updates, resume status); per-connection file watchers with cleanup on disconnect; configurable port and bind address via preferences
+- **Web Client Adapter** — Same UI loads in a regular browser via the remote server; automatic detection (no build flags) — if Electron preload didn't run, a fetch+WebSocket adapter replaces `window.overseer`; auto-reconnecting WebSocket; write operations (save preferences, resume session) are no-ops for remote clients; resume input hidden in remote mode
+- **Centralised Broadcaster** — Single `Broadcaster` class replaces 5 scattered `BrowserWindow.getAllWindows()` broadcast loops across ipc-handlers, cost-cache, and session-resume; sends to Electron windows + optional RemoteTarget (WebSocket server)
 - **Resume Session via CLI** — Text input at the bottom of the MessageStream panel lets users resume any displayed session by sending a prompt; spawns `claude --resume <id> -p "<prompt>"` as a child process, with status indicators (running/completed/error) and double-spawn prevention; existing file watcher picks up new messages automatically
 - **Session Cost Tracking** — Per-session and per-project cost estimates calculated from token usage and model pricing; costs displayed in session rows, pinned project cards (with per-model breakdown), and the status bar
 - **Per-Message Cost Display** — Individual assistant message costs shown inline using the model's pricing rates

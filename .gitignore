@@ -48,3 +48,4 @@ release/*
 # Playwright reports
 playwright-report/
 .pnpm-store/
+playwright-report/index.html
