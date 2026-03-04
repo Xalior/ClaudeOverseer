@@ -28,7 +28,7 @@ test.describe('App Launch', () => {
 
       // Verify panel content
       await expect(projectSidebar).toContainText('Projects')
-      await expect(sessionList).toContainText('Sessions')
+      await expect(sessionList).toContainText('Threads')
       await expect(messageStream).toContainText('Message Stream')
 
     } finally {

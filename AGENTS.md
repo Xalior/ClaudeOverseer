@@ -223,6 +223,7 @@ Status badges based on `lastModified`:
 4. **Never commit** unless explicitly told to.
 5. **Edit → Observe → Fix → Observe.** That's the loop.
 6. **Don't changelog agent metafiles.** Changes to `AGENTS.md`, `CLAUDE.md`, `docs/plans/`, and other agent-facing documentation are not user-facing and should not be recorded in `docs/CHANGELOG.md`.
+7. **Always update tests** when making codebase changes. Run `npx vitest run` after changes and fix any broken tests. When renaming UI text, updating components, or changing behavior, update the corresponding test assertions and descriptions to match.
 
 ## Plan Management Workflow
 
