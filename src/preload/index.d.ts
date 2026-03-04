@@ -1,4 +1,4 @@
-import type { Project, Session } from '../main/types'
+import type { Project, Session, ResumeSessionStatus } from '../main/types'
 import type { FormattedSession } from '../main/services/message-formatter'
 
 export interface WindowState {
@@ -46,6 +46,8 @@ export interface OverseerAPI {
   getSessionCosts: (projectDir: string) => Promise<Record<string, number>>
   getAllProjectCosts: (projectDirs: string[]) => Promise<Record<string, { total: number; byModel: Record<string, number> }>>
   onCostUpdated: (callback: () => void) => () => void
+  resumeSession: (sessionId: string, projectPath: string, prompt: string) => Promise<void>
+  onResumeStatus: (callback: (status: ResumeSessionStatus) => void) => () => void
 }
 
 declare global {

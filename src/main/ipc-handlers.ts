@@ -9,6 +9,7 @@ import { formatMessages } from './services/message-formatter'
 import { JsonlWatcher } from './services/jsonl-watcher'
 import { DirectoryWatcher } from './services/directory-watcher'
 import { loadPreferences, savePreferencesSync } from './services/preferences'
+import { resumeSession } from './services/session-resume'
 import type { AppPreferences } from './services/preferences'
 import type { CostCache } from './services/cost-cache'
 
@@ -195,5 +196,10 @@ export function registerIpcHandlers(costCache: CostCache): void {
   // Get aggregated costs for multiple project directories
   ipcMain.handle('overseer:get-all-project-costs', async (_event, projectDirs: string[]) => {
     return costCache.getAllProjectCosts(projectDirs)
+  })
+
+  // Resume a session via the Claude CLI
+  ipcMain.handle('overseer:resume-session', async (_event, sessionId: string, projectPath: string, prompt: string) => {
+    resumeSession({ sessionId, projectPath, prompt })
   })
 }

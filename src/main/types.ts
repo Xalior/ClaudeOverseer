@@ -107,3 +107,16 @@ export interface AssistantMessage {
 }
 
 export type ParsedMessage = QueueOperationMessage | UserMessage | AssistantMessage
+
+export interface ResumeSessionRequest {
+  sessionId: string
+  projectPath: string
+  prompt: string
+}
+
+export interface ResumeSessionStatus {
+  sessionId: string
+  status: 'running' | 'completed' | 'error'
+  exitCode?: number
+  error?: string
+}

@@ -992,6 +992,80 @@ body {
   color: var(--text-2);
 }
 
+/* ===== Resume Input ===== */
+
+.resume-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--border-0);
+  background: var(--surface-0);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.resume-input__field {
+  flex: 1;
+  background: var(--bg-1);
+  border: 1px solid var(--border-0);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  color: var(--text-0);
+  outline: none;
+  transition: border-color 0.14s ease;
+
+  &::placeholder {
+    color: var(--text-2);
+  }
+
+  &:focus {
+    border-color: var(--accent);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.resume-input__btn {
+  background: var(--accent-muted);
+  border: 1px solid var(--border-0);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.14s ease, opacity 0.14s ease;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--text-0);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.resume-input__error {
+  position: absolute;
+  bottom: 100%;
+  left: 10px;
+  right: 10px;
+  background: var(--danger-muted);
+  color: var(--danger);
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 4px 4px 0 0;
+  border: 1px solid var(--danger);
+  border-bottom: none;
+}
+
 /* ===== UI Card ===== */
 
 .ui-card {

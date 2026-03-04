@@ -33,11 +33,88 @@ function isEmptySystemMessage(msg: FormattedMessage): boolean {
   return !hasContent
 }
 
-interface MessageStreamProps {
-  sessionFilePath: string | null
+interface ResumeInputProps {
+  sessionFilePath: string
+  projectPath: string | null
 }
 
-export function MessageStream({ sessionFilePath }: MessageStreamProps) {
+function ResumeInput({ sessionFilePath, projectPath }: ResumeInputProps) {
+  const [inputValue, setInputValue] = useState('')
+  const [isResuming, setIsResuming] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Extract session ID from file path (basename without .jsonl)
+  const sessionId = useMemo(() => {
+    const basename = sessionFilePath.split('/').pop() ?? ''
+    return basename.replace(/\.jsonl$/, '')
+  }, [sessionFilePath])
+
+  // Listen for resume status updates
+  useEffect(() => {
+    const unsub = window.overseer.onResumeStatus((status) => {
+      if (status.sessionId !== sessionId) return
+      if (status.status === 'running') {
+        setIsResuming(true)
+        setError(null)
+      } else if (status.status === 'completed') {
+        setIsResuming(false)
+        setError(null)
+      } else if (status.status === 'error') {
+        setIsResuming(false)
+        setError(status.error ?? 'Unknown error')
+      }
+    })
+    return unsub
+  }, [sessionId])
+
+  // Reset state when session changes
+  useEffect(() => {
+    setIsResuming(false)
+    setError(null)
+    setInputValue('')
+  }, [sessionFilePath])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const prompt = inputValue.trim()
+    if (!prompt || !projectPath || isResuming) return
+    setError(null)
+    setInputValue('')
+    await window.overseer.resumeSession(sessionId, projectPath, prompt)
+  }
+
+  return (
+    <form className="resume-input" onSubmit={handleSubmit} data-testid="resume-input">
+      <input
+        ref={inputRef}
+        className="resume-input__field"
+        type="text"
+        placeholder={isResuming ? 'Resuming session...' : 'Send a prompt to resume this session...'}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        disabled={isResuming || !projectPath}
+        data-testid="resume-input-field"
+      />
+      <button
+        className="resume-input__btn"
+        type="submit"
+        disabled={isResuming || !inputValue.trim() || !projectPath}
+        data-testid="resume-input-submit"
+      >
+        {isResuming ? '⏳' : '▶'}
+      </button>
+      {error && <span className="resume-input__error" data-testid="resume-input-error">{error}</span>}
+    </form>
+  )
+}
+
+interface MessageStreamProps {
+  sessionFilePath: string | null
+  projectPath?: string | null
+}
+
+export function MessageStream({ sessionFilePath, projectPath }: MessageStreamProps) {
   const { data: session, isLoading: loading } = useSessionMessages(sessionFilePath)
   const [globalRaw, setGlobalRaw] = useState(false)
   const [rawToggles, setRawToggles] = useState<Set<string>>(new Set())
@@ -238,6 +315,9 @@ export function MessageStream({ sessionFilePath }: MessageStreamProps) {
 
       {/* Status Bar */}
       <StatusBar usage={session.totalUsage} messageCount={messageCount} messages={session.messages} />
+
+      {/* Resume Input */}
+      <ResumeInput sessionFilePath={sessionFilePath} projectPath={projectPath ?? null} />
     </div>
   )
 }

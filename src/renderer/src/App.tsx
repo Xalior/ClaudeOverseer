@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ProjectList } from './components/ProjectList'
 import { SessionList } from './components/SessionList'
 import { MessageStream } from './components/messages/MessageStream'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ThemeToggle } from './components/ThemeToggle'
-import { useDirectoryWatcher, useProjectsDir } from './hooks/queries'
+import { useDirectoryWatcher, useProjectsDir, useProjects } from './hooks/queries'
 import { useTheme } from './hooks/useTheme'
 
 const queryClient = new QueryClient({
@@ -34,6 +34,7 @@ function AppContent() {
   useDirectoryWatcher()
   const { mode: themeMode, setTheme } = useTheme()
   const { data: projectsDir } = useProjectsDir()
+  const { data: projects = [] } = useProjects()
 
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [selectedSessionPath, setSelectedSessionPath] = useState<string | null>(null)
@@ -117,6 +118,13 @@ function AppContent() {
     window.overseer.savePreferences({ selectedSessionPath: sessionPath })
   }
 
+  // Derive the real filesystem path for the selected project
+  const selectedProjectPath = useMemo(() => {
+    if (!selectedProject) return null
+    const project = projects.find(p => p.encodedName === selectedProject)
+    return project?.path ?? null
+  }, [selectedProject, projects])
+
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -184,7 +192,7 @@ function AppContent() {
         tabIndex={-1}
       >
         <ErrorBoundary>
-          <MessageStream sessionFilePath={selectedSessionPath} />
+          <MessageStream sessionFilePath={selectedSessionPath} projectPath={selectedProjectPath} />
         </ErrorBoundary>
       </div>
     </div>

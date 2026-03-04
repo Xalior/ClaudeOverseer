@@ -47,5 +47,14 @@ contextBridge.exposeInMainWorld('overseer', {
     return () => {
       ipcRenderer.removeListener('overseer:cost-updated', handler)
     }
+  },
+  resumeSession: (sessionId: string, projectPath: string, prompt: string) =>
+    ipcRenderer.invoke('overseer:resume-session', sessionId, projectPath, prompt),
+  onResumeStatus: (callback: (status: { sessionId: string; status: string; exitCode?: number; error?: string }) => void) => {
+    const handler = (_event: unknown, status: { sessionId: string; status: string; exitCode?: number; error?: string }) => callback(status)
+    ipcRenderer.on('overseer:resume-status', handler)
+    return () => {
+      ipcRenderer.removeListener('overseer:resume-status', handler)
+    }
   }
 })
