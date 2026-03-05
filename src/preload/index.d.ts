@@ -23,6 +23,7 @@ export interface AppPreferences {
   selectedSessionPath: string | null
   windowState: WindowState
   panelWidths: [number, number]
+  projectsPanelCollapsed: boolean
   pinnedProjects: string[]
   hiddenProjects: string[]
   projectSortOrder: ProjectSortOrder

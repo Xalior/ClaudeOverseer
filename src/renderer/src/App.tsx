@@ -21,6 +21,7 @@ const queryClient = new QueryClient({
 const DEFAULT_WIDTHS: [number, number] = [240, 280] // px for panel 1 and 2; panel 3 gets the rest
 const MIN_WIDTHS: [number, number] = [240, 120]
 const MAX_WIDTH_FRACTION = 0.45 // no single panel > 45% of window
+const COLLAPSED_WIDTH = 40 // px width when projects panel is collapsed
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function AppContent() {
 
   // Resizable panel widths (px)
   const [panelWidths, setPanelWidths] = useState<[number, number]>(DEFAULT_WIDTHS)
+  const [projectsCollapsed, setProjectsCollapsed] = useState(false)
   const dragging = useRef<{ index: 0 | 1; startX: number; startWidths: [number, number] } | null>(null)
 
   // Load preferences on mount
@@ -55,6 +57,7 @@ function AppContent() {
       if (prefs.selectedProject) setSelectedProject(prefs.selectedProject)
       if (prefs.selectedSessionPath) setSelectedSessionPath(prefs.selectedSessionPath)
       if (prefs.panelWidths) setPanelWidths(prefs.panelWidths)
+      if (prefs.projectsPanelCollapsed) setProjectsCollapsed(prefs.projectsPanelCollapsed)
       setPrefsLoaded(true)
     }).catch(() => {
       setPrefsLoaded(true)
@@ -109,6 +112,14 @@ function AppContent() {
     }
   }, [])
 
+  const toggleProjectsCollapsed = useCallback(() => {
+    setProjectsCollapsed(prev => {
+      const next = !prev
+      window.overseer.savePreferences({ projectsPanelCollapsed: next })
+      return next
+    })
+  }, [])
+
   function handleProjectSelect(encodedName: string) {
     setSelectedProject(encodedName)
     setSelectedSessionPath(null)
@@ -146,6 +157,13 @@ function AppContent() {
         return
       }
 
+      // Cmd+B — toggle projects panel
+      if (isMeta && e.key === 'b') {
+        e.preventDefault()
+        toggleProjectsCollapsed()
+        return
+      }
+
       // Cmd+1/2/3 — focus panels
       if (isMeta && e.key === '1') {
         e.preventDefault()
@@ -163,25 +181,42 @@ function AppContent() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [toggleProjectsCollapsed])
 
   return (
     <div className="app-layout">
       {/* Panel 1: Projects Sidebar */}
       <div
-        className="app-panel app-panel--surface"
-        style={{ width: panelWidths[0] }}
+        className={`app-panel app-panel--surface ${projectsCollapsed ? 'app-panel--collapsed' : ''}`}
+        style={{ width: projectsCollapsed ? COLLAPSED_WIDTH : panelWidths[0] }}
         data-testid="project-sidebar"
         ref={projectRef}
         tabIndex={-1}
       >
-        <ProjectList
-          onProjectSelect={handleProjectSelect}
-          themeToggle={<ThemeToggle mode={themeMode} onModeChange={setTheme} />}
-        />
+        {projectsCollapsed ? (
+          <div className="collapsed-panel">
+            <button
+              className="collapsed-panel__toggle"
+              onClick={toggleProjectsCollapsed}
+              title="Expand projects (Cmd+B)"
+              aria-label="Expand projects panel"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <span className="collapsed-panel__label">Projects</span>
+          </div>
+        ) : (
+          <ProjectList
+            onProjectSelect={handleProjectSelect}
+            themeToggle={<ThemeToggle mode={themeMode} onModeChange={setTheme} />}
+            onCollapse={toggleProjectsCollapsed}
+          />
+        )}
       </div>
 
-      <div className="resize-handle" onMouseDown={handleMouseDown(0)} />
+      {!projectsCollapsed && <div className="resize-handle" onMouseDown={handleMouseDown(0)} />}
 
       {/* Panel 2: Sessions List */}
       <div

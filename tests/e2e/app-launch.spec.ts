@@ -39,6 +39,51 @@ test.describe('App Launch', () => {
     }
   })
 
+  test('collapse and expand projects panel', async () => {
+    let app
+    try {
+      app = await electron.launch({
+        args: [path.join(__dirname, '../../out/main/index.js')],
+      })
+
+      const window = await app.firstWindow()
+      await window.waitForLoadState('domcontentloaded')
+
+      const projectSidebar = window.locator('[data-testid="project-sidebar"]')
+      await expect(projectSidebar).toBeVisible()
+
+      // Should start expanded with the collapse button visible
+      const collapseBtn = window.locator('button[aria-label="Collapse projects panel"]')
+      await expect(collapseBtn).toBeVisible({ timeout: 5000 })
+
+      // Click collapse
+      await collapseBtn.click()
+
+      // Should now show the expand button instead
+      const expandBtn = window.locator('button[aria-label="Expand projects panel"]')
+      await expect(expandBtn).toBeVisible({ timeout: 3000 })
+
+      // The sidebar should be narrow (collapsed)
+      const collapsedWidth = await projectSidebar.evaluate(el => el.offsetWidth)
+      expect(collapsedWidth).toBeLessThanOrEqual(50)
+
+      // Click expand
+      await expandBtn.click()
+
+      // Collapse button should be back
+      await expect(collapseBtn).toBeVisible({ timeout: 3000 })
+
+      // Sidebar should be wider again
+      const expandedWidth = await projectSidebar.evaluate(el => el.offsetWidth)
+      expect(expandedWidth).toBeGreaterThan(100)
+
+    } finally {
+      if (app) {
+        await app.close()
+      }
+    }
+  })
+
   test('no orphaned processes after close', async () => {
     // This test verifies cleanup by launching and closing multiple times
     for (let i = 0; i < 3; i++) {

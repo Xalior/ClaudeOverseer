@@ -24,6 +24,7 @@ export interface AppPreferences {
   selectedSessionPath: string | null
   windowState: WindowState
   panelWidths: [number, number]
+  projectsPanelCollapsed: boolean
   pinnedProjects: string[]
   hiddenProjects: string[]
   projectSortOrder: ProjectSortOrder
@@ -45,6 +46,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
     isMaximized: false
   },
   panelWidths: [220, 280],
+  projectsPanelCollapsed: false,
   pinnedProjects: [],
   hiddenProjects: [],
   projectSortOrder: 'recent',

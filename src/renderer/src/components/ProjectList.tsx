@@ -17,6 +17,7 @@ interface Project {
 interface ProjectListProps {
   onProjectSelect: (encodedName: string) => void
   themeToggle?: React.ReactNode
+  onCollapse?: () => void
 }
 
 /**
@@ -98,7 +99,7 @@ const SORT_LABELS: Record<ProjectSortOrder, string> = {
 
 const SORT_OPTIONS: ProjectSortOrder[] = ['recent', 'alpha', 'sessions']
 
-export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) {
+export function ProjectList({ onProjectSelect, themeToggle, onCollapse }: ProjectListProps) {
   const { data: projects = [], isLoading: loading } = useProjects()
   const { data: projectsDir } = useProjectsDir()
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
@@ -392,7 +393,21 @@ export function ProjectList({ onProjectSelect, themeToggle }: ProjectListProps) 
         <div className="panel-content">
           <div className="project-panel-header">
             <h5 className="panel-title">Projects</h5>
-            {themeToggle}
+            <div className="project-panel-header__actions">
+              {themeToggle}
+              {onCollapse && (
+                <button
+                  className="panel-collapse-btn"
+                  onClick={onCollapse}
+                  title="Collapse projects (Cmd+B)"
+                  aria-label="Collapse projects panel"
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                    <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Pinned Section */}

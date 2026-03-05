@@ -188,6 +188,79 @@ body {
   background: var(--accent);
 }
 
+/* ===== Collapsed Panel ===== */
+
+.app-panel--collapsed {
+  transition: width 0.15s ease;
+  overflow: hidden;
+  border-right: 1px solid var(--border-0);
+}
+
+.collapsed-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding-top: 10px;
+  gap: 12px;
+}
+
+.collapsed-panel__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--surface-1);
+    color: var(--text-0);
+  }
+}
+
+.collapsed-panel__label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  user-select: none;
+}
+
+.panel-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+
+  &:hover {
+    background: var(--surface-1);
+    color: var(--text-0);
+  }
+}
+
+.project-panel-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* ===== Panel Chrome ===== */
 
 .panel-content {
