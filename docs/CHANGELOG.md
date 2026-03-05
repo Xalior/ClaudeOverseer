@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pinned Project Reorder** — Drag-and-drop reordering for pinned projects
 - **Hide Projects** — Discovered projects can be hidden from the sidebar
 - **Post-Dist Build Hooks** — Platform-specific postdist hooks for macOS, Linux, and Windows build targets
+- **Collapsible Projects Panel** — Projects sidebar can be collapsed to a 40px strip via chevron button or `Cmd+B` shortcut; collapsed state persists across sessions; maximises working space on small screens
 
 ### Changed
 - **Sessions → Threads** — "Sessions" renamed to "Threads" throughout the UI for clarity
