@@ -110,10 +110,16 @@ describe('RemoteServer', () => {
     expect(res.status).toBe(404)
   })
 
-  it('returns 405 for non-GET methods', async () => {
+  it('returns 405 for unsupported methods', async () => {
+    await server.start()
+    const res = await fetch(`http://127.0.0.1:${TEST_PORT}/api/projects`, { method: 'PUT' })
+    expect(res.status).toBe(405)
+  })
+
+  it('returns 404 for unknown POST routes', async () => {
     await server.start()
     const res = await fetch(`http://127.0.0.1:${TEST_PORT}/api/projects`, { method: 'POST' })
-    expect(res.status).toBe(405)
+    expect(res.status).toBe(404)
   })
 
   it('broadcasts events to connected WebSocket clients', async () => {

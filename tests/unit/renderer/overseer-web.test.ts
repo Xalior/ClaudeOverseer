@@ -46,7 +46,7 @@ class MockWebSocket {
 
 const fetchResponses = new Map<string, unknown>()
 
-function mockFetch(url: string): Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }> {
+const mockFetch = vi.fn((url: string, _init?: RequestInit): Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }> => {
   const path = url.replace('http://localhost', '')
   const data = fetchResponses.get(path)
   if (data !== undefined) {
@@ -61,13 +61,14 @@ function mockFetch(url: string): Promise<{ ok: boolean; status: number; json: ()
     status: 404,
     json: () => Promise.resolve({ error: 'Not found' })
   })
-}
+})
 
 // --- Setup globals ---
 
 beforeEach(() => {
   MockWebSocket.instances = []
   fetchResponses.clear()
+  mockFetch.mockClear()
 
   // Stub browser globals (vitest runs in Node, no window by default)
   vi.stubGlobal('window', {
@@ -279,9 +280,17 @@ describe('overseer-web adapter', () => {
       await api.savePreferences({ theme: 'dark' })
     })
 
-    it('resumeSession is a no-op', async () => {
+    it('resumeSession posts to /api/resume-session', async () => {
       const api = await createAPI()
-      await api.resumeSession('id', '/path', 'prompt')
+      await api.resumeSession('session-123', '/home/project', 'fix the bug')
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost/api/resume-session',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: 'session-123', projectPath: '/home/project', prompt: 'fix the bug' })
+        })
+      )
     })
 
     it('startDirectoryWatch is a no-op', async () => {

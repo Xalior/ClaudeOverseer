@@ -110,7 +110,13 @@ export function createWebOverseerAPI(): OverseerAPI {
     getAllProjectCosts: (dirs) => fetchJson(`/api/project-costs?dirs=${encodeURIComponent(JSON.stringify(dirs))}`),
     onCostUpdated: (cb) => on('overseer:cost-updated', cb as EventCallback),
 
-    resumeSession: async () => { /* read-only for remote clients */ },
+    resumeSession: async (sessionId, projectPath, prompt) => {
+      await fetch(`${baseUrl}/api/resume-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, projectPath, prompt })
+      })
+    },
     onResumeStatus: (cb) => on('overseer:resume-status', cb as EventCallback),
 
     onOpenPreferences: (cb) => on('overseer:open-preferences', cb as EventCallback),

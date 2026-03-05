@@ -1,4 +1,4 @@
-import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'http'
+import { createServer, request as httpRequest, type Server, type IncomingMessage, type ServerResponse } from 'http'
 import { homedir } from 'os'
 import { join, extname, resolve, normalize } from 'path'
 import { readFileSync, existsSync } from 'fs'
@@ -8,6 +8,7 @@ import { discoverSessions } from './session-discovery'
 import { parseJsonlFile } from './jsonl-parser'
 import { formatMessages } from './message-formatter'
 import { loadPreferences } from './preferences'
+import { resumeSession } from './session-resume'
 import { JsonlWatcher } from './jsonl-watcher'
 import type { RemoteTarget } from './broadcaster'
 import type { CostCache } from './cost-cache'
@@ -123,6 +124,7 @@ export class RemoteServer implements RemoteTarget {
 
   /** Broadcast an event to all connected WebSocket clients (RemoteTarget interface). */
   broadcast(channel: string, data?: unknown): void {
+    if (this.clients.size === 0) return
     const message = JSON.stringify({ event: channel, data })
     for (const ws of this.clients) {
       if (ws.readyState === WebSocket.OPEN) {
@@ -137,9 +139,23 @@ export class RemoteServer implements RemoteTarget {
 
     // CORS headers for API routes
     res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
-    // Only GET allowed
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204)
+      res.end()
+      return
+    }
+
+    // POST routes
+    if (req.method === 'POST') {
+      await this.handlePostRoute(pathname, req, res)
+      return
+    }
+
+    // Only GET otherwise
     if (req.method !== 'GET') {
       res.writeHead(405)
       res.end('Method Not Allowed')
@@ -153,8 +169,8 @@ export class RemoteServer implements RemoteTarget {
         return
       }
 
-      // Static files
-      this.serveStatic(pathname, res)
+      // Static files (proxied to Vite in dev mode)
+      this.serveStatic(pathname, req, res)
     } catch (err) {
       console.error('Remote server request error:', err)
       res.writeHead(500, { 'Content-Type': 'application/json' })
@@ -255,7 +271,47 @@ export class RemoteServer implements RemoteTarget {
     res.end(JSON.stringify({ error: 'Not found' }))
   }
 
-  private serveStatic(pathname: string, res: ServerResponse): void {
+  private async handlePostRoute(pathname: string, req: IncomingMessage, res: ServerResponse): Promise<void> {
+    res.setHeader('Content-Type', 'application/json')
+
+    if (pathname === '/api/resume-session') {
+      const body = await this.readBody(req)
+      const { sessionId, projectPath, prompt } = JSON.parse(body)
+      if (!sessionId || !projectPath || !prompt) {
+        res.writeHead(400)
+        res.end(JSON.stringify({ error: 'Missing sessionId, projectPath, or prompt' }))
+        return
+      }
+      resumeSession({ sessionId, projectPath, prompt })
+      res.writeHead(200)
+      res.end(JSON.stringify({ ok: true }))
+      return
+    }
+
+    res.writeHead(404)
+    res.end(JSON.stringify({ error: 'Not found' }))
+  }
+
+  private readBody(req: IncomingMessage): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = []
+      req.on('data', (chunk) => chunks.push(chunk))
+      req.on('end', () => resolve(Buffer.concat(chunks).toString()))
+      req.on('error', reject)
+    })
+  }
+
+  private get isDev(): boolean {
+    return process.env.NODE_ENV === 'development'
+  }
+
+  private serveStatic(pathname: string, req: IncomingMessage, res: ServerResponse): void {
+    // In dev mode, proxy to the Vite dev server
+    if (this.isDev) {
+      this.proxyToVite(pathname, req, res)
+      return
+    }
+
     // Default to index.html for SPA routing
     let filePath = pathname === '/' ? '/index.html' : pathname
 
@@ -286,6 +342,27 @@ export class RemoteServer implements RemoteTarget {
     const content = readFileSync(fullPath)
     res.writeHead(200, { 'Content-Type': contentType })
     res.end(content)
+  }
+
+  private proxyToVite(pathname: string, req: IncomingMessage, res: ServerResponse): void {
+    const proxyReq = httpRequest(
+      {
+        hostname: 'localhost',
+        port: 5173,
+        path: pathname,
+        method: req.method,
+        headers: req.headers
+      },
+      (proxyRes) => {
+        res.writeHead(proxyRes.statusCode || 502, proxyRes.headers)
+        proxyRes.pipe(res)
+      }
+    )
+    proxyReq.on('error', () => {
+      res.writeHead(502)
+      res.end('Vite dev server not available')
+    })
+    req.pipe(proxyReq)
   }
 
   private handleConnection(ws: WebSocket): void {

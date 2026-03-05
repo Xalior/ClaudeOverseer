@@ -1,4 +1,6 @@
-import { readdir, stat, readFile } from 'fs/promises'
+import { readdir, stat } from 'fs/promises'
+import { createReadStream } from 'fs'
+import { createInterface } from 'readline'
 import { join } from 'path'
 import type { Session } from '../types'
 
@@ -52,44 +54,51 @@ function extractUserText(content: unknown): string | undefined {
 
 /**
  * Extract slug and first meaningful user message from a JSONL file.
- * Scans up to 60 lines to skip past command noise at the start.
+ * Streams only the first ~60 lines instead of reading the entire file.
  */
 async function extractSessionMetadata(filePath: string): Promise<{ slug?: string; summary?: string }> {
-  try {
-    const content = await readFile(filePath, 'utf-8')
-    const lines = content.split('\n')
+  return new Promise((resolve) => {
     let slug: string | undefined
     let summary: string | undefined
+    let lineCount = 0
 
-    for (let i = 0; i < Math.min(lines.length, 60); i++) {
-      const line = lines[i]?.trim()
-      if (!line) continue
+    const rl = createInterface({
+      input: createReadStream(filePath, { encoding: 'utf-8' }),
+      crlfDelay: Infinity
+    })
+
+    rl.on('line', (line) => {
+      lineCount++
+      const trimmed = line.trim()
+      if (!trimmed) return
+
       try {
-        const obj = JSON.parse(line)
+        const obj = JSON.parse(trimmed)
         if (!slug && obj.slug) {
           slug = obj.slug
         }
         if (!summary && obj.type === 'user' && obj.userType !== 'internal' && !obj.isMeta) {
-          // Skip tool_result-only messages (automated responses)
           const msgContent = obj.message?.content
           if (Array.isArray(msgContent) && msgContent.every((b: { type: string }) => b?.type === 'tool_result')) {
-            continue
+            return
           }
           const text = extractUserText(msgContent)
           if (text) {
             summary = text
           }
         }
-        if (slug && summary) break
       } catch {
-        continue
+        // malformed line
       }
-    }
 
-    return { slug, summary }
-  } catch {
-    return {}
-  }
+      if ((slug && summary) || lineCount >= 60) {
+        rl.close()
+      }
+    })
+
+    rl.on('close', () => resolve({ slug, summary }))
+    rl.on('error', () => resolve({}))
+  })
 }
 
 /**

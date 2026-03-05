@@ -1,6 +1,6 @@
 {
   "name": "claudeoverseer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Monitor Claude Code background agents in real-time",
   "homepage": "https://github.com/Xalior/ClaudeOverseer",
   "main": "./out/main/index.js",
@@ -35,6 +35,7 @@
     "clean:extra": "find release -name '*.blockmap' -delete && find release -name '*.yml' -delete && find release -name 'builder-*.y*ml' -delete && find release -type d \\( -name '*-unpacked' -o -name 'mac*' -o -name 'linux-*' -o -name 'win-*' -o -name '.icon-*' \\) -exec rm -rf {} + 2>/dev/null || true && echo '🧹 Cleaned up intermediate build files'"
   },
   "build": {
+    "npmRebuild": false,
     "appId": "com.xalior.desktop.claude-overseer",
     "productName": "ClaudeOverseer",
     "directories": {

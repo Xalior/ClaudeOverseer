@@ -316,10 +316,8 @@ export function MessageStream({ sessionFilePath, projectPath }: MessageStreamPro
       {/* Status Bar */}
       <StatusBar usage={session.totalUsage} messageCount={messageCount} messages={session.messages} />
 
-      {/* Resume Input (hidden for remote clients) */}
-      {!window.__REMOTE_CLIENT__ && (
-        <ResumeInput sessionFilePath={sessionFilePath} projectPath={projectPath ?? null} />
-      )}
+      {/* Resume Input */}
+      <ResumeInput sessionFilePath={sessionFilePath} projectPath={projectPath ?? null} />
     </div>
   )
 }
