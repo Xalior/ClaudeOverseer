@@ -38,6 +38,7 @@ const mockLoadPreferences = vi.fn(() => ({
   selectedSessionPath: null,
   windowState: { width: 1200, height: 800, isMaximized: false },
   panelWidths: [220, 280],
+  projectsPanelCollapsed: false,
   pinnedProjects: [],
   hiddenProjects: [],
   projectSortOrder: 'recent',
@@ -74,12 +75,13 @@ vi.mock('../../src/main/services/preferences', () => ({
   loadPreferences: () => mockLoadPreferences()
 }))
 
-vi.mock('../../src/main/services/jsonl-watcher', () => ({
-  JsonlWatcher: vi.fn().mockImplementation(() => ({
-    start: vi.fn(),
-    stop: vi.fn()
-  }))
-}))
+vi.mock('../../src/main/services/jsonl-watcher', () => {
+  const MockJsonlWatcher = vi.fn(function(this: Record<string, unknown>) {
+    this.start = vi.fn()
+    this.stop = vi.fn()
+  })
+  return { JsonlWatcher: MockJsonlWatcher }
+})
 
 const TEST_PORT = 19298
 let server: InstanceType<typeof import('../../src/main/services/remote-server').RemoteServer>
@@ -326,10 +328,10 @@ describe('Remote browser flow: WebSocket watch/unwatch', () => {
   it('client sends unwatch after watch, watcher is stopped', async () => {
     const { JsonlWatcher } = await import('../../src/main/services/jsonl-watcher')
     const mockStop = vi.fn()
-    vi.mocked(JsonlWatcher).mockImplementation(() => ({
-      start: vi.fn(),
-      stop: mockStop
-    }) as never)
+    vi.mocked(JsonlWatcher).mockImplementation(function(this: Record<string, unknown>) {
+      this.start = vi.fn()
+      this.stop = mockStop
+    } as never)
 
     const ws = await connectWs()
 
@@ -347,10 +349,10 @@ describe('Remote browser flow: WebSocket watch/unwatch', () => {
   it('watchers are cleaned up when client disconnects', async () => {
     const { JsonlWatcher } = await import('../../src/main/services/jsonl-watcher')
     const mockStop = vi.fn()
-    vi.mocked(JsonlWatcher).mockImplementation(() => ({
-      start: vi.fn(),
-      stop: mockStop
-    }) as never)
+    vi.mocked(JsonlWatcher).mockImplementation(function(this: Record<string, unknown>) {
+      this.start = vi.fn()
+      this.stop = mockStop
+    } as never)
 
     const ws = await connectWs()
 
