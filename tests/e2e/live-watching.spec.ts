@@ -4,6 +4,12 @@ import { writeFileSync, appendFileSync, mkdtempSync, copyFileSync, mkdirSync } f
 import { tmpdir } from 'os'
 import { join } from 'path'
 
+function cleanPrefsFile(): string {
+  const f = join(tmpdir(), `prefs-${Date.now()}-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(f, '{}')
+  return f
+}
+
 test.describe('Live Watching', () => {
   test('new messages appear when JSONL file is appended', async () => {
     let app
@@ -26,7 +32,8 @@ test.describe('Live Watching', () => {
         cwd: path.join(__dirname, '../..'),
         env: {
           ...process.env,
-          PATHS_FILE: tempPathsFile
+          PATHS_FILE: tempPathsFile,
+          PREFS_FILE: cleanPrefsFile()
         }
       })
 

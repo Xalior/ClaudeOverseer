@@ -1,13 +1,23 @@
 import { test, expect, _electron as electron } from '@playwright/test'
 import path from 'path'
+import { writeFileSync } from 'fs'
+import { tmpdir } from 'os'
+import { join } from 'path'
+
+function cleanPrefsFile(): string {
+  const f = join(tmpdir(), `prefs-${Date.now()}-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(f, '{}')
+  return f
+}
 
 test.describe('App Launch', () => {
   test('launches app and shows three panels', async () => {
     let app
     try {
-      // Launch Electron app
+      // Launch Electron app with clean prefs to avoid saved state interference
       app = await electron.launch({
         args: [path.join(__dirname, '../../out/main/index.js')],
+        env: { ...process.env, PREFS_FILE: cleanPrefsFile() }
       })
 
       // Get the first window
@@ -44,6 +54,7 @@ test.describe('App Launch', () => {
     try {
       app = await electron.launch({
         args: [path.join(__dirname, '../../out/main/index.js')],
+        env: { ...process.env, PREFS_FILE: cleanPrefsFile() }
       })
 
       const window = await app.firstWindow()
@@ -63,9 +74,14 @@ test.describe('App Launch', () => {
       const expandBtn = window.locator('button[aria-label="Expand projects panel"]')
       await expect(expandBtn).toBeVisible({ timeout: 3000 })
 
-      // The sidebar should be narrow (collapsed)
-      const collapsedWidth = await projectSidebar.evaluate(el => el.offsetWidth)
-      expect(collapsedWidth).toBeLessThanOrEqual(50)
+      // The sidebar should be narrow (collapsed) — wait for CSS transition
+      await window.waitForFunction(
+        () => {
+          const el = document.querySelector('[data-testid="project-sidebar"]')
+          return el && el.offsetWidth <= 50
+        },
+        { timeout: 3000 }
+      )
 
       // Click expand
       await expandBtn.click()
@@ -91,6 +107,7 @@ test.describe('App Launch', () => {
       try {
         app = await electron.launch({
           args: [path.join(__dirname, '../../out/main/index.js')],
+          env: { ...process.env, PREFS_FILE: cleanPrefsFile() }
         })
         const window = await app.firstWindow()
         await window.waitForLoadState('domcontentloaded')

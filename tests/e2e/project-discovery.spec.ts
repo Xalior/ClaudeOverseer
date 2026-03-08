@@ -4,6 +4,12 @@ import { writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
+function cleanPrefsFile(): string {
+  const f = join(tmpdir(), `prefs-${Date.now()}-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(f, '{}')
+  return f
+}
+
 test.describe('Project Discovery', () => {
   test('discovers and displays projects from fixtures', async () => {
     let app
@@ -19,7 +25,8 @@ test.describe('Project Discovery', () => {
         cwd: path.join(__dirname, '../..'),
         env: {
           ...process.env,
-          PATHS_FILE: tempPathsFile
+          PATHS_FILE: tempPathsFile,
+          PREFS_FILE: cleanPrefsFile()
         }
       })
 
@@ -58,7 +65,8 @@ test.describe('Project Discovery', () => {
         cwd: path.join(__dirname, '../..'),
         env: {
           ...process.env,
-          PATHS_FILE: tempPathsFile
+          PATHS_FILE: tempPathsFile,
+          PREFS_FILE: cleanPrefsFile()
         }
       })
 
@@ -106,6 +114,7 @@ test.describe('Project Discovery', () => {
       try {
         app = await electron.launch({
           args: [path.join(__dirname, '../../out/main/index.js')],
+          env: { ...process.env, PREFS_FILE: cleanPrefsFile() }
         })
 
         const window = await app.firstWindow()

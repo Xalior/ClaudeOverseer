@@ -1,5 +1,5 @@
 import { homedir } from 'os'
-import { join } from 'path'
+import { join, dirname } from 'path'
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'fs'
 
 export interface WindowState {
@@ -32,8 +32,8 @@ export interface AppPreferences {
   remoteServer: RemoteServerConfig
 }
 
-const PREFS_DIR = join(homedir(), '.ClaudeOverseer')
-const PREFS_FILE = join(PREFS_DIR, 'prefs.json')
+const PREFS_FILE = process.env.PREFS_FILE || join(homedir(), '.ClaudeOverseer', 'prefs.json')
+const PREFS_DIR = dirname(PREFS_FILE)
 
 const DEFAULT_PREFERENCES: AppPreferences = {
   selectedProject: null,

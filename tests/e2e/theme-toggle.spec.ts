@@ -1,5 +1,14 @@
 import { test, expect, _electron as electron } from '@playwright/test'
 import path from 'path'
+import { writeFileSync } from 'fs'
+import { tmpdir } from 'os'
+import { join } from 'path'
+
+function cleanPrefsFile(): string {
+  const f = join(tmpdir(), `prefs-${Date.now()}-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(f, '{}')
+  return f
+}
 
 test.describe('Theme Toggle', () => {
   test('shows theme toggle with light/system/dark buttons', async () => {
@@ -7,6 +16,7 @@ test.describe('Theme Toggle', () => {
     try {
       app = await electron.launch({
         args: [path.join(__dirname, '../../out/main/index.js')],
+        env: { ...process.env, PREFS_FILE: cleanPrefsFile() }
       })
 
       const window = await app.firstWindow()
@@ -44,6 +54,7 @@ test.describe('Theme Toggle', () => {
     try {
       app = await electron.launch({
         args: [path.join(__dirname, '../../out/main/index.js')],
+        env: { ...process.env, PREFS_FILE: cleanPrefsFile() }
       })
 
       const window = await app.firstWindow()
