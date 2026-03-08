@@ -261,12 +261,28 @@ export function ProjectList({ onProjectSelect, themeToggle, onCollapse }: Projec
 
   const { data: projectCosts = {} } = useProjectCosts(projectDirPaths)
 
+  const collapseButton = onCollapse && (
+    <button
+      className="panel-collapse-btn"
+      onClick={onCollapse}
+      title="Collapse projects (Cmd+B)"
+      aria-label="Collapse projects panel"
+    >
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </button>
+  )
+
   if (loading && !prefsReady) {
     return (
       <div className="panel-content">
         <div className="project-panel-header">
           <h5 className="panel-title">Projects</h5>
-          {themeToggle}
+          <div className="project-panel-header__actions">
+            {themeToggle}
+            {collapseButton}
+          </div>
         </div>
         <p className="panel-muted">Loading...</p>
       </div>
@@ -278,7 +294,10 @@ export function ProjectList({ onProjectSelect, themeToggle, onCollapse }: Projec
       <div className="panel-content">
         <div className="project-panel-header">
           <h5 className="panel-title">Projects</h5>
-          {themeToggle}
+          <div className="project-panel-header__actions">
+            {themeToggle}
+            {collapseButton}
+          </div>
         </div>
         <p className="panel-muted">No projects found</p>
       </div>
@@ -405,18 +424,7 @@ export function ProjectList({ onProjectSelect, themeToggle, onCollapse }: Projec
             <h5 className="panel-title">Projects</h5>
             <div className="project-panel-header__actions">
               {themeToggle}
-              {onCollapse && (
-                <button
-                  className="panel-collapse-btn"
-                  onClick={onCollapse}
-                  title="Collapse projects (Cmd+B)"
-                  aria-label="Collapse projects panel"
-                >
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                    <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-              )}
+              {collapseButton}
             </div>
           </div>
 
