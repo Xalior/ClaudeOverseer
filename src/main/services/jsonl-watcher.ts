@@ -1,4 +1,4 @@
-import { watch, type FSWatcher } from 'chokidar'
+import { watchFile, unwatchFile } from 'fs'
 import { open, stat } from 'fs/promises'
 import { parseJsonlLine } from './jsonl-parser'
 import type { ParsedMessage } from '../types'
@@ -9,12 +9,11 @@ export interface WatcherEvents {
 }
 
 export interface WatcherOptions {
-  stabilityThreshold?: number
   pollInterval?: number
 }
 
 export class JsonlWatcher {
-  private watcher: FSWatcher | null = null
+  private watching = false
   private filePath: string
   private offset: number = 0
   private events: WatcherEvents
@@ -35,27 +34,21 @@ export class JsonlWatcher {
       this.offset = 0
     }
 
-    this.watcher = watch(this.filePath, {
-      persistent: true,
-      awaitWriteFinish: {
-        stabilityThreshold: this.options.stabilityThreshold ?? 100,
-        pollInterval: this.options.pollInterval ?? 50
+    this.watching = true
+
+    // Use fs.watchFile (polling) instead of chokidar to avoid consuming a persistent
+    // file descriptor. watchFile uses stat() polling which opens/closes fds per check.
+    watchFile(this.filePath, { interval: this.options.pollInterval ?? 500 }, (curr, prev) => {
+      if (curr.mtimeMs > prev.mtimeMs || curr.size !== prev.size) {
+        this.readNewLines()
       }
-    })
-
-    this.watcher.on('change', () => {
-      this.readNewLines()
-    })
-
-    this.watcher.on('error', (error) => {
-      this.events.onError(error instanceof Error ? error : new Error(String(error)))
     })
   }
 
   async stop(): Promise<void> {
-    if (this.watcher) {
-      await this.watcher.close()
-      this.watcher = null
+    if (this.watching) {
+      unwatchFile(this.filePath)
+      this.watching = false
     }
   }
 

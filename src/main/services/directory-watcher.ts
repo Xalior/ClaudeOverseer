@@ -24,11 +24,22 @@ export class DirectoryWatcher {
       await this.stop()
     }
 
+    // Use polling to avoid exhausting file descriptors (macOS soft limit is 256).
+    // With many projects, native FSEvents/kqueue watchers consume one fd per directory,
+    // easily hitting EMFILE. Polling uses a single fd per stat() call, released immediately.
     this.watcher = watch(this.projectsDir, {
       persistent: true,
       ignoreInitial: true, // Don't fire events for existing files on startup
-      depth: 4, // Enough to cover projects/subagents/deep nesting
-      awaitWriteFinish: false // We don't need this - we're not reading file contents
+      depth: 3, // projects/session-id/subagents/agent.jsonl
+      usePolling: true,
+      interval: 2000, // Poll every 2s — good enough for UI updates
+      binaryInterval: 2000,
+      awaitWriteFinish: false, // We don't need this - we're not reading file contents
+      ignored: [
+        /(^|[/\\])\../, // Hidden files/dirs (dotfiles)
+        /\.lock$/,
+        /\.tmp$/
+      ]
     })
 
     // Watch for new/removed projects (top-level directories)

@@ -146,16 +146,19 @@ export function registerIpcHandlers(costCache: CostCache, broadcaster: Broadcast
 
     await directoryWatcher.start()
 
-    // Background scan: recompute costs for all sessions
+    // Background scan: recompute costs for all sessions (serialized to avoid fd exhaustion)
     setImmediate(async () => {
       try {
         const projects = await scanProjects(projectsDir)
-        const allPaths: string[] = []
         for (const project of projects) {
-          const sessions = await discoverSessions(join(projectsDir, project.encodedName))
-          for (const s of sessions) allPaths.push(s.filePath)
+          try {
+            const sessions = await discoverSessions(join(projectsDir, project.encodedName))
+            const paths = sessions.map(s => s.filePath)
+            await costCache.recomputeAllStale(paths)
+          } catch {
+            // Skip projects that fail (e.g. permission errors)
+          }
         }
-        await costCache.recomputeAllStale(allPaths)
         costCache.broadcastCostUpdate()
       } catch (err) {
         console.error('Background cost scan failed:', err)

@@ -306,13 +306,13 @@ export class RemoteServer implements RemoteTarget {
   }
 
   private serveStatic(pathname: string, req: IncomingMessage, res: ServerResponse): void {
-    // In dev mode, proxy to the Vite dev server
+    // In dev mode, proxy to Vite so remote browsers get live code
     if (this.isDev) {
       this.proxyToVite(pathname, req, res)
       return
     }
 
-    // Default to index.html for SPA routing
+    // Production: serve from built renderer directory
     let filePath = pathname === '/' ? '/index.html' : pathname
 
     // Path traversal protection: resolve and ensure it's under rendererDir
@@ -349,9 +349,9 @@ export class RemoteServer implements RemoteTarget {
       {
         hostname: 'localhost',
         port: 5173,
-        path: pathname,
+        path: req.url || pathname,
         method: req.method,
-        headers: req.headers
+        headers: { ...req.headers, host: 'localhost:5173' }
       },
       (proxyRes) => {
         res.writeHead(proxyRes.statusCode || 502, proxyRes.headers)
@@ -359,8 +359,8 @@ export class RemoteServer implements RemoteTarget {
       }
     )
     proxyReq.on('error', () => {
-      res.writeHead(502)
-      res.end('Vite dev server not available')
+      res.writeHead(502, { 'Content-Type': 'text/html' })
+      res.end('<!DOCTYPE html><html><body><h1>502 - Vite dev server not available</h1><p>Run <code>pnpm run dev</code> to start the dev server.</p></body></html>')
     })
     req.pipe(proxyReq)
   }

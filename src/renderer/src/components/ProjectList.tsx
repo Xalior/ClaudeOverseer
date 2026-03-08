@@ -119,6 +119,16 @@ export function ProjectList({ onProjectSelect, themeToggle, onCollapse }: Projec
     }).catch(() => setPrefsReady(true))
   }, [])
 
+  // Listen for hidden projects changes from preferences panel
+  useEffect(() => {
+    function handleHiddenChange(e: Event) {
+      const next = (e as CustomEvent<string[]>).detail
+      setHiddenProjects(next)
+    }
+    window.addEventListener('overseer:hidden-projects-changed', handleHiddenChange)
+    return () => window.removeEventListener('overseer:hidden-projects-changed', handleHiddenChange)
+  }, [])
+
   function handleProjectClick(encodedName: string) {
     setSelectedProject(encodedName)
     onProjectSelect(encodedName)
